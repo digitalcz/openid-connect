@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect;
 
 use DigitalCz\OpenIDConnect\Authentication\AuthenticationMethod;
-use DigitalCz\OpenIDConnect\Authentication\ClientSecretBasic;
 use DigitalCz\OpenIDConnect\Authentication\ClientSecretPost;
 
 final class ClientMetadata

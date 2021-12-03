@@ -18,8 +18,6 @@ use DigitalCz\OpenIDConnect\Token\TokenVerifierInterface;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\UriInterface;
 
-use function Safe\base64_decode;
-
 final class Client
 {
     public function __construct(
