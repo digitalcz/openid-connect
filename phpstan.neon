@@ -1,0 +1,11 @@
+parameters:
+    level: 8
+    paths:
+        - examples
+        - src
+        - tests
+
+    bootstrapFiles:
+        - tests/bootstrap.php
+
+    treatPhpDocTypesAsCertain: false
