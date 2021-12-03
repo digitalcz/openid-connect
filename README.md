@@ -9,7 +9,7 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/digitalcz/openid-connect/badges/quality-score.png?b=0.x)](https://scrutinizer-ci.com/g/digitalcz/openid-connect/?branch=0.x)
 [![codecov](https://codecov.io/gh/digitalcz/openid-connect/branch/0.x/graph/badge.svg?token=e8B81l7mzA)](https://codecov.io/gh/digitalcz/openid-connect)
 
-PHP implementation of Authorization Code grant of https://openid.net/specs/openid-connect-core-1_0.html
+PHP implementation of https://openid.net/specs/openid-connect-core-1_0.html
 
 ## Install
 
