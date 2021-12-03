@@ -13,11 +13,6 @@ $discoveryUri = 'https://accounts.google.com/.well-known/openid-configuration';
 $clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
 $client = ClientFactory::create($discoveryUri, $clientMetadata);
 
-$tokens = $client->requestTokens(
-    new TokenParams(
-        new ClientCredentials(),
-        ['scope' => 'profile']
-    )
-);
+$tokens = $client->requestTokens(new TokenParams(new ClientCredentials(), ['scope' => 'profile']));
 
 dump($tokens);

@@ -64,6 +64,9 @@ final class Client
         return $tokens;
     }
 
+    /**
+     * Request for tokens
+     */
     public function requestTokens(TokenParams $params): Tokens
     {
         $tokenEndpoint = $this->getProviderMetadata()->tokenEndpoint();

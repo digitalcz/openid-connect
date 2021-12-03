@@ -53,7 +53,8 @@
     "squizlabs/php_codesniffer": "^3.6.1",
     "symfony/cache": "^v5.4.0",
     "symfony/var-dumper": "^v5.4.0",
-    "thecodingmachine/phpstan-safe-rule": "^1.1"
+    "thecodingmachine/phpstan-safe-rule": "^1.1",
+    "web-token/jwt-easy": "^2.2"
   },
   "autoload": {
     "psr-4": {

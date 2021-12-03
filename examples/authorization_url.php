@@ -14,7 +14,7 @@ $client = ClientFactory::create($discoveryUri, $clientMetadata);
 
 echo $client->getAuthorizationUrl(
     new AuthorizationParams([
-        'scope' => 'openid profile.email',
+        'scope' => 'openid profile',
         'state' => 'foo',
         'nonce' => 'bar',
     ])

@@ -14,7 +14,7 @@ $clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://exampl
 $client = ClientFactory::create($discoveryUri, $clientMetadata);
 
 // Parameters that were returned from authorization server
-// $parameters = $_GET;
+// $parameters = $request->query->all();
 $parameters = ['state' => 'foo', 'code' => 'bar'];
 
 $tokens = $client->handleCallback(

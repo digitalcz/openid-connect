@@ -22,7 +22,24 @@ $ composer require digitalcz/openid-connect
 ## Usage
 
 ```php
+$discoveryUri = 'https://example.com/.well-known/openid-configuration';
+$clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
+$client = ClientFactory::create($discoveryUri, $clientMetadata);
 
+$authorizationParams = new AuthorizationParams([
+    'scope' => 'openid profile',
+    'state' => 'foo',
+    'nonce' => 'bar',
+]);
+
+echo $client->getAuthorizationUrl($authorizationParams); 
+// https://example.com/authorize?
+//      scope=openid%20profile
+//      &state=foo
+//      &nonce=bar
+//      &response_type=code
+//      &redirect_uri=https%3A%2F%2Fexample.com%2Fcallback
+//      &client_id=clientid
 ```
 
 See [examples](examples) for more
