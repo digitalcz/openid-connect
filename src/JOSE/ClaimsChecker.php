@@ -9,10 +9,11 @@ use DigitalCz\OpenIDConnect\Exception\AuthorizationException;
 use DigitalCz\OpenIDConnect\Param\CallbackChecks;
 use Jose\Component\Checker\AudienceChecker;
 use Jose\Component\Checker\ClaimCheckerManager;
-use Jose\Component\Checker\ClaimExceptionInterface;
 use Jose\Component\Checker\ExpirationTimeChecker;
+use Jose\Component\Checker\InvalidClaimException;
 use Jose\Component\Checker\IssuedAtChecker;
 use Jose\Component\Checker\IssuerChecker;
+use Jose\Component\Checker\MissingMandatoryClaimException;
 use Jose\Component\Checker\NotBeforeChecker;
 
 final class ClaimsChecker implements ClaimsCheckerInterface
@@ -31,7 +32,9 @@ final class ClaimsChecker implements ClaimsCheckerInterface
     {
         try {
             $this->createClaimCheckerManager($checks)->check($claims->all(), $this->mandatoryClaims);
-        } catch (ClaimExceptionInterface $e) {
+        } catch (MissingMandatoryClaimException $e) {
+            throw new AuthorizationException('Missing claims: ' . $e->getMessage(), previous: $e);
+        } catch (InvalidClaimException $e) {
             throw new AuthorizationException('Invalid claims: ' . $e->getMessage(), previous: $e);
         }
     }

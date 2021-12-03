@@ -50,49 +50,60 @@ use Jose\Component\Signature\Algorithm\RS512;
 final class AlgorithmsFactory
 {
     /**
+     * @var array<string, class-string<Algorithm>>
+     */
+    private static array $algorithms = [ // @phpstan-ignore-line
+        'A128CBC-HS256' => A128CBCHS256::class,
+        'A128GCM' => A128GCM::class,
+        'A128GCMKW' => A128GCMKW::class,
+        'A128KW' => A128KW::class,
+        'A192CBC-HS384' => A192CBCHS384::class,
+        'A192GCM' => A192GCM::class,
+        'A192GCMKW' => A192GCMKW::class,
+        'A192KW' => A192KW::class,
+        'A256CBC-HS512' => A256CBCHS512::class,
+        'A256GCM' => A256GCM::class,
+        'A256GCMKW' => A256GCMKW::class,
+        'A256KW' => A256KW::class,
+        'ECDH-ES' => ECDHES::class,
+        'ECDH-ES+A128KW' => ECDHESA128KW::class,
+        'ECDH-ES+A192KW' => ECDHESA192KW::class,
+        'ECDH-ES+A256KW' => ECDHESA256KW::class,
+        'ES256' => ES256::class,
+        'ES256K' => ES256K::class, // @phpstan-ignore-line
+        'ES384' => ES384::class,
+        'ES512' => ES512::class,
+        'HS1' => HS1::class,
+        'HS256' => HS256::class,
+        'HS256/64' => HS256_64::class,
+        'HS384' => HS384::class,
+        'HS512' => HS512::class,
+        'OKP' => EdDSA::class,
+        'PBES2-HS256+A128KW' => PBES2HS256A128KW::class,
+        'PBES2-HS384+A192KW' => PBES2HS384A192KW::class,
+        'PBES2-HS512+A256KW' => PBES2HS512A256KW::class,
+        'PS256' => PS256::class,
+        'PS384' => PS384::class,
+        'PS512' => PS512::class,
+        'RS1' => RS1::class,
+        'RS256' => RS256::class,
+        'RS384' => RS384::class,
+        'RS512' => RS512::class,
+        'RSA-OAEP' => RSAOAEP::class,
+        'RSA-OAEP-256' => RSAOAEP256::class,
+        'RSA1_5' => RSA15::class,
+        'none' => None::class,
+    ];
+
+    /**
      * @return Generator<Algorithm>
      */
     public static function create(): Generator
     {
-        yield 'ES256' => new ES256();
-        yield 'ES256K' => new ES256K();
-        yield 'ES384' => new ES384();
-        yield 'ES512' => new ES512();
-        yield 'HS1' => new HS1();
-        yield 'HS256' => new HS256();
-        yield 'HS256/64' => new HS256_64();
-        yield 'HS384' => new HS384();
-        yield 'HS512' => new HS512();
-        yield 'OKP' => new EdDSA();
-        yield 'PS256' => new PS256();
-        yield 'PS384' => new PS384();
-        yield 'PS512' => new PS512();
-        yield 'RS1' => new RS1();
-        yield 'RS256' => new RS256();
-        yield 'RS384' => new RS384();
-        yield 'RS512' => new RS512();
-        yield 'none' => new None();
-        yield 'RSA1_5' => new RSA15();
-        yield 'RSA-OAEP' => new RSAOAEP();
-        yield 'RSA-OAEP-256' => new RSAOAEP256();
-        yield 'A128KW' => new A128KW();
-        yield 'A192KW' => new A192KW();
-        yield 'A256KW' => new A256KW();
-        yield 'ECDH-ES' => new ECDHES();
-        yield 'ECDH-ES+A128KW' => new ECDHESA128KW();
-        yield 'ECDH-ES+A192KW' => new ECDHESA192KW();
-        yield 'ECDH-ES+A256KW' => new ECDHESA256KW();
-        yield 'A128GCMKW' => new A128GCMKW();
-        yield 'A192GCMKW' => new A192GCMKW();
-        yield 'A256GCMKW' => new A256GCMKW();
-        yield 'PBES2-HS256+A128KW' => new PBES2HS256A128KW();
-        yield 'PBES2-HS384+A192KW' => new PBES2HS384A192KW();
-        yield 'PBES2-HS512+A256KW' => new PBES2HS512A256KW();
-        yield 'A128CBC-HS256' => new A128CBCHS256();
-        yield 'A192CBC-HS384' => new A192CBCHS384();
-        yield 'A256CBC-HS512' => new A256CBCHS512();
-        yield 'A128GCM' => new A128GCM();
-        yield 'A192GCM' => new A192GCM();
-        yield 'A256GCM' => new A256GCM();
+        foreach (self::$algorithms as $alias => $class) {
+            if (class_exists($class)) {
+                yield $alias => new $class();
+            }
+        }
     }
 }

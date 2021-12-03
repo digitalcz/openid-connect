@@ -16,6 +16,7 @@ use DigitalCz\OpenIDConnect\Param\TokenParams;
 use DigitalCz\OpenIDConnect\Token\Tokens;
 use DigitalCz\OpenIDConnect\Token\TokenVerifierInterface;
 use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 
 final class Client
@@ -71,6 +72,7 @@ final class Client
             throw new AuthorizationException('Provider configuration is missing token_endpoint parameter');
         }
 
+        /** @var RequestInterface $request */
         $request = $this->httpClient
             ->createRequest('POST', $tokenEndpoint)
             ->withHeader('content-type', 'application/x-www-form-urlencoded')
@@ -80,7 +82,9 @@ final class Client
 
         if ($clientMetadata->authenticationMethod() instanceof ClientSecretBasic) {
             $credentials = base64_encode($clientMetadata->id() . ":" . $clientMetadata->secret());
-            $request->withHeader('Authorization', "Basic {$credentials}");
+
+            /** @var RequestInterface $request */
+            $request = $request->withHeader('Authorization', "Basic {$credentials}");
         }
 
         try {
