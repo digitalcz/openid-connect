@@ -9,6 +9,8 @@ use DigitalCz\OpenIDConnect\Authentication\ClientSecretPost;
 use DigitalCz\OpenIDConnect\Exception\AuthorizationException;
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Grant\AuthorizationCode;
+use DigitalCz\OpenIDConnect\Http\AuthenticatedClient;
+use DigitalCz\OpenIDConnect\Http\HttpClient;
 use DigitalCz\OpenIDConnect\Param\AuthorizationParams;
 use DigitalCz\OpenIDConnect\Param\CallbackChecks;
 use DigitalCz\OpenIDConnect\Param\CallbackParams;
@@ -16,10 +18,12 @@ use DigitalCz\OpenIDConnect\Param\TokenParams;
 use DigitalCz\OpenIDConnect\Token\Tokens;
 use DigitalCz\OpenIDConnect\Token\TokenVerifierInterface;
 use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 
-final class Client
+final class Client implements ClientInterface
 {
     public function __construct(
         private Config $config,
@@ -106,11 +110,17 @@ final class Client
             throw AuthorizationException::error($result['error'], $result['error_description'] ?? null);
         }
 
-        $accessToken = $result['access_token'] ?? throw new AuthorizationException('No access_token in response');
-        $idToken = $result['id_token'] ?? null;
-        $refreshToken = $result['refresh_token'] ?? null;
+        return new Tokens($result);
+    }
 
-        return new Tokens($accessToken, $idToken, $refreshToken);
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        return $this->httpClient->sendRequest($request);
+    }
+
+    public function getAuthenticatedClient(Tokens $tokens): AuthenticatedClient
+    {
+        return new AuthenticatedClient($this, $tokens);
     }
 
     private function createAuthorizationQuery(AuthorizationParams $authorizationParams): string

@@ -7,7 +7,7 @@ namespace DigitalCz\OpenIDConnect\Factory;
 use DigitalCz\OpenIDConnect\Client;
 use DigitalCz\OpenIDConnect\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config;
-use DigitalCz\OpenIDConnect\HttpClient;
+use DigitalCz\OpenIDConnect\Http\HttpClient;
 use Psr\SimpleCache\CacheInterface;
 
 final class ClientFactory

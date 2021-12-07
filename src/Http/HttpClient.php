@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DigitalCz\OpenIDConnect;
+namespace DigitalCz\OpenIDConnect\Http;
 
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Util\Json;

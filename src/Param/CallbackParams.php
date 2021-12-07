@@ -13,7 +13,7 @@ final class CallbackParams extends Params
 
     public function code(): string
     {
-        return $this->ensure(self::CODE);
+        return $this->getString(self::CODE);
     }
 
     public function state(): ?string

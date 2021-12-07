@@ -21,12 +21,12 @@ final class ProviderMetadata extends Params
 
     public function issuer(): string
     {
-        return $this->ensure('issuer');
+        return $this->getString('issuer');
     }
 
     public function authorizationEndpoint(): string
     {
-        return $this->ensure('authorization_endpoint');
+        return $this->getString('authorization_endpoint');
     }
 
     public function tokenEndpoint(): ?string
@@ -41,7 +41,7 @@ final class ProviderMetadata extends Params
 
     public function jwksUri(): string
     {
-        return $this->ensure('jwks_uri');
+        return $this->getString('jwks_uri');
     }
 
     public function registrationEndpoint(): ?string
@@ -58,7 +58,7 @@ final class ProviderMetadata extends Params
     /** @return string[] */
     public function responseTypesSupported(): array
     {
-        return $this->ensure('response_types_supported');
+        return $this->get('response_types_supported', []);
     }
 
     /** @return string[] */
@@ -82,13 +82,13 @@ final class ProviderMetadata extends Params
     /** @return string[] */
     public function subjectTypesSupported(): array
     {
-        return $this->ensure('subject_types_supported');
+        return $this->get('subject_types_supported', []);
     }
 
     /** @return string[] */
     public function idTokenSigningAlgValuesSupported(): array
     {
-        return $this->ensure('id_token_signing_alg_values_supported');
+        return $this->get('id_token_signing_alg_values_supported', []);
     }
 
     /** @return string[] */
@@ -188,22 +188,22 @@ final class ProviderMetadata extends Params
 
     public function claimsParameterSupported(): bool
     {
-        return $this->get('claims_parameter_supported', false);
+        return $this->getBool('claims_parameter_supported', false);
     }
 
     public function requestParameterSupported(): bool
     {
-        return $this->get('request_parameter_supported', false);
+        return $this->getBool('request_parameter_supported', false);
     }
 
     public function requestUriParameterSupported(): bool
     {
-        return $this->get('request_uri_parameter_supported', false);
+        return $this->getBool('request_uri_parameter_supported', false);
     }
 
     public function requireRequestUriRegistration(): bool
     {
-        return $this->get('require_request_uri_registration', false);
+        return $this->getBool('require_request_uri_registration', false);
     }
 
     public function opPolicyUri(): string

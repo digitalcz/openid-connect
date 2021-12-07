@@ -6,7 +6,7 @@ namespace DigitalCz\OpenIDConnect\Discovery;
 
 use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
-use DigitalCz\OpenIDConnect\HttpClient;
+use DigitalCz\OpenIDConnect\Http\HttpClient;
 use DigitalCz\OpenIDConnect\ProviderMetadata;
 use Jose\Component\Core\JWKSet;
 use Psr\Http\Client\ClientExceptionInterface;

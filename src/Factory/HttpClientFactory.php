@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Factory;
 
-use DigitalCz\OpenIDConnect\HttpClient;
+use DigitalCz\OpenIDConnect\Http\HttpClient;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
 use Psr\Http\Client\ClientInterface;
