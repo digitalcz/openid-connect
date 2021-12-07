@@ -14,7 +14,7 @@ use Psr\Http\Message\ResponseInterface;
 
 final class AuthenticatedClient implements ClientInterface
 {
-    public function __construct(private Client $client, private Tokens $tokens)
+    public function __construct(private Client $client, private HttpClient $httpClient, private Tokens $tokens)
     {
     }
 
@@ -27,7 +27,7 @@ final class AuthenticatedClient implements ClientInterface
             $this->tokens = $this->client->requestTokens($tokenParams);
         }
 
-        return $this->client->sendRequest(
+        return $this->httpClient->sendRequest(
             $request->withHeader('Authorization', "Bearer {$tokens->getAccessToken()}")
         );
     }

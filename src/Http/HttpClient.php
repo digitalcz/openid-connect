@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Http;
 
+use DigitalCz\OpenIDConnect\Exception\ResponseException;
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Util\Json;
 use JsonException;
@@ -28,7 +29,14 @@ final class HttpClient implements ClientInterface, RequestFactoryInterface, UriF
 
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        return $this->httpClient->sendRequest($request);
+        $response = $this->httpClient->sendRequest($request);
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode < 200 || $statusCode >= 400) {
+            throw new ResponseException($request, $response);
+        }
+
+        return $response;
     }
 
     public function createRequest(string $method, $uri): RequestInterface

@@ -7,6 +7,7 @@ namespace DigitalCz\OpenIDConnect;
 use DigitalCz\OpenIDConnect\Authentication\ClientSecretBasic;
 use DigitalCz\OpenIDConnect\Authentication\ClientSecretPost;
 use DigitalCz\OpenIDConnect\Exception\AuthorizationException;
+use DigitalCz\OpenIDConnect\Exception\ResponseException;
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Grant\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Http\AuthenticatedClient;
@@ -18,12 +19,10 @@ use DigitalCz\OpenIDConnect\Param\TokenParams;
 use DigitalCz\OpenIDConnect\Token\Tokens;
 use DigitalCz\OpenIDConnect\Token\TokenVerifierInterface;
 use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 
-final class Client implements ClientInterface
+final class Client
 {
     public function __construct(
         private Config $config,
@@ -96,7 +95,7 @@ final class Client implements ClientInterface
 
         try {
             $response = $this->httpClient->sendRequest($request);
-        } catch (ClientExceptionInterface $e) {
+        } catch (ClientExceptionInterface | ResponseException $e) {
             throw new AuthorizationException('Token request error: ' . $e->getMessage(), previous: $e);
         }
 
@@ -113,14 +112,9 @@ final class Client implements ClientInterface
         return new Tokens($result);
     }
 
-    public function sendRequest(RequestInterface $request): ResponseInterface
-    {
-        return $this->httpClient->sendRequest($request);
-    }
-
     public function getAuthenticatedClient(Tokens $tokens): AuthenticatedClient
     {
-        return new AuthenticatedClient($this, $tokens);
+        return new AuthenticatedClient($this, $this->httpClient, $tokens);
     }
 
     private function createAuthorizationQuery(AuthorizationParams $authorizationParams): string
