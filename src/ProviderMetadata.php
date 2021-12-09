@@ -12,9 +12,9 @@ final class ProviderMetadata extends Params
 {
     /**
      * @param array<string, mixed> $metadata
-     * @param JWKSet<JWK> $jwks
+     * @param JWKSet<JWK>|null $jwks
      */
-    public function __construct(array $metadata, private JWKSet $jwks)
+    public function __construct(array $metadata, private ?JWKSet $jwks = null)
     {
         parent::__construct($metadata);
     }
@@ -217,9 +217,9 @@ final class ProviderMetadata extends Params
     }
 
     /**
-     * @return JWKSet<JWK>
+     * @return JWKSet<JWK>|null
      */
-    public function getJwks(): JWKSet
+    public function getJwks(): ?JWKSet
     {
         return $this->jwks;
     }
