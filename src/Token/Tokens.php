@@ -9,10 +9,17 @@ use DigitalCz\OpenIDConnect\Param\Params;
 
 final class Tokens extends Params
 {
+    public const ACCESS_TOKEN = 'access_token';
+    public const REFRESH_TOKEN = 'refresh_token';
+    public const ID_TOKEN = 'id_token';
+    public const EXPIRES_IN = 'expires_in';
+    public const EXPIRES = 'expires';
+    public const SCOPE = 'scope';
+
     public function __construct(array $parameters = [])
     {
-        if (isset($parameters['expires_in']) && !isset($parameters['expires'])) {
-            $parameters['expires'] = time() + $parameters['expires_in'];
+        if (isset($parameters[self::EXPIRES_IN]) && !isset($parameters[self::EXPIRES])) {
+            $parameters[self::EXPIRES] = time() + $parameters[self::EXPIRES_IN];
         }
 
         parent::__construct($parameters);
@@ -20,12 +27,12 @@ final class Tokens extends Params
 
     public function getAccessToken(): string
     {
-        return $this->getString('access_token');
+        return $this->getString(self::ACCESS_TOKEN);
     }
 
     public function getIdToken(): ?string
     {
-        return $this->get('id_token');
+        return $this->get(self::ID_TOKEN);
     }
 
     public function getIdTokenClaims(): ?Claims
@@ -39,22 +46,22 @@ final class Tokens extends Params
 
     public function getRefreshToken(): ?string
     {
-        return $this->get('refresh_token');
+        return $this->get(self::REFRESH_TOKEN);
     }
 
     public function getExpiresIn(): ?int
     {
-        return $this->get('expires_in', 0);
+        return $this->get(self::EXPIRES_IN, 0);
     }
 
     public function getExpires(): int
     {
-        return $this->getInt('expires', 0);
+        return $this->getInt(self::EXPIRES, 0);
     }
 
     public function getScope(): ?string
     {
-        return $this->get('scope');
+        return $this->get(self::SCOPE);
     }
 
     public function isExpired(): bool

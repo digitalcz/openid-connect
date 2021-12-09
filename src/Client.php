@@ -54,8 +54,8 @@ final class Client
         }
 
         $tokenParams = new TokenParams(new AuthorizationCode(), [
-            'code' => $params->code(),
-            'redirect_uri' => $this->getClientMetadata()->redirectUri(),
+            TokenParams::CODE => $params->code(),
+            ClientMetadata::REDIRECT_URI => $this->getClientMetadata()->redirectUri(),
         ]);
         $tokens = $this->requestTokens($tokenParams);
 
@@ -117,9 +117,9 @@ final class Client
         $clientMetadata = $this->getClientMetadata();
 
         $params = $authorizationParams->all();
-        $params['response_type'] ??= 'code';
-        $params['redirect_uri'] ??= $clientMetadata->redirectUri();
-        $params['client_id'] ??= $clientMetadata->id();
+        $params[AuthorizationParams::RESPONSE_TYPE] ??= 'code';
+        $params[ClientMetadata::REDIRECT_URI] ??= $clientMetadata->redirectUri();
+        $params[ClientMetadata::CLIENT_ID] ??= $clientMetadata->id();
 
         return $this->httpClient->buildQueryString($params);
     }
@@ -128,13 +128,13 @@ final class Client
     {
         $grant = $tokenParams->getGrantType();
         $params = $tokenParams->all();
-        $params['grant_type'] = $grant->getType();
+        $params[TokenParams::GRANT_TYPE] = $grant->getType();
 
         $clientMetadata = $this->getClientMetadata();
 
         if ($clientMetadata->authenticationMethod() instanceof ClientSecretPost) {
-            $params['client_id'] = $clientMetadata->id();
-            $params['client_secret'] = $clientMetadata->secret();
+            $params[ClientMetadata::CLIENT_ID] = $clientMetadata->id();
+            $params[ClientMetadata::CLIENT_SECRET] = $clientMetadata->secret();
         }
 
         return $this->httpClient->buildQueryString($params);

@@ -8,6 +8,9 @@ use DigitalCz\OpenIDConnect\Grant\GrantType;
 
 final class TokenParams extends Params
 {
+    public const CODE = 'code';
+    public const GRANT_TYPE = 'grant_type';
+
     /**
      * @param GrantType $grantType
      * @param array<string, mixed> $parameters
