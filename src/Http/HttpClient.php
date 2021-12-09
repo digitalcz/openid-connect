@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Http;
 
-use DigitalCz\OpenIDConnect\Exception\ResponseException;
+use DigitalCz\OpenIDConnect\Exception\HttpException;
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Util\Json;
 use JsonException;
@@ -33,7 +33,7 @@ final class HttpClient implements ClientInterface, RequestFactoryInterface, UriF
         $statusCode = $response->getStatusCode();
 
         if ($statusCode < 200 || $statusCode >= 400) {
-            throw new ResponseException($request, $response);
+            throw new HttpException($request, $response);
         }
 
         return $response;

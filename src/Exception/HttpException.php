@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Exception;
 
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 use function Safe\sprintf;
 
-class ResponseException extends RuntimeException
+class HttpException extends RuntimeException implements ClientExceptionInterface
 {
     public function __construct(private RequestInterface $request, private ResponseInterface $response)
     {
-        $code = $response->getStatusCode();
-        $url = (string)$this->request->getUri();
-        $message = sprintf('HTTP %s returned for "%s".', $code, $url);
-
-        parent::__construct($message, $code);
+        parent::__construct(sprintf(
+            '%s %s returned for %s %s',
+            $response->getStatusCode(),
+            $response->getReasonPhrase(),
+            $request->getMethod(),
+            $request->getUri()
+        ));
     }
 
     public function getRequest(): RequestInterface

@@ -7,7 +7,7 @@ namespace DigitalCz\OpenIDConnect;
 use DigitalCz\OpenIDConnect\Authentication\ClientSecretBasic;
 use DigitalCz\OpenIDConnect\Authentication\ClientSecretPost;
 use DigitalCz\OpenIDConnect\Exception\AuthorizationException;
-use DigitalCz\OpenIDConnect\Exception\ResponseException;
+use DigitalCz\OpenIDConnect\Exception\HttpException;
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Grant\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Http\AuthenticatedClient;
@@ -72,13 +72,9 @@ final class Client
      */
     public function requestTokens(TokenParams $params): Tokens
     {
-        $tokenEndpoint = $this->getProviderMetadata()->tokenEndpoint();
+        $tokenEndpoint = $this->getProviderMetadata()->tokenEndpoint()
+            ?? throw new AuthorizationException('Provider configuration is missing token_endpoint parameter');
 
-        if (!is_string($tokenEndpoint)) {
-            throw new AuthorizationException('Provider configuration is missing token_endpoint parameter');
-        }
-
-        /** @var RequestInterface $request */
         $request = $this->httpClient
             ->createRequest('POST', $tokenEndpoint)
             ->withHeader('content-type', 'application/x-www-form-urlencoded')
@@ -95,7 +91,7 @@ final class Client
 
         try {
             $response = $this->httpClient->sendRequest($request);
-        } catch (ClientExceptionInterface | ResponseException $e) {
+        } catch (ClientExceptionInterface $e) {
             throw new AuthorizationException('Token request error: ' . $e->getMessage(), previous: $e);
         }
 

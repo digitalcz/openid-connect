@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Discovery;
 
 use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
-use DigitalCz\OpenIDConnect\Exception\ResponseException;
+use DigitalCz\OpenIDConnect\Exception\HttpException;
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Http\HttpClient;
 use DigitalCz\OpenIDConnect\ProviderMetadata;
@@ -38,7 +38,7 @@ final class HttpDiscoverer implements Discoverer
 
         try {
             $response = $this->httpClient->sendRequest($request);
-        } catch (ClientExceptionInterface | ResponseException $e) {
+        } catch (ClientExceptionInterface $e) {
             throw new DiscoveryException($e->getMessage(), $e->getCode(), $e);
         }
 

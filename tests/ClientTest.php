@@ -16,6 +16,7 @@ use DigitalCz\OpenIDConnect\Param\CallbackParams;
 use DigitalCz\OpenIDConnect\Param\TokenParams;
 use DigitalCz\OpenIDConnect\Util\Json;
 use Http\Message\RequestMatcher\RequestMatcher;
+use Nyholm\Psr7\Request;
 use Nyholm\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
@@ -75,6 +76,14 @@ class ClientTest extends TestCase
         self::assertSame('bar_token', $tokens->getRefreshToken());
         self::assertSame($idToken, $tokens->getIdToken());
         self::assertSame('bar', $tokens->getIdTokenClaims()?->get('foo'));
+
+        $authenticatedClient = $client->getAuthenticatedClient($tokens);
+        $authenticatedClient->sendRequest(new Request('GET', 'https://example.com'));
+
+        self::assertSame(
+            'Bearer foo_token',
+            $mockClient->getLastRequest()->getHeaderLine('Authorization')
+        );
     }
 
     public function testHandleCallbackWithError(): void
@@ -145,5 +154,41 @@ class ClientTest extends TestCase
             'client_secret' => 'bar',
         ];
         self::assertSame($expectedBody, $body);
+    }
+
+    public function testRequestTokensError(): void
+    {
+        $mockClient = MockClientFactory::create();
+        $mockClient->on(
+            new RequestMatcher('/token'),
+            new Response(status: 404, body: 'Not Found')
+        );
+        $client = ClientFactory::create(
+            'https://example.com/.well-known/openid-configuration',
+            new ClientMetadata('foo', 'bar', 'https://example.com/callback'),
+            HttpClientFactory::create($mockClient)
+        );
+
+        $this->expectException(AuthorizationException::class);
+        $this->expectExceptionMessage('Token request error: 404 Not Found returned for POST https://example.com/token');
+        $client->requestTokens(new TokenParams(new ClientCredentials(), ['scope' => 'all']));
+    }
+
+    public function testRequestTokensInvalidResponse(): void
+    {
+        $mockClient = MockClientFactory::create();
+        $mockClient->on(
+            new RequestMatcher('/token'),
+            new Response(body: '{not a: json]')
+        );
+        $client = ClientFactory::create(
+            'https://example.com/.well-known/openid-configuration',
+            new ClientMetadata('foo', 'bar', 'https://example.com/callback'),
+            HttpClientFactory::create($mockClient)
+        );
+
+        $this->expectException(AuthorizationException::class);
+        $this->expectExceptionMessage('Invalid response from token endpoint: Unable to parse response: Syntax error');
+        $client->requestTokens(new TokenParams(new ClientCredentials(), ['scope' => 'all']));
     }
 }
