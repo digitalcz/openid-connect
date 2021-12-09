@@ -10,7 +10,7 @@ use DigitalCz\OpenIDConnect\Authentication\ClientSecretPost;
 final class ClientMetadata
 {
     public const CLIENT_ID = 'client_id';
-    public const CLIENT_SECRET  = 'client_secret';
+    public const CLIENT_SECRET = 'client_secret';
     public const REDIRECT_URI = 'redirect_uri';
 
     private AuthenticationMethod $authenticationMethod;

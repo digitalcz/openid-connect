@@ -52,7 +52,7 @@ final class AlgorithmsFactory
     /**
      * @var array<string, class-string<Algorithm>>
      */
-    private static array $algorithms = [ // @phpstan-ignore-line
+    private static array $algorithms = [// @phpstan-ignore-line
         'A128CBC-HS256' => A128CBCHS256::class,
         'A128GCM' => A128GCM::class,
         'A128GCMKW' => A128GCMKW::class,

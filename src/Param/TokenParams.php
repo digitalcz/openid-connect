@@ -10,6 +10,7 @@ final class TokenParams extends Params
 {
     public const CODE = 'code';
     public const GRANT_TYPE = 'grant_type';
+    public const SCOPE = 'scope';
 
     /**
      * @param GrantType $grantType

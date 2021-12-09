@@ -21,25 +21,92 @@ $ composer require digitalcz/openid-connect
 
 ## Usage
 
+### Initialization
+#### Using the OIDC discovery endpoint
+
 ```php
+use DigitalCz\OpenIDConnect\ClientMetadata;
+use DigitalCz\OpenIDConnect\Factory\ClientFactory;
+
 $discoveryUri = 'https://example.com/.well-known/openid-configuration';
 $clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
 $client = ClientFactory::create($discoveryUri, $clientMetadata);
+```
+
+<details>
+<summary>Manually</summary>
+
+```php
+use DigitalCz\OpenIDConnect\Client;
+use DigitalCz\OpenIDConnect\ClientMetadata;
+use DigitalCz\OpenIDConnect\Config;
+use DigitalCz\OpenIDConnect\Factory\HttpClientFactory;
+use DigitalCz\OpenIDConnect\Factory\TokenVerifierFactory;
+use DigitalCz\OpenIDConnect\ProviderMetadata;
+
+$clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
+$providerMetadata = new ProviderMetadata([
+    ProviderMetadata::AUTHORIZATION_ENDPOINT => 'https://example.com/authorize',
+    ProviderMetadata::TOKEN_ENDPOINT => 'https://example.com/token',
+    // ...
+])
+$config = new Config($providerMetadata, $clientMetadata);
+$client = new Client(
+    $config,
+    HttpClientFactory::create(),
+    TokenVerifierFactory::create($config)
+);
+```
+</details>
+
+### Authorization Code flow
+
+#### Step 1 - Redirect the user to authorization endpoint
+
+```php
+use DigitalCz\OpenIDConnect\Param\AuthorizationParams;
+
+$state = bin2hex(random_bytes(8));
+$_SESSION['oauth_state'] = $state;
 
 $authorizationParams = new AuthorizationParams([
-    'scope' => 'openid profile',
-    'state' => 'foo',
-    'nonce' => 'bar',
+    AuthorizationParams::SCOPE => 'openid profile',
+    AuthorizationParams::STATE => $state,
 ]);
 
-echo $client->getAuthorizationUrl($authorizationParams); 
-// https://example.com/authorize?
-//      scope=openid%20profile
-//      &state=foo
-//      &nonce=bar
-//      &response_type=code
-//      &redirect_uri=https%3A%2F%2Fexample.com%2Fcallback
-//      &client_id=clientid
+$url = $client->getAuthorizationUrl($authorizationParams); 
+header('Location: ' . $url);
+exit();
+```
+
+#### Step 2 - Handle callback and exchange code for tokens
+
+```php
+use DigitalCz\OpenIDConnect\Param\CallbackParams;
+use DigitalCz\OpenIDConnect\Param\CallbackChecks;
+
+$tokens = $client->handleCallback(
+    new CallbackParams($_GET),
+    new CallbackChecks($_SESSION['oauth_state'])
+);
+```
+
+### Client Credentials flow
+
+```php
+use DigitalCz\OpenIDConnect\Grant\ClientCredentials;
+use DigitalCz\OpenIDConnect\Param\CallbackChecks;
+use DigitalCz\OpenIDConnect\Param\CallbackParams;
+use DigitalCz\OpenIDConnect\Param\TokenParams;
+
+$tokens = $client->requestTokens(
+    new TokenParams(
+        new ClientCredentials(),
+        [
+            TokenParams::SCOPE => 'some scope'
+        ]
+    )
+);
 ```
 
 See [examples](examples) for more
