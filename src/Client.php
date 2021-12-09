@@ -7,7 +7,6 @@ namespace DigitalCz\OpenIDConnect;
 use DigitalCz\OpenIDConnect\Authentication\ClientSecretBasic;
 use DigitalCz\OpenIDConnect\Authentication\ClientSecretPost;
 use DigitalCz\OpenIDConnect\Exception\AuthorizationException;
-use DigitalCz\OpenIDConnect\Exception\HttpException;
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Grant\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Http\AuthenticatedClient;

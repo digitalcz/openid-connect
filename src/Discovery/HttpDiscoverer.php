@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Discovery;
 
 use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
-use DigitalCz\OpenIDConnect\Exception\HttpException;
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Http\HttpClient;
 use DigitalCz\OpenIDConnect\ProviderMetadata;
