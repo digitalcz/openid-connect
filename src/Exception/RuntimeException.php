@@ -11,5 +11,4 @@ use RuntimeException as PhpRuntimeException;
  */
 class RuntimeException extends PhpRuntimeException
 {
-
 }
