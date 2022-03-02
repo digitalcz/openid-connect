@@ -15,11 +15,12 @@ class HttpException extends RuntimeException implements ClientExceptionInterface
     public function __construct(private RequestInterface $request, private ResponseInterface $response)
     {
         parent::__construct(sprintf(
-            '%s %s returned for %s %s',
+            '%s %s returned for %s %s "%s"',
             $response->getStatusCode(),
             $response->getReasonPhrase(),
             $request->getMethod(),
-            $request->getUri()
+            $request->getUri(),
+            (string)$response->getBody()
         ));
     }
 
