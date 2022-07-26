@@ -18,6 +18,7 @@ use Jose\Component\Encryption\Algorithm\KeyEncryption\A192GCMKW;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\A192KW;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\A256GCMKW;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\A256KW;
+use Jose\Component\Encryption\Algorithm\KeyEncryption\Dir;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\ECDHES;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\ECDHESA128KW;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\ECDHESA192KW;
@@ -93,6 +94,7 @@ final class AlgorithmsFactory
         'RSA-OAEP-256' => RSAOAEP256::class,
         'RSA1_5' => RSA15::class,
         'none' => None::class,
+        'dir' => Dir::class,
     ];
 
     /**
