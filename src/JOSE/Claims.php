@@ -6,9 +6,8 @@ namespace DigitalCz\OpenIDConnect\JOSE;
 
 use DigitalCz\OpenIDConnect\Exception\RuntimeException;
 use DigitalCz\OpenIDConnect\Param\Params;
+use DigitalCz\OpenIDConnect\Util\Base64;
 use DigitalCz\OpenIDConnect\Util\Json;
-
-use function Safe\base64_decode;
 
 final class Claims extends Params
 {
@@ -20,7 +19,7 @@ final class Claims extends Params
             throw new RuntimeException('Invalid token');
         }
 
-        $payload = base64_decode($parts[1], true);
+        $payload = Base64::urlDecode($parts[1]);
 
         return new self(Json::decode($payload));
     }
