@@ -14,6 +14,9 @@ final class TokenVerifierFactory
 {
     public static function create(Config $config): TokenVerifier
     {
-        return new TokenVerifier(new SignatureChecker($config, new JOSEFactory()), new ClaimsChecker($config));
+        return new TokenVerifier(
+            new SignatureChecker($config->getProviderMetadata(), new JOSEFactory()),
+            new ClaimsChecker($config)
+        );
     }
 }

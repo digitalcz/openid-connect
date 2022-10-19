@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\JOSE;
 
-use DigitalCz\OpenIDConnect\Config;
+use DigitalCz\OpenIDConnect\ProviderMetadata;
 use Jose\Component\Checker\AlgorithmChecker;
 use Jose\Component\Checker\HeaderCheckerManager;
 use Jose\Component\Core\AlgorithmManagerFactory;
@@ -26,9 +26,9 @@ final class JOSEFactory
         }
     }
 
-    public function createJWSLoader(Config $config): JWSLoader
+    public function createJWSLoader(ProviderMetadata $providerMetadata): JWSLoader
     {
-        $algorithms = $this->resolveAlgorithms($config);
+        $algorithms = $this->resolveAlgorithms($providerMetadata);
 
         return new JWSLoader(
             new JWSSerializerManager([new CompactSerializer()]),
@@ -38,10 +38,8 @@ final class JOSEFactory
     }
 
     /** @return string[] */
-    private function resolveAlgorithms(Config $config): array
+    private function resolveAlgorithms(ProviderMetadata $providerMetadata): array
     {
-        $providerMetadata = $config->getProviderMetadata();
-
         return array_unique(
             array_merge(
                 $providerMetadata->idTokenSigningAlgValuesSupported(),
