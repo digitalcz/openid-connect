@@ -44,6 +44,7 @@
     <!--  Exceptions  -->
     <rule ref="SlevomatCodingStandard.Exceptions">
         <exclude name="SlevomatCodingStandard.Exceptions.RequireNonCapturingCatch"/>
+        <exclude name="SlevomatCodingStandard.Classes.RequireAbstractOrFinal"/>
     </rule>
 
     <!--  Operators  -->
