@@ -51,8 +51,8 @@
     "phpunit/phpunit": "^9.5.25",
     "slevomat/coding-standard": "^7.2.1",
     "squizlabs/php_codesniffer": "^3.7.1",
-    "symfony/cache": "^v6.1.5",
-    "symfony/var-dumper": "^v6.1.6",
+    "symfony/cache": "^v6.0.13",
+    "symfony/var-dumper": "^v6.0.14",
     "thecodingmachine/phpstan-safe-rule": "^1.2",
     "web-token/jwt-easy": "^2.2"
   },
