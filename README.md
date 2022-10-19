@@ -28,9 +28,9 @@ $ composer require digitalcz/openid-connect
 use DigitalCz\OpenIDConnect\ClientMetadata;
 use DigitalCz\OpenIDConnect\Factory\ClientFactory;
 
-$discoveryUri = 'https://example.com/.well-known/openid-configuration';
+$issuerUrl = 'https://example.com';
 $clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
-$client = ClientFactory::create($discoveryUri, $clientMetadata);
+$client = ClientFactory::create($issuerUrl, $clientMetadata);
 ```
 
 <details>

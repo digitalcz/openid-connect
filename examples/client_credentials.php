@@ -9,9 +9,9 @@ use DigitalCz\OpenIDConnect\Param\TokenParams;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-$discoveryUri = 'https://accounts.google.com/.well-known/openid-configuration';
+$issuerUrl = 'https://accounts.google.com';
 $clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
-$client = ClientFactory::create($discoveryUri, $clientMetadata);
+$client = ClientFactory::create($issuerUrl, $clientMetadata);
 
 $tokens = $client->requestTokens(new TokenParams(new ClientCredentials(), ['scope' => 'profile']));
 

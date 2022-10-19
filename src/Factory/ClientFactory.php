@@ -13,14 +13,15 @@ use Psr\SimpleCache\CacheInterface;
 final class ClientFactory
 {
     public static function create(
-        string $discoveryUri,
+        string $issuerUrl,
         ClientMetadata $clientMetadata,
         ?HttpClient $httpClient = null,
         ?CacheInterface $cache = null
     ): Client {
         $httpClient ??= HttpClientFactory::create();
         $discoverer = DiscovererFactory::create($httpClient, $cache);
-        $config = new Config($discoverer->discover($discoveryUri), $clientMetadata);
+        $providerMetadata = $discoverer->discover($issuerUrl);
+        $config = new Config($providerMetadata, $clientMetadata);
         $tokenVerifier = TokenVerifierFactory::create($config);
 
         return new Client($config, $httpClient, $tokenVerifier);

@@ -8,9 +8,8 @@ use DigitalCz\OpenIDConnect\Param\AuthorizationParams;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-$discoveryUri = 'https://accounts.google.com/.well-known/openid-configuration';
 $clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
-$client = ClientFactory::create($discoveryUri, $clientMetadata);
+$client = ClientFactory::create('https://accounts.google.com', $clientMetadata);
 
 echo $client->getAuthorizationUrl(
     new AuthorizationParams([

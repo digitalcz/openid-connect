@@ -18,15 +18,15 @@ final class CachedDiscoverer implements Discoverer
     ) {
     }
 
-    public function discover(string $uri): ProviderMetadata
+    public function discover(string $issuerUrl): ProviderMetadata
     {
-        $key = 'oidc_discoverer_' . base64_encode($uri);
+        $key = 'oidc_discoverer_' . base64_encode($issuerUrl);
 
         if ($this->cache->has($key)) {
             return $this->cache->get($key);
         }
 
-        $metadata = $this->inner->discover($uri);
+        $metadata = $this->inner->discover($issuerUrl);
         $this->cache->set($key, $metadata, $this->ttl);
 
         return $metadata;

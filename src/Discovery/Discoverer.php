@@ -12,5 +12,5 @@ interface Discoverer
     /**
      * @throws DiscoveryException
      */
-    public function discover(string $uri): ProviderMetadata;
+    public function discover(string $issuerUrl): ProviderMetadata;
 }

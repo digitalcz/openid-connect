@@ -20,9 +20,13 @@ final class HttpDiscoverer implements Discoverer
     /**
      * @throws DiscoveryException
      */
-    public function discover(string $uri): ProviderMetadata
+    public function discover(string $issuerUrl): ProviderMetadata
     {
-        $configuration = $this->sendRequest($uri);
+        if (!str_ends_with($issuerUrl, '/.well-known/openid-configuration')) {
+            $issuerUrl .= '/.well-known/openid-configuration';
+        }
+
+        $configuration = $this->sendRequest($issuerUrl);
         $jwks = $this->sendRequest($configuration['jwks_uri']);
 
         return new ProviderMetadata($configuration, JWKSet::createFromKeyData($jwks));
@@ -31,9 +35,9 @@ final class HttpDiscoverer implements Discoverer
     /**
      * @return array<string, mixed>
      */
-    private function sendRequest(string $uri): array
+    private function sendRequest(string $issuerUrl): array
     {
-        $request = $this->httpClient->createRequest('GET', $uri);
+        $request = $this->httpClient->createRequest('GET', $issuerUrl);
 
         try {
             $response = $this->httpClient->sendRequest($request);
@@ -44,7 +48,7 @@ final class HttpDiscoverer implements Discoverer
         try {
             return $this->httpClient->parseResponse($response);
         } catch (RuntimeException $e) {
-            throw new DiscoveryException('Unable to parse response from ' . $uri, $e->getCode(), $e);
+            throw new DiscoveryException('Unable to parse response from ' . $issuerUrl, $e->getCode(), $e);
         }
     }
 }
