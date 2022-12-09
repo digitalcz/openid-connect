@@ -193,6 +193,6 @@ final class Client
 
     private function createTokenVerifier(): TokenVerifierInterface
     {
-        return TokenVerifierFactory::create($this->getConfig());
+        return TokenVerifierFactory::create($this->getProviderMetadata());
     }
 }

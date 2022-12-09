@@ -51,11 +51,7 @@ $providerMetadata = new ProviderMetadata([
     // ...
 ])
 $config = new Config($providerMetadata, $clientMetadata);
-$client = new Client(
-    $config,
-    HttpClientFactory::create(),
-    TokenVerifierFactory::create($config)
-);
+$client = new Client($config, HttpClientFactory::create());
 ```
 </details>
 
