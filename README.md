@@ -95,8 +95,6 @@ $tokens = $client->handleCallback(
 
 ```php
 use DigitalCz\OpenIDConnect\Grant\ClientCredentials;
-use DigitalCz\OpenIDConnect\Param\CallbackChecks;
-use DigitalCz\OpenIDConnect\Param\CallbackParams;
 use DigitalCz\OpenIDConnect\Param\TokenParams;
 
 $tokens = $client->requestTokens(
