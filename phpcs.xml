@@ -70,9 +70,10 @@
     <!--  Files  -->
     <rule ref="SlevomatCodingStandard.Files">
         <exclude name="SlevomatCodingStandard.Files.TypeNameMatchesFileName"/>
+        <exclude name="SlevomatCodingStandard.Files.FileLength"/>
         <properties>
             <property name="lineLengthLimit" value="180"/>
-            <property name="maxLinesLength" value="50" />
+            <property name="maxLinesLength" value="100" />
         </properties>
     </rule>
 
@@ -111,6 +112,7 @@
                 <element value="static properties"/>
                 <element value="public properties"/>
                 <element value="properties"/>
+                <element value="enum cases"/>
 
                 <!-- methods -->
                 <element value="constructor, static constructors"/>

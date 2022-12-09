@@ -9,7 +9,7 @@ class Params
     /**
      * @param array<string, mixed> $parameters
      */
-    public function __construct(private array $parameters = [])
+    public function __construct(private readonly array $parameters = [])
     {
     }
 

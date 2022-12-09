@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Token;
 
-use DigitalCz\OpenIDConnect\JOSE\Claims;
 use DigitalCz\OpenIDConnect\Param\Params;
 
 final class Tokens extends Params
@@ -25,47 +24,38 @@ final class Tokens extends Params
         parent::__construct($parameters);
     }
 
-    public function getAccessToken(): string
+    public function accessToken(): string
     {
         return $this->getString(self::ACCESS_TOKEN);
     }
 
-    public function getIdToken(): ?string
+    public function idToken(): ?string
     {
         return $this->get(self::ID_TOKEN);
     }
 
-    public function getIdTokenClaims(): ?Claims
-    {
-        if ($this->getIdToken() === null) {
-            return null;
-        }
-
-        return Claims::fromToken($this->getIdToken());
-    }
-
-    public function getRefreshToken(): ?string
+    public function refreshToken(): ?string
     {
         return $this->get(self::REFRESH_TOKEN);
     }
 
-    public function getExpiresIn(): ?int
+    public function expiresIn(): ?int
     {
         return $this->get(self::EXPIRES_IN, 0);
     }
 
-    public function getExpires(): int
+    public function expires(): int
     {
         return $this->getInt(self::EXPIRES, 0);
     }
 
-    public function getScope(): ?string
+    public function scope(): ?string
     {
         return $this->get(self::SCOPE);
     }
 
     public function isExpired(): bool
     {
-        return $this->getExpires() <= time();
+        return $this->expires() <= time();
     }
 }

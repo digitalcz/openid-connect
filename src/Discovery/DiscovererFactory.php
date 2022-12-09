@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DigitalCz\OpenIDConnect\Factory;
+namespace DigitalCz\OpenIDConnect\Discovery;
 
-use DigitalCz\OpenIDConnect\Discovery\CachedDiscoverer;
-use DigitalCz\OpenIDConnect\Discovery\Discoverer;
-use DigitalCz\OpenIDConnect\Discovery\HttpDiscoverer;
 use DigitalCz\OpenIDConnect\Http\HttpClient;
+use DigitalCz\OpenIDConnect\Http\HttpClientFactory;
 use Psr\SimpleCache\CacheInterface;
 
 final class DiscovererFactory

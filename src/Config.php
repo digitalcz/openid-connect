@@ -6,16 +6,18 @@ namespace DigitalCz\OpenIDConnect;
 
 final class Config
 {
-    public function __construct(private ProviderMetadata $providerMetadata, private ClientMetadata $clientMetadata)
-    {
+    public function __construct(
+        private readonly ProviderMetadata $providerMetadata,
+        private readonly ClientMetadata $clientMetadata
+    ) {
     }
 
-    public function getProviderMetadata(): ProviderMetadata
+    public function providerMetadata(): ProviderMetadata
     {
         return $this->providerMetadata;
     }
 
-    public function getClientMetadata(): ClientMetadata
+    public function clientMetadata(): ClientMetadata
     {
         return $this->clientMetadata;
     }

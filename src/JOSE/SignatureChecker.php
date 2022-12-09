@@ -10,15 +10,17 @@ use Jose\Component\Signature\JWSLoader;
 
 final class SignatureChecker implements SignatureCheckerInterface
 {
-    public function __construct(private ProviderMetadata $providerMetadata, private JOSEFactory $JOSEFactory)
-    {
+    public function __construct(
+        private readonly ProviderMetadata $providerMetadata,
+        private readonly JOSEFactory $JOSEFactory
+    ) {
     }
 
     public function check(string $token): void
     {
-        $jwks = $this->providerMetadata->getJwks()
+        $jwkSet = $this->providerMetadata->jwks()
             ?? throw new AuthorizationException('Cannot check token signature without JWKs.');
-        $this->createJWSLoader()->loadAndVerifyWithKeySet($token, $jwks, $signature);
+        $this->createJWSLoader()->loadAndVerifyWithKeySet($token, $jwkSet, $signature);
     }
 
     private function createJWSLoader(): JWSLoader

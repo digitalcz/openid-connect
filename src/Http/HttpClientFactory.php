@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace DigitalCz\OpenIDConnect\Factory;
+namespace DigitalCz\OpenIDConnect\Http;
 
-use DigitalCz\OpenIDConnect\Http\HttpClient;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
 use Psr\Http\Client\ClientInterface;

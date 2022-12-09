@@ -13,7 +13,7 @@ use Psr\Http\Client\ClientExceptionInterface;
 
 final class HttpDiscoverer implements Discoverer
 {
-    public function __construct(private HttpClient $httpClient)
+    public function __construct(private readonly HttpClient $httpClient)
     {
     }
 

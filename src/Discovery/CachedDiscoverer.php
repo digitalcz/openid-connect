@@ -12,9 +12,9 @@ final class CachedDiscoverer implements Discoverer
     public const DEFAULT_TTL = 3600;
 
     public function __construct(
-        private Discoverer $inner,
-        private CacheInterface $cache,
-        private int $ttl = self::DEFAULT_TTL
+        private readonly Discoverer $inner,
+        private readonly CacheInterface $cache,
+        private readonly int $ttl = self::DEFAULT_TTL
     ) {
     }
 

@@ -20,10 +20,10 @@ use Psr\Http\Message\UriInterface;
 final class HttpClient implements ClientInterface, RequestFactoryInterface, UriFactoryInterface, StreamFactoryInterface
 {
     public function __construct(
-        private ClientInterface $httpClient,
-        private RequestFactoryInterface $requestFactory,
-        private UriFactoryInterface $uriFactory,
-        private StreamFactoryInterface $streamFactory
+        private readonly ClientInterface $httpClient,
+        private readonly RequestFactoryInterface $requestFactory,
+        private readonly UriFactoryInterface $uriFactory,
+        private readonly StreamFactoryInterface $streamFactory
     ) {
     }
 

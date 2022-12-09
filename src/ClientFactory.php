@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DigitalCz\OpenIDConnect\Factory;
+namespace DigitalCz\OpenIDConnect;
 
-use DigitalCz\OpenIDConnect\Client;
-use DigitalCz\OpenIDConnect\ClientMetadata;
-use DigitalCz\OpenIDConnect\Config;
+use DigitalCz\OpenIDConnect\Discovery\DiscovererFactory;
 use DigitalCz\OpenIDConnect\Http\HttpClient;
+use DigitalCz\OpenIDConnect\Http\HttpClientFactory;
 use Psr\SimpleCache\CacheInterface;
 
 final class ClientFactory
@@ -22,8 +21,7 @@ final class ClientFactory
         $discoverer = DiscovererFactory::create($httpClient, $cache);
         $providerMetadata = $discoverer->discover($issuerUrl);
         $config = new Config($providerMetadata, $clientMetadata);
-        $tokenVerifier = TokenVerifierFactory::create($config);
 
-        return new Client($config, $httpClient, $tokenVerifier);
+        return new Client($config, $httpClient);
     }
 }

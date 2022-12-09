@@ -11,12 +11,11 @@ final class NonceChecker implements ClaimChecker
 {
     private const CLAIM_NAME = 'nonce';
 
-    public function __construct(private ?string $nonce = null)
+    public function __construct(private readonly ?string $nonce = null)
     {
     }
 
-    /** @inheritDoc */
-    public function checkClaim($value): void
+    public function checkClaim(mixed $value): void
     {
         if ($this->nonce !== null && $value !== $this->nonce) {
             throw new InvalidClaimException('Invalid nonce.', self::CLAIM_NAME, $value);

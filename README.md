@@ -26,7 +26,7 @@ $ composer require digitalcz/openid-connect
 
 ```php
 use DigitalCz\OpenIDConnect\ClientMetadata;
-use DigitalCz\OpenIDConnect\Factory\ClientFactory;
+use DigitalCz\OpenIDConnect\ClientFactory;
 
 $issuerUrl = 'https://example.com';
 $clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
@@ -40,8 +40,8 @@ $client = ClientFactory::create($issuerUrl, $clientMetadata);
 use DigitalCz\OpenIDConnect\Client;
 use DigitalCz\OpenIDConnect\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config;
-use DigitalCz\OpenIDConnect\Factory\HttpClientFactory;
-use DigitalCz\OpenIDConnect\Factory\TokenVerifierFactory;
+use DigitalCz\OpenIDConnect\Http\HttpClientFactory;
+use DigitalCz\OpenIDConnect\Token\TokenVerifierFactory;
 use DigitalCz\OpenIDConnect\ProviderMetadata;
 
 $clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');

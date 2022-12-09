@@ -255,7 +255,7 @@ final class ProviderMetadata extends Params
     /**
      * @return JWKSet<JWK>|null
      */
-    public function getJwks(): ?JWKSet
+    public function jwks(): ?JWKSet
     {
         return $this->jwks;
     }

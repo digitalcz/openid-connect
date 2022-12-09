@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Exception;
 
-use function Safe\sprintf;
-
 class AuthorizationException extends RuntimeException
 {
     public static function error(string $error, ?string $errorDescription = null): self

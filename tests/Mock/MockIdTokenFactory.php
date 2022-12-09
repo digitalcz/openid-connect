@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Mock;
 
+use DigitalCz\OpenIDConnect\Util\Json;
+use Jose\Component\Core\AlgorithmManager;
 use Jose\Component\Core\JWKSet;
-use Jose\Easy\Build;
-use Jose\Easy\JWSBuilder;
+use Jose\Component\Signature\Algorithm\ES256;
+use Jose\Component\Signature\JWSBuilder;
+use Jose\Component\Signature\Serializer\CompactSerializer;
 
 use function Safe\file_get_contents;
 
@@ -16,18 +19,24 @@ final class MockIdTokenFactory
     {
         $jwks = JWKSet::createFromJson(file_get_contents(TESTS_DIR . '/Mock/jwks.json'));
 
-        /** @var JWSBuilder $jwsBuilder */
-        $jwsBuilder = Build::jws()
-            ->exp(time() + 3600)
-            ->iat(time())
-            ->nbf(time())
-            ->jti('12345')
-            ->alg('ES256')
-            ->iss('https://example.com')
-            ->aud('foo')
-            ->sub('subject')
-            ->claim('foo', 'bar');
+        $algorithmManager = new AlgorithmManager([new ES256()]);
+        $jwsBuilder = new JWSBuilder($algorithmManager);
+        $serializer = new CompactSerializer();
 
-        return $jwsBuilder->sign($jwks->get('sign'));
+        $jws = $jwsBuilder->create()
+            ->withPayload(Json::encode([
+                'exp' => time() + 3600,
+                'iat' => time(),
+                'nbf' => time(),
+                'jti' => '12345',
+                'iss' => 'https://example.com',
+                'aud' => 'foo',
+                'sub' => 'subject',
+                'foo' => 'bar',
+            ]))
+            ->addSignature($jwks->get('sign'), ['alg' => 'ES256'])
+            ->build();
+
+        return $serializer->serialize($jws);
     }
 }

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use DigitalCz\OpenIDConnect\ClientFactory;
 use DigitalCz\OpenIDConnect\ClientMetadata;
-use DigitalCz\OpenIDConnect\Factory\ClientFactory;
 use DigitalCz\OpenIDConnect\Param\CallbackChecks;
 use DigitalCz\OpenIDConnect\Param\CallbackParams;
 

@@ -6,7 +6,7 @@ namespace DigitalCz\OpenIDConnect\Param;
 
 final class CallbackChecks
 {
-    public function __construct(private ?string $state = null, private ?string $nonce = null)
+    public function __construct(private readonly ?string $state = null, private readonly ?string $nonce = null)
     {
     }
 

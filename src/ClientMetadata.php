@@ -6,6 +6,7 @@ namespace DigitalCz\OpenIDConnect;
 
 use DigitalCz\OpenIDConnect\Authentication\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Authentication\ClientSecretPost;
+use DigitalCz\OpenIDConnect\Exception\MissingParamException;
 
 final class ClientMetadata
 {
@@ -13,15 +14,12 @@ final class ClientMetadata
     public const CLIENT_SECRET = 'client_secret';
     public const REDIRECT_URI = 'redirect_uri';
 
-    private AuthenticationMethod $authenticationMethod;
-
     public function __construct(
-        private string $id,
-        private string $secret,
-        private ?string $redirectUri = null,
-        ?AuthenticationMethod $authenticationMethod = null
+        private readonly string $id,
+        private readonly ?string $secret = null,
+        private readonly ?string $redirectUri = null,
+        private readonly ?AuthenticationMethod $authenticationMethod = new ClientSecretPost()
     ) {
-        $this->authenticationMethod = $authenticationMethod ?? new ClientSecretPost();
     }
 
     public function id(): string
@@ -31,7 +29,7 @@ final class ClientMetadata
 
     public function secret(): string
     {
-        return $this->secret;
+        return $this->secret ?? throw new MissingParamException('client_secret');
     }
 
     public function redirectUri(): ?string
@@ -39,7 +37,7 @@ final class ClientMetadata
         return $this->redirectUri;
     }
 
-    public function authenticationMethod(): AuthenticationMethod
+    public function authenticationMethod(): ?AuthenticationMethod
     {
         return $this->authenticationMethod;
     }

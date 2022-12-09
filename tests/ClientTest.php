@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect;
 
 use DigitalCz\OpenIDConnect\Exception\AuthorizationException;
-use DigitalCz\OpenIDConnect\Factory\ClientFactory;
-use DigitalCz\OpenIDConnect\Factory\HttpClientFactory;
 use DigitalCz\OpenIDConnect\Grant\ClientCredentials;
+use DigitalCz\OpenIDConnect\Http\HttpClientFactory;
 use DigitalCz\OpenIDConnect\Mock\MockClientFactory;
 use DigitalCz\OpenIDConnect\Mock\MockIdTokenFactory;
 use DigitalCz\OpenIDConnect\Param\AuthorizationParams;
@@ -15,6 +14,7 @@ use DigitalCz\OpenIDConnect\Param\CallbackChecks;
 use DigitalCz\OpenIDConnect\Param\CallbackParams;
 use DigitalCz\OpenIDConnect\Param\TokenParams;
 use DigitalCz\OpenIDConnect\Util\Json;
+use DigitalCz\OpenIDConnect\Util\JWT;
 use Http\Message\RequestMatcher\RequestMatcher;
 use Nyholm\Psr7\Request;
 use Nyholm\Psr7\Response;
@@ -72,10 +72,10 @@ class ClientTest extends TestCase
             new CallbackChecks('foo')
         );
 
-        self::assertSame('foo_token', $tokens->getAccessToken());
-        self::assertSame('bar_token', $tokens->getRefreshToken());
-        self::assertSame($idToken, $tokens->getIdToken());
-        self::assertSame('bar', $tokens->getIdTokenClaims()?->get('foo'));
+        self::assertSame('foo_token', $tokens->accessToken());
+        self::assertSame('bar_token', $tokens->refreshToken());
+        self::assertSame($idToken, $tokens->idToken());
+        self::assertSame('bar', JWT::claim($tokens->idToken(), 'foo'));
 
         $authenticatedClient = $client->getAuthenticatedClient($tokens);
         $authenticatedClient->sendRequest(new Request('GET', 'https://example.com'));
@@ -138,8 +138,8 @@ class ClientTest extends TestCase
         );
         $tokens = $client->requestTokens(new TokenParams(new ClientCredentials(), ['scope' => 'all']));
 
-        self::assertSame('foo_token', $tokens->getAccessToken());
-        self::assertSame('bar_token', $tokens->getRefreshToken());
+        self::assertSame('foo_token', $tokens->accessToken());
+        self::assertSame('bar_token', $tokens->refreshToken());
 
         $lastRequest = $mockClient->getLastRequest();
         self::assertSame('POST', $lastRequest->getMethod());
