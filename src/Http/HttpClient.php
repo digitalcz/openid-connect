@@ -23,7 +23,7 @@ final class HttpClient implements ClientInterface, RequestFactoryInterface, UriF
         private readonly ClientInterface $httpClient,
         private readonly RequestFactoryInterface $requestFactory,
         private readonly UriFactoryInterface $uriFactory,
-        private readonly StreamFactoryInterface $streamFactory
+        private readonly StreamFactoryInterface $streamFactory,
     ) {
     }
 
@@ -39,6 +39,9 @@ final class HttpClient implements ClientInterface, RequestFactoryInterface, UriF
         return $response;
     }
 
+    /**
+     * @param UriInterface|string $uri
+     */
     public function createRequest(string $method, $uri): RequestInterface
     {
         return $this->requestFactory->createRequest($method, $uri);
@@ -59,6 +62,9 @@ final class HttpClient implements ClientInterface, RequestFactoryInterface, UriF
         return $this->streamFactory->createStreamFromFile($filename, $mode);
     }
 
+    /**
+     * @param resource $resource
+     */
     public function createStreamFromResource($resource): StreamInterface
     {
         return $this->streamFactory->createStreamFromResource($resource);
@@ -73,7 +79,6 @@ final class HttpClient implements ClientInterface, RequestFactoryInterface, UriF
     }
 
     /**
-     * @param ResponseInterface $response
      * @return mixed[]
      */
     public function parseResponse(ResponseInterface $response): array

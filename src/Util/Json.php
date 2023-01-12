@@ -14,7 +14,6 @@ final class Json
 {
     /**
      * @param mixed[] $payload
-     * @return string
      *
      * @throws SafeJsonException|JsonException
      */
@@ -24,7 +23,6 @@ final class Json
     }
 
     /**
-     * @param string $json
      * @return mixed[]
      *
      * @throws SafeJsonException|JsonException

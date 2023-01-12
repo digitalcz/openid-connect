@@ -12,7 +12,7 @@ class HttpException extends RuntimeException implements ClientExceptionInterface
 {
     public function __construct(
         private readonly RequestInterface $request,
-        private readonly ResponseInterface $response
+        private readonly ResponseInterface $response,
     ) {
         parent::__construct(sprintf(
             '%s %s returned for %s %s %s',
@@ -20,7 +20,7 @@ class HttpException extends RuntimeException implements ClientExceptionInterface
             $response->getReasonPhrase(),
             $request->getMethod(),
             $request->getUri(),
-            $response->getBody()
+            $response->getBody(),
         ));
     }
 

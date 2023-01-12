@@ -13,7 +13,6 @@ final class TokenParams extends Params
     public const SCOPE = 'scope';
 
     /**
-     * @param GrantType $grantType
      * @param array<string, mixed> $parameters
      */
     public function __construct(private readonly GrantType $grantType, array $parameters = [])

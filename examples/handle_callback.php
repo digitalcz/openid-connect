@@ -19,7 +19,7 @@ $parameters = ['state' => 'foo', 'code' => 'bar'];
 
 $tokens = $client->handleCallback(
     new CallbackParams($parameters),
-    new CallbackChecks('foo', 'bar')
+    new CallbackChecks('foo', 'bar'),
 );
 
 dump($tokens);

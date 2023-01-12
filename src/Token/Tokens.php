@@ -15,6 +15,9 @@ final class Tokens extends Params
     public const EXPIRES = 'expires';
     public const SCOPE = 'scope';
 
+    /**
+     * @param array<string, int|string> $parameters
+     */
     public function __construct(array $parameters = [])
     {
         if (isset($parameters[self::EXPIRES_IN]) && !isset($parameters[self::EXPIRES])) {

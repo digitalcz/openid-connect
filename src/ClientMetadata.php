@@ -18,7 +18,7 @@ final class ClientMetadata
         private readonly string $id,
         private readonly ?string $secret = null,
         private readonly ?string $redirectUri = null,
-        private readonly ?AuthenticationMethod $authenticationMethod = new ClientSecretPost()
+        private readonly ?AuthenticationMethod $authenticationMethod = new ClientSecretPost(),
     ) {
     }
 

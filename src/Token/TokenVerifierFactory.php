@@ -14,7 +14,7 @@ final class TokenVerifierFactory
     public static function create(
         ProviderMetadata $providerMetadata,
         ?SignatureChecker $signatureChecker = null,
-        ?ClaimsChecker $claimsChecker = null
+        ?ClaimsChecker $claimsChecker = null,
     ): TokenVerifier {
         $signatureChecker ??= new SignatureChecker($providerMetadata, new JOSEFactory());
         $claimsChecker ??= new ClaimsChecker();
