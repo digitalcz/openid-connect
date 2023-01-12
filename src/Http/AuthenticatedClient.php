@@ -15,7 +15,7 @@ final class AuthenticatedClient implements ClientInterface
     public function __construct(
         private readonly Client $client,
         private readonly HttpClient $httpClient,
-        private Tokens $tokens
+        private Tokens $tokens,
     ) {
     }
 
@@ -24,7 +24,7 @@ final class AuthenticatedClient implements ClientInterface
         $this->tokens = $this->client->refreshTokens($this->tokens);
 
         return $this->httpClient->sendRequest(
-            $request->withHeader('Authorization', "Bearer {$this->tokens->accessToken()}")
+            $request->withHeader('Authorization', "Bearer {$this->tokens->accessToken()}"),
         );
     }
 }

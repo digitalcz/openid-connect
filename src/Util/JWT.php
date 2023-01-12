@@ -52,7 +52,7 @@ final class JWT
             self::parse($jwt);
 
             return true;
-        } catch (UnexpectedValueException $e) {
+        } catch (UnexpectedValueException) {
             return false;
         }
     }

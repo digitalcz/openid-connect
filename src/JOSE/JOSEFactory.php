@@ -33,7 +33,7 @@ final class JOSEFactory
         return new JWSLoader(
             new JWSSerializerManager([new CompactSerializer()]),
             new JWSVerifier($this->algorithmManagerFactory->create($algorithms)),
-            new HeaderCheckerManager([new AlgorithmChecker($algorithms)], [new JWSTokenSupport()])
+            new HeaderCheckerManager([new AlgorithmChecker($algorithms)], [new JWSTokenSupport()]),
         );
     }
 
@@ -44,8 +44,8 @@ final class JOSEFactory
             array_merge(
                 $providerMetadata->idTokenSigningAlgValuesSupported(),
                 $providerMetadata->idTokenEncryptionAlgValuesSupported(),
-                $providerMetadata->idTokenEncryptionEncValuesSupported()
-            )
+                $providerMetadata->idTokenEncryptionEncValuesSupported(),
+            ),
         );
     }
 }

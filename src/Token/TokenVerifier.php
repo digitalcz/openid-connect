@@ -13,7 +13,7 @@ final class TokenVerifier implements TokenVerifierInterface
 {
     public function __construct(
         private readonly SignatureCheckerInterface $signatureChecker,
-        private readonly ClaimsCheckerInterface $claimsChecker
+        private readonly ClaimsCheckerInterface $claimsChecker,
     ) {
     }
 

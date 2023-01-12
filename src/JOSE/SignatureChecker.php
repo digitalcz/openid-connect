@@ -12,7 +12,7 @@ final class SignatureChecker implements SignatureCheckerInterface
 {
     public function __construct(
         private readonly ProviderMetadata $providerMetadata,
-        private readonly JOSEFactory $JOSEFactory
+        private readonly JOSEFactory $JOSEFactory,
     ) {
     }
 

@@ -17,13 +17,13 @@ final class HttpClientFactory
         ?ClientInterface $httpClient = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?UriFactoryInterface $uriFactory = null,
-        ?StreamFactoryInterface $streamFactory = null
+        ?StreamFactoryInterface $streamFactory = null,
     ): HttpClient {
         return new HttpClient(
             $httpClient ?? Psr18ClientDiscovery::find(),
             $requestFactory ?? Psr17FactoryDiscovery::findRequestFactory(),
             $uriFactory ?? Psr17FactoryDiscovery::findUriFactory(),
-            $streamFactory ?? Psr17FactoryDiscovery::findStreamFactory()
+            $streamFactory ?? Psr17FactoryDiscovery::findStreamFactory(),
         );
     }
 }

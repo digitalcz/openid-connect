@@ -8,7 +8,7 @@ final class Config
 {
     public function __construct(
         private readonly ProviderMetadata $providerMetadata,
-        private readonly ClientMetadata $clientMetadata
+        private readonly ClientMetadata $clientMetadata,
     ) {
     }
 

@@ -15,7 +15,7 @@ final class ClientFactory
         string $issuerUrl,
         ClientMetadata $clientMetadata,
         ?HttpClient $httpClient = null,
-        ?CacheInterface $cache = null
+        ?CacheInterface $cache = null,
     ): Client {
         $httpClient ??= HttpClientFactory::create();
         $discoverer = DiscovererFactory::create($httpClient, $cache);

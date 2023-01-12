@@ -75,7 +75,7 @@ final class Client
                     new IssuedAtChecker(10),
                     new NotBeforeChecker(10),
                     new NonceChecker($checks->nonce()),
-                ]
+                ],
             );
             $this->createTokenVerifier()->verify($tokens->idToken(), $claimsChecks);
         }
@@ -138,8 +138,8 @@ final class Client
                 new RefreshToken(),
                 [
                     'refresh_token' => $tokens->refreshToken(),
-                ]
-            )
+                ],
+            ),
         );
     }
 

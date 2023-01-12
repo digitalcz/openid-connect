@@ -18,11 +18,11 @@ final class MockClientFactory
         $mockClient = new MockClient();
         $mockClient->on(
             new RequestMatcher("/.well-known/openid-configuration"),
-            new Response(body: file_get_contents(TESTS_DIR . '/Mock/configuration.json'))
+            new Response(body: file_get_contents(TESTS_DIR . '/Mock/configuration.json')),
         );
         $mockClient->on(
             new RequestMatcher("/.well-known/jwks"),
-            new Response(body: file_get_contents(TESTS_DIR . '/Mock/jwks.json'))
+            new Response(body: file_get_contents(TESTS_DIR . '/Mock/jwks.json')),
         );
 
         return $mockClient;

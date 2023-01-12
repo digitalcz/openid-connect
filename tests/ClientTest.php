@@ -30,11 +30,11 @@ class ClientTest extends TestCase
         $client = ClientFactory::create(
             'https://example.com/.well-known/openid-configuration',
             new ClientMetadata('foo', 'bar', 'https://example.com/callback'),
-            HttpClientFactory::create(MockClientFactory::create())
+            HttpClientFactory::create(MockClientFactory::create()),
         );
 
         $url = $client->getAuthorizationUrl(
-            new AuthorizationParams(['scope' => 'openid profile', 'state' => 'bar', 'nonce' => 'moo'])
+            new AuthorizationParams(['scope' => 'openid profile', 'state' => 'bar', 'nonce' => 'moo']),
         );
 
         self::assertSame('example.com', $url->getHost());
@@ -58,18 +58,18 @@ class ClientTest extends TestCase
                 'access_token' => 'foo_token',
                 'refresh_token' => 'bar_token',
                 'id_token' => $idToken,
-            ]))
+            ])),
         );
 
         $client = ClientFactory::create(
             'https://example.com/.well-known/openid-configuration',
             new ClientMetadata('foo', 'bar', 'https://example.com/callback'),
-            HttpClientFactory::create($mockClient)
+            HttpClientFactory::create($mockClient),
         );
 
         $tokens = $client->handleCallback(
             new CallbackParams(['state' => 'foo', 'code' => 'bar']),
-            new CallbackChecks('foo')
+            new CallbackChecks('foo'),
         );
 
         self::assertSame('foo_token', $tokens->accessToken());
@@ -82,7 +82,7 @@ class ClientTest extends TestCase
 
         self::assertSame(
             'Bearer foo_token',
-            $mockClient->getLastRequest()->getHeaderLine('Authorization')
+            $mockClient->getLastRequest()->getHeaderLine('Authorization'),
         );
     }
 
@@ -91,7 +91,7 @@ class ClientTest extends TestCase
         $client = ClientFactory::create(
             'https://example.com/.well-known/openid-configuration',
             new ClientMetadata('foo', 'bar', 'https://example.com/callback'),
-            HttpClientFactory::create(MockClientFactory::create())
+            HttpClientFactory::create(MockClientFactory::create()),
         );
 
         $this->expectException(AuthorizationException::class);
@@ -99,7 +99,7 @@ class ClientTest extends TestCase
 
         $client->handleCallback(
             new CallbackParams(['error' => 'Foo', 'error_description' => 'bar']),
-            new CallbackChecks()
+            new CallbackChecks(),
         );
     }
 
@@ -108,7 +108,7 @@ class ClientTest extends TestCase
         $client = ClientFactory::create(
             'https://example.com/.well-known/openid-configuration',
             new ClientMetadata('foo', 'bar', 'https://example.com/callback'),
-            HttpClientFactory::create(MockClientFactory::create())
+            HttpClientFactory::create(MockClientFactory::create()),
         );
 
         $this->expectException(AuthorizationException::class);
@@ -116,7 +116,7 @@ class ClientTest extends TestCase
 
         $client->handleCallback(
             new CallbackParams(['state' => 'foo']),
-            new CallbackChecks('bar')
+            new CallbackChecks('bar'),
         );
     }
 
@@ -128,13 +128,13 @@ class ClientTest extends TestCase
             new Response(body: Json::encode([
                 'access_token' => 'foo_token',
                 'refresh_token' => 'bar_token',
-            ]))
+            ])),
         );
 
         $client = ClientFactory::create(
             'https://example.com/.well-known/openid-configuration',
             new ClientMetadata('foo', 'bar', 'https://example.com/callback'),
-            HttpClientFactory::create($mockClient)
+            HttpClientFactory::create($mockClient),
         );
         $tokens = $client->requestTokens(new TokenParams(new ClientCredentials(), ['scope' => 'all']));
 
@@ -161,12 +161,12 @@ class ClientTest extends TestCase
         $mockClient = MockClientFactory::create();
         $mockClient->on(
             new RequestMatcher('/token'),
-            new Response(status: 404, body: 'Not Found')
+            new Response(status: 404, body: 'Not Found'),
         );
         $client = ClientFactory::create(
             'https://example.com/.well-known/openid-configuration',
             new ClientMetadata('foo', 'bar', 'https://example.com/callback'),
-            HttpClientFactory::create($mockClient)
+            HttpClientFactory::create($mockClient),
         );
 
         $this->expectException(AuthorizationException::class);
@@ -179,12 +179,12 @@ class ClientTest extends TestCase
         $mockClient = MockClientFactory::create();
         $mockClient->on(
             new RequestMatcher('/token'),
-            new Response(body: '{not a: json]')
+            new Response(body: '{not a: json]'),
         );
         $client = ClientFactory::create(
             'https://example.com/.well-known/openid-configuration',
             new ClientMetadata('foo', 'bar', 'https://example.com/callback'),
-            HttpClientFactory::create($mockClient)
+            HttpClientFactory::create($mockClient),
         );
 
         $this->expectException(AuthorizationException::class);

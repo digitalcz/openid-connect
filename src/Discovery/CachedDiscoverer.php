@@ -14,7 +14,7 @@ final class CachedDiscoverer implements Discoverer
     public function __construct(
         private readonly Discoverer $inner,
         private readonly CacheInterface $cache,
-        private readonly int $ttl = self::DEFAULT_TTL
+        private readonly int $ttl = self::DEFAULT_TTL,
     ) {
     }
 

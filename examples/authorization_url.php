@@ -16,5 +16,5 @@ echo $client->getAuthorizationUrl(
         'scope' => 'openid profile',
         'state' => 'foo',
         'nonce' => 'bar',
-    ])
+    ]),
 );
