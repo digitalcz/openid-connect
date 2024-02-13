@@ -16,7 +16,7 @@ final class Tokens extends Params
     public const SCOPE = 'scope';
 
     /**
-     * @param array<string, int|string> $parameters
+     * @param array<string, int|string|null> $parameters
      */
     public function __construct(array $parameters = [])
     {
