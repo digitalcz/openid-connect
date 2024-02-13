@@ -21,7 +21,7 @@ final class Tokens extends Params
     public function __construct(array $parameters = [])
     {
         if (isset($parameters[self::EXPIRES_IN]) && !isset($parameters[self::EXPIRES])) {
-            $parameters[self::EXPIRES] = time() + $parameters[self::EXPIRES_IN];
+            $parameters[self::EXPIRES] = time() + (int)$parameters[self::EXPIRES_IN];
         }
 
         parent::__construct($parameters);
