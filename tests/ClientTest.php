@@ -18,11 +18,10 @@ use DigitalCz\OpenIDConnect\Util\JWT;
 use Http\Message\RequestMatcher\RequestMatcher;
 use Nyholm\Psr7\Request;
 use Nyholm\Psr7\Response;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \DigitalCz\OpenIDConnect\Client
- */
+#[CoversClass(Client::class)]
 class ClientTest extends TestCase
 {
     public function testGetAuthorizationUrl(): void
