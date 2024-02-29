@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
-         bootstrap="tests/bootstrap.php"
-         colors="true"
-         verbose="true"
-         forceCoversAnnotation="true"
-         beStrictAboutOutputDuringTests="true"
-         beStrictAboutTodoAnnotatedTests="true"
->
-  <coverage processUncoveredFiles="true">
-    <include>
-      <directory suffix=".php">src/</directory>
-    </include>
-  </coverage>
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd" bootstrap="tests/bootstrap.php"
+         colors="true" beStrictAboutOutputDuringTests="true" cacheDirectory=".phpunit.cache"
+         requireCoverageMetadata="true">
   <testsuites>
     <testsuite name="DigitalCz Test Suite">
       <directory>tests</directory>
     </testsuite>
   </testsuites>
+  <source>
+    <include>
+      <directory suffix=".php">src/</directory>
+    </include>
+  </source>
 </phpunit>

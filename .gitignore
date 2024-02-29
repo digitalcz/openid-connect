@@ -7,5 +7,5 @@
 
 # Build
 /composer.lock
-.phpunit.result.cache
+.phpunit.cache
 .phpcs.cache
