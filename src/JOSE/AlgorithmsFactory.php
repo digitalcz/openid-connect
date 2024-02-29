@@ -31,19 +31,15 @@ use Jose\Component\Encryption\Algorithm\KeyEncryption\RSAOAEP;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\RSAOAEP256;
 use Jose\Component\Signature\Algorithm\EdDSA;
 use Jose\Component\Signature\Algorithm\ES256;
-use Jose\Component\Signature\Algorithm\ES256K;
 use Jose\Component\Signature\Algorithm\ES384;
 use Jose\Component\Signature\Algorithm\ES512;
-use Jose\Component\Signature\Algorithm\HS1;
 use Jose\Component\Signature\Algorithm\HS256;
-use Jose\Component\Signature\Algorithm\HS256_64;
 use Jose\Component\Signature\Algorithm\HS384;
 use Jose\Component\Signature\Algorithm\HS512;
 use Jose\Component\Signature\Algorithm\None;
 use Jose\Component\Signature\Algorithm\PS256;
 use Jose\Component\Signature\Algorithm\PS384;
 use Jose\Component\Signature\Algorithm\PS512;
-use Jose\Component\Signature\Algorithm\RS1;
 use Jose\Component\Signature\Algorithm\RS256;
 use Jose\Component\Signature\Algorithm\RS384;
 use Jose\Component\Signature\Algorithm\RS512;
@@ -71,12 +67,9 @@ final class AlgorithmsFactory
         'ECDH-ES+A192KW' => ECDHESA192KW::class,
         'ECDH-ES+A256KW' => ECDHESA256KW::class,
         'ES256' => ES256::class,
-        'ES256K' => ES256K::class, // @phpstan-ignore-line
         'ES384' => ES384::class,
         'ES512' => ES512::class,
-        'HS1' => HS1::class,
         'HS256' => HS256::class,
-        'HS256/64' => HS256_64::class,
         'HS384' => HS384::class,
         'HS512' => HS512::class,
         'OKP' => EdDSA::class,
@@ -86,7 +79,6 @@ final class AlgorithmsFactory
         'PS256' => PS256::class,
         'PS384' => PS384::class,
         'PS512' => PS512::class,
-        'RS1' => RS1::class,
         'RS256' => RS256::class,
         'RS384' => RS384::class,
         'RS512' => RS512::class,
