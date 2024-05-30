@@ -28,7 +28,10 @@ final class JOSEFactory
 
     public function createJWSLoader(ProviderMetadata $providerMetadata): JWSLoader
     {
-        $algorithms = $this->resolveAlgorithms($providerMetadata);
+        $algorithms = array_intersect(
+            $this->algorithmManagerFactory->aliases(),
+            $this->resolveAlgorithms($providerMetadata),
+        );
 
         return new JWSLoader(
             new JWSSerializerManager([new CompactSerializer()]),
