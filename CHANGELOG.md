@@ -4,6 +4,9 @@ All notable changes will be documented in this file.
 
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## [Unreleased]
+- Fixed error when issuer uses unavailable algorithm
+
 ## [0.1.1]
 ### Changed
 - Changed TokenVerifierFactory dependency on Config with ProviderMetadata instead
