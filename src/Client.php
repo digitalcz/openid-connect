@@ -30,9 +30,9 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 
-final class Client
+final readonly class Client
 {
-    public function __construct(private readonly Config $config, private readonly HttpClient $httpClient)
+    public function __construct(private Config $config, private HttpClient $httpClient)
     {
     }
 
@@ -71,9 +71,9 @@ final class Client
                 [
                     new IssuerChecker([$this->getProviderMetadata()->issuer()]),
                     new AudienceChecker($this->getClientMetadata()->id()),
-                    new ExpirationTimeChecker(10),
-                    new IssuedAtChecker(10),
-                    new NotBeforeChecker(10),
+                    new ExpirationTimeChecker($this->config->clock(), 10),
+                    new IssuedAtChecker($this->config->clock(), 10),
+                    new NotBeforeChecker($this->config->clock(), 10),
                     new NonceChecker($checks->nonce()),
                 ],
             );
