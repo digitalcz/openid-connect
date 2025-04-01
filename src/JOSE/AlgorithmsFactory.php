@@ -12,20 +12,8 @@ use Jose\Component\Encryption\Algorithm\ContentEncryption\A192CBCHS384;
 use Jose\Component\Encryption\Algorithm\ContentEncryption\A192GCM;
 use Jose\Component\Encryption\Algorithm\ContentEncryption\A256CBCHS512;
 use Jose\Component\Encryption\Algorithm\ContentEncryption\A256GCM;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\A128GCMKW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\A128KW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\A192GCMKW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\A192KW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\A256GCMKW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\A256KW;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\Dir;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\ECDHES;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\ECDHESA128KW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\ECDHESA192KW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\ECDHESA256KW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\PBES2HS256A128KW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\PBES2HS384A192KW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\PBES2HS512A256KW;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\RSA15;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\RSAOAEP;
 use Jose\Component\Encryption\Algorithm\KeyEncryption\RSAOAEP256;
@@ -52,20 +40,11 @@ final class AlgorithmsFactory
     private static array $algorithms = [// @phpstan-ignore-line
         A128CBCHS256::class,
         A128GCM::class,
-        A128GCMKW::class,
-        A128KW::class,
         A192CBCHS384::class,
         A192GCM::class,
-        A192GCMKW::class,
-        A192KW::class,
         A256CBCHS512::class,
         A256GCM::class,
-        A256GCMKW::class,
-        A256KW::class,
         ECDHES::class,
-        ECDHESA128KW::class,
-        ECDHESA192KW::class,
-        ECDHESA256KW::class,
         ES256::class,
         ES384::class,
         ES512::class,
@@ -73,9 +52,6 @@ final class AlgorithmsFactory
         HS384::class,
         HS512::class,
         EdDSA::class,
-        PBES2HS256A128KW::class,
-        PBES2HS384A192KW::class,
-        PBES2HS512A256KW::class,
         PS256::class,
         PS384::class,
         PS512::class,
