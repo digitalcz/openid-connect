@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Util;
 
-use function Safe\base64_decode;
+use InvalidArgumentException;
 
 final class Base64Url
 {
@@ -23,6 +23,12 @@ final class Base64Url
      */
     public static function decode(string $string): string
     {
-        return base64_decode(strtr($string, '-_', '+/'), true);
+        $decoded = base64_decode(strtr($string, '-_', '+/'), true);
+
+        if ($decoded === false) {
+            throw new InvalidArgumentException('Invalid base64url string',);
+        }
+
+        return $decoded;
     }
 }

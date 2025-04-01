@@ -5,17 +5,13 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Util;
 
 use JsonException;
-use Safe\Exceptions\JsonException as SafeJsonException;
-
-use function Safe\json_decode;
-use function Safe\json_encode;
 
 final class Json
 {
     /**
      * @param mixed[] $payload
      *
-     * @throws SafeJsonException|JsonException
+     * @throws JsonException
      */
     public static function encode(array $payload): string
     {
@@ -25,7 +21,7 @@ final class Json
     /**
      * @return mixed[]
      *
-     * @throws SafeJsonException|JsonException
+     * @throws JsonException
      */
     public static function decode(string $json): array
     {

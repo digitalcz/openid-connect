@@ -10,14 +10,21 @@ use Jose\Component\Core\JWKSet;
 use Jose\Component\Signature\Algorithm\ES256;
 use Jose\Component\Signature\JWSBuilder;
 use Jose\Component\Signature\Serializer\CompactSerializer;
+use RuntimeException;
 
-use function Safe\file_get_contents;
+use function file_get_contents;
 
 final class MockIdTokenFactory
 {
     public static function create(): string
     {
-        $jwks = JWKSet::createFromJson(file_get_contents(TESTS_DIR . '/Mock/jwks.json'));
+        $jwks = file_get_contents(TESTS_DIR . '/Mock/jwks.json');
+
+        if ($jwks === false) {
+            throw new RuntimeException('Failed to read jwks.json');
+        }
+
+        $jwkSet = JWKSet::createFromJson($jwks);
 
         $algorithmManager = new AlgorithmManager([new ES256()]);
         $jwsBuilder = new JWSBuilder($algorithmManager);
@@ -34,7 +41,7 @@ final class MockIdTokenFactory
                 'sub' => 'subject',
                 'foo' => 'bar',
             ]))
-            ->addSignature($jwks->get('sign'), ['alg' => 'ES256'])
+            ->addSignature($jwkSet->get('sign'), ['alg' => 'ES256'])
             ->build();
 
         return $serializer->serialize($jws);

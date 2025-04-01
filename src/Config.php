@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect;
 
-final class Config
+use Psr\Clock\ClockInterface;
+
+final readonly class Config
 {
     public function __construct(
-        private readonly ProviderMetadata $providerMetadata,
-        private readonly ClientMetadata $clientMetadata,
+        private ProviderMetadata $providerMetadata,
+        private ClientMetadata $clientMetadata,
+        private ClockInterface $clock = new SimpleClock(),
     ) {
     }
 
@@ -20,5 +23,10 @@ final class Config
     public function clientMetadata(): ClientMetadata
     {
         return $this->clientMetadata;
+    }
+
+    public function clock(): ClockInterface
+    {
+        return $this->clock;
     }
 }
