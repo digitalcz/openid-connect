@@ -8,6 +8,7 @@ use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config\Config;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 use DigitalCz\OpenIDConnect\TestCase;
+use DigitalCz\OpenIDConnect\Util\PkceMethod;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -35,8 +36,14 @@ class AuthorizationCodeTest extends TestCase
 
     public function testCreateAuthorizationUrlWithDefaults(): void
     {
-        $url = $this->authorizationCode->createAuthorizationUrl();
+        $result = $this->authorizationCode->createAuthorizationUrl();
 
+        $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
+        $this->assertIsString($result->codeVerifier()); // PKCE enabled by default (S256)
+        $this->assertIsString($result->state()); // Generated automatically
+        $this->assertIsString($result->nonce()); // Generated automatically
+
+        $url = $result->url();
         $expectedParams = [
             'client_id' => 'test-client-id',
             'response_type' => 'code',
@@ -49,6 +56,12 @@ class AuthorizationCodeTest extends TestCase
         foreach ($expectedParams as $key => $value) {
             $this->assertStringContainsString($key . '=' . urlencode($value), $url);
         }
+
+        // Check that state, nonce, and PKCE parameters were automatically generated
+        $this->assertStringContainsString('state=', $url);
+        $this->assertStringContainsString('nonce=', $url);
+        $this->assertStringContainsString('code_challenge=', $url);
+        $this->assertStringContainsString('code_challenge_method=S256', $url);
     }
 
     public function testCreateAuthorizationUrlWithCustomParams(): void
@@ -59,11 +72,16 @@ class AuthorizationCodeTest extends TestCase
             'prompt' => 'consent',
         ];
 
-        $url = $this->authorizationCode->createAuthorizationUrl($customParams);
+        $result = $this->authorizationCode->createAuthorizationUrl($customParams);
+        $url = $result->url();
 
         foreach ($customParams as $key => $value) {
             $this->assertStringContainsString($key . '=' . urlencode($value), $url);
         }
+
+        // Verify that custom state and nonce are returned
+        $this->assertSame('random-state-value', $result->state());
+        $this->assertSame('random-nonce-value', $result->nonce());
     }
 
     public function testCreateAuthorizationUrlOverrideDefaults(): void
@@ -75,7 +93,8 @@ class AuthorizationCodeTest extends TestCase
             'redirect_uri' => 'https://custom.example.com/callback',
         ];
 
-        $url = $this->authorizationCode->createAuthorizationUrl($overrideParams);
+        $result = $this->authorizationCode->createAuthorizationUrl($overrideParams);
+        $url = $result->url();
 
         foreach ($overrideParams as $key => $value) {
             $this->assertStringContainsString($key . '=' . urlencode($value), $url);
@@ -101,7 +120,8 @@ class AuthorizationCodeTest extends TestCase
         // Create a new instance with the fresh config
         $authCode = new AuthorizationCode($config, $this->httpClient, $this->validator);
 
-        $url = $authCode->createAuthorizationUrl();
+        $result = $authCode->createAuthorizationUrl();
+        $url = $result->url();
 
         // Should not contain redirect_uri when not configured (clientMetadata.redirectUri() is null)
         $this->assertStringNotContainsString('redirect_uri=', $url);
@@ -312,7 +332,8 @@ class AuthorizationCodeTest extends TestCase
     #[DataProvider('authorizationUrlParamsProvider')]
     public function testCreateAuthorizationUrlWithVariousParams(array $params, string $expectedContains): void
     {
-        $url = $this->authorizationCode->createAuthorizationUrl($params);
+        $result = $this->authorizationCode->createAuthorizationUrl($params);
+        $url = $result->url();
 
         $this->assertStringContainsString($expectedContains, $url);
     }
@@ -341,9 +362,248 @@ class AuthorizationCodeTest extends TestCase
             ],
             'with code_challenge (PKCE)' => [
                 ['code_challenge' => 'code_challenge_value', 'code_challenge_method' => 'S256'],
-                'code_challenge=code_challenge_value',
+                'code_challenge_method=S256',
             ],
         ];
+    }
+
+    public function testCreateAuthorizationUrlWithPkce(): void
+    {
+        // Create config with PKCE enabled
+        $config = $this->createMock(Config::class);
+        $issuerMetadata = $this->createRealIssuerMetadata();
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            pkceMethod: PkceMethod::S256,
+        );
+
+        $config->method('issuerMetadata')->willReturn($issuerMetadata);
+        $config->method('clientMetadata')->willReturn($clientMetadata);
+
+        $authCode = new AuthorizationCode($config, $this->httpClient, $this->validator);
+
+        $result = $authCode->createAuthorizationUrl();
+
+        $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
+        $this->assertNotNull($result->codeVerifier());
+
+        $url = $result->url();
+        $this->assertStringContainsString('code_challenge=', $url);
+        $this->assertStringContainsString('code_challenge_method=S256', $url);
+
+        // Verify code verifier format
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9_-]+$/', $result->codeVerifier());
+        $this->assertSame(128, strlen($result->codeVerifier()));
+
+        // Verify __toString method works
+        $this->assertSame($url, (string) $result);
+    }
+
+    public function testCreateAuthorizationUrlWithPlainPkce(): void
+    {
+        // Create config with PKCE plain method
+        $config = $this->createMock(Config::class);
+        $issuerMetadata = $this->createRealIssuerMetadata();
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            pkceMethod: PkceMethod::Plain,
+        );
+
+        $config->method('issuerMetadata')->willReturn($issuerMetadata);
+        $config->method('clientMetadata')->willReturn($clientMetadata);
+
+        $authCode = new AuthorizationCode($config, $this->httpClient, $this->validator);
+
+        $result = $authCode->createAuthorizationUrl();
+
+        $url = $result->url();
+        $this->assertStringContainsString('code_challenge=', $url);
+        $this->assertStringContainsString('code_challenge_method=plain', $url);
+
+        // With plain method, verifier and challenge should be the same
+        $this->assertSame($result->codeVerifier(), $result->codeVerifier());
+    }
+
+    public function testCreateAuthorizationUrlPkceWithManualChallenge(): void
+    {
+        // Test with PKCE enabled - automatic generation overrides manual parameters
+        $config = $this->createMock(Config::class);
+        $issuerMetadata = $this->createRealIssuerMetadata();
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            pkceMethod: PkceMethod::S256,
+        );
+
+        $config->method('issuerMetadata')->willReturn($issuerMetadata);
+        $config->method('clientMetadata')->willReturn($clientMetadata);
+
+        $authCode = new AuthorizationCode($config, $this->httpClient, $this->validator);
+
+        $params = [
+            'code_challenge' => 'manual-code-challenge',
+            'code_challenge_method' => 'S256',
+        ];
+
+        $result = $authCode->createAuthorizationUrl($params);
+
+        // PKCE is enabled so code verifier should be generated
+        $this->assertIsString($result->codeVerifier());
+
+        $url = $result->url();
+        // Manual challenge will be overridden by automatic PKCE generation
+        $this->assertStringContainsString('code_challenge=', $url);
+        $this->assertStringContainsString('code_challenge_method=S256', $url);
+        // Manual challenge should not appear in URL since it's overridden
+        $this->assertStringNotContainsString('code_challenge=manual-code-challenge', $url);
+    }
+
+    public function testCreateAuthorizationUrlWithManualChallengeNoPkce(): void
+    {
+        // Test with PKCE disabled - manual challenge should be preserved
+        $config = $this->createMock(Config::class);
+        $issuerMetadata = $this->createRealIssuerMetadata();
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            pkceMethod: null, // PKCE disabled
+        );
+
+        $config->method('issuerMetadata')->willReturn($issuerMetadata);
+        $config->method('clientMetadata')->willReturn($clientMetadata);
+
+        $authCode = new AuthorizationCode($config, $this->httpClient, $this->validator);
+
+        $params = [
+            'code_challenge' => 'manual-code-challenge',
+            'code_challenge_method' => 'S256',
+        ];
+
+        $result = $authCode->createAuthorizationUrl($params);
+
+        // No PKCE configured, so no code verifier generated
+        $this->assertNull($result->codeVerifier());
+
+        $url = $result->url();
+        // Manual challenge should be preserved
+        $this->assertStringContainsString('code_challenge=manual-code-challenge', $url);
+        $this->assertStringContainsString('code_challenge_method=S256', $url);
+    }
+
+    public function testFetchTokensWithCodeVerifier(): void
+    {
+        $authorizationCode = 'test-auth-code';
+        $codeVerifier = 'test-code-verifier-123';
+        $nonce = 'test-nonce';
+
+        $tokenResponse = [
+            'access_token' => 'access-token-123',
+            'refresh_token' => 'refresh-token-456',
+            'id_token' => $this->createValidJwtString(),
+            'token_type' => 'Bearer',
+            'expires_in' => 3600,
+        ];
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('toArray')->willReturn($tokenResponse);
+
+        $this->httpClient->expects($this->once())
+            ->method('request')
+            ->with(
+                'POST',
+                'https://auth.example.com/oauth/token',
+                $this->callback(static fn ($options) => $options['body']['grant_type'] === 'authorization_code'
+                        && $options['body']['code'] === $authorizationCode
+                        && $options['body']['code_verifier'] === $codeVerifier
+                        && $options['body']['redirect_uri'] === 'https://client.example.com/callback'),
+            )
+            ->willReturn($response);
+
+        $this->validator->expects($this->once())
+            ->method('validate')
+            ->with($this->isInstanceOf(IdToken::class), $nonce);
+
+        $tokens = $this->authorizationCode->fetchTokens($authorizationCode, $nonce, $codeVerifier);
+
+        $this->assertInstanceOf(Tokens::class, $tokens);
+        $this->assertSame('access-token-123', (string) $tokens->accessToken());
+        $this->assertNotNull($tokens->refreshToken());
+        $this->assertNotNull($tokens->idToken());
+    }
+
+    public function testFetchTokensWithoutCodeVerifier(): void
+    {
+        $authorizationCode = 'test-auth-code';
+
+        $tokenResponse = [
+            'access_token' => 'access-token-123',
+            'refresh_token' => 'refresh-token-456',
+            'token_type' => 'Bearer',
+            'expires_in' => 3600,
+        ];
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('toArray')->willReturn($tokenResponse);
+
+        $this->httpClient->expects($this->once())
+            ->method('request')
+            ->with(
+                'POST',
+                'https://auth.example.com/oauth/token',
+                $this->callback(static fn ($options) => $options['body']['grant_type'] === 'authorization_code'
+                        && $options['body']['code'] === $authorizationCode
+                        && !isset($options['body']['code_verifier'])),
+            )
+            ->willReturn($response);
+
+        $tokens = $this->authorizationCode->fetchTokens($authorizationCode);
+
+        $this->assertInstanceOf(Tokens::class, $tokens);
+        $this->assertSame('access-token-123', (string) $tokens->accessToken());
+    }
+
+    public function testAuthorizationUrlResultToString(): void
+    {
+        $result = $this->authorizationCode->createAuthorizationUrl(['state' => 'test-state']);
+
+        $this->assertSame($result->url(), (string) $result);
+        $this->assertStringContainsString('client_id=test-client-id', (string) $result);
+        $this->assertStringContainsString('state=test-state', (string) $result);
+    }
+
+    public function testNonceGenerationOnlyWithOpenIdScope(): void
+    {
+        // Test with openid scope (default) - nonce should be generated
+        $resultWithOpenId = $this->authorizationCode->createAuthorizationUrl();
+        $this->assertIsString($resultWithOpenId->nonce());
+
+        // Test without openid scope - nonce should not be generated
+        $resultWithoutOpenId = $this->authorizationCode->createAuthorizationUrl(['scope' => 'profile email']);
+        $this->assertNull($resultWithoutOpenId->nonce());
+        $this->assertStringNotContainsString('nonce=', $resultWithoutOpenId->url());
+
+        // Test with custom openid scope mixed with others - nonce should be generated
+        $resultMixed = $this->authorizationCode->createAuthorizationUrl(['scope' => 'profile openid email']);
+        $this->assertIsString($resultMixed->nonce());
+        $this->assertStringContainsString('nonce=', $resultMixed->url());
+    }
+
+    public function testCustomNonceOverridesGeneration(): void
+    {
+        // Custom nonce should be used even without openid scope
+        $result = $this->authorizationCode->createAuthorizationUrl([
+            'scope' => 'profile email',
+            'nonce' => 'custom-nonce-123',
+        ]);
+
+        $this->assertSame('custom-nonce-123', $result->nonce());
+        $this->assertStringContainsString('nonce=custom-nonce-123', $result->url());
     }
 
     protected function setUp(): void

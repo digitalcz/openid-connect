@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Config;
 
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
+use DigitalCz\OpenIDConnect\Util\PkceMethod;
 
 /**
  * Client configuration value object
@@ -20,6 +21,7 @@ final readonly class ClientMetadata
         private ?string $redirectUri = null,
         private array $defaultScopes = ['openid', 'profile', 'email'],
         private AuthenticationMethod $authenticationMethod = AuthenticationMethod::ClientSecretPost,
+        private ?PkceMethod $pkceMethod = PkceMethod::S256,
     ) {
     }
 
@@ -49,5 +51,10 @@ final readonly class ClientMetadata
     public function authenticationMethod(): AuthenticationMethod
     {
         return $this->authenticationMethod;
+    }
+
+    public function pkceMethod(): ?PkceMethod
+    {
+        return $this->pkceMethod;
     }
 }

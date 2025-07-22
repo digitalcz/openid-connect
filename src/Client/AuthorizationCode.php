@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Client;
 
 use DigitalCz\OpenIDConnect\Config\Config;
+use DigitalCz\OpenIDConnect\Util\Pkce;
 use InvalidArgumentException;
 use RuntimeException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -32,9 +33,9 @@ final readonly class AuthorizationCode
      * Create authorization URL for user redirect.
      *
      * @param array<string, string> $params Additional query parameters
-     * @return string Authorization URL
+     * @return AuthorizationUrlResult Authorization URL with security parameters
      */
-    public function createAuthorizationUrl(array $params = []): string
+    public function createAuthorizationUrl(array $params = []): AuthorizationUrlResult
     {
         $issuerMetadata = $this->config->issuerMetadata();
         $clientMetadata = $this->config->clientMetadata();
@@ -44,12 +45,32 @@ final readonly class AuthorizationCode
         $params['client_id'] ??= $clientMetadata->clientId();
         $params['response_type'] ??= 'code';
         $params['scope'] ??= implode(' ', $clientMetadata->defaultScopes());
+        $params['state'] ??= bin2hex(random_bytes(16));
+
+        if (str_contains($params['scope'], 'openid')) {
+            $params['nonce'] ??= bin2hex(random_bytes(16));
+        }
 
         if ($clientMetadata->redirectUri() !== null) {
             $params['redirect_uri'] ??= $clientMetadata->redirectUri();
         }
 
-        return $authorizationEndpoint . '?' . http_build_query($params);
+        if ($clientMetadata->pkceMethod() !== null) {
+            $pkcePair = Pkce::generatePair($clientMetadata->pkceMethod());
+
+            $params['code_challenge'] = $pkcePair['challenge'];
+            $params['code_challenge_method'] = $pkcePair['method'];
+            $codeVerifier = $pkcePair['verifier'];
+        }
+
+        $url = $authorizationEndpoint . '?' . http_build_query($params);
+
+        return new AuthorizationUrlResult(
+            url: $url,
+            state: $params['state'],
+            nonce: $params['nonce'] ?? null,
+            codeVerifier: $codeVerifier ?? null,
+        );
     }
 
     /**
@@ -57,9 +78,10 @@ final readonly class AuthorizationCode
      *
      * @param string $code Authorization code from callback
      * @param string|null $nonce Nonce for ID token validation
+     * @param string|null $codeVerifier PKCE code verifier (required if PKCE was used)
      * @return Tokens Access token, refresh token, and ID token
      */
-    public function fetchTokens(string $code, ?string $nonce = null): Tokens
+    public function fetchTokens(string $code, ?string $nonce = null, ?string $codeVerifier = null): Tokens
     {
         $issuerMetadata = $this->config->issuerMetadata();
         $clientMetadata = $this->config->clientMetadata();
@@ -72,6 +94,11 @@ final readonly class AuthorizationCode
                 'redirect_uri' => $clientMetadata->redirectUri(),
             ],
         ];
+
+        // Add PKCE code verifier if provided
+        if ($codeVerifier !== null) {
+            $options['body']['code_verifier'] = $codeVerifier;
+        }
 
         $authOptions = $clientMetadata->authenticationMethod()->asOptions($clientMetadata);
         $options = array_merge_recursive($options, $authOptions);
