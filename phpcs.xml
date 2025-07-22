@@ -6,7 +6,7 @@
 
     <arg name="colors"/>
     <arg name="parallel" value="16"/>
-    <arg value="ps"/>
+    <arg value="s"/>
     <arg name="cache" value=".phpcs.cache"/>
 
     <rule ref="./vendor/digitalcz/coding-standard/ruleset.xml"/>
