@@ -78,7 +78,7 @@ class OpaqueAccessTokenValidatorTest extends TestCase
                     if (!is_array($options) || !is_array($options['body'] ?? null)) {
                         return false;
                     }
-                    
+
                     return isset($options['body']['token'])
                         && $options['body']['token'] === 'valid-opaque-token'
                         && isset($options['body']['client_id'])
@@ -196,12 +196,14 @@ class OpaqueAccessTokenValidatorTest extends TestCase
                 'POST',
                 'https://auth.example.com/oauth/introspect',
                 $this->callback(static function (mixed $options): bool {
-                    if (!is_array($options) 
-                        || !is_array($options['body'] ?? null) 
-                        || !is_array($options['auth_basic'] ?? null)) {
+                    if (
+                        !is_array($options)
+                        || !is_array($options['body'] ?? null)
+                        || !is_array($options['auth_basic'] ?? null)
+                    ) {
                         return false;
                     }
-                    
+
                     return isset($options['body']['token'])
                         && $options['body']['token'] === 'basic-auth-token'
                         && isset($options['auth_basic'][0])
@@ -339,7 +341,7 @@ class OpaqueAccessTokenValidatorTest extends TestCase
                     if (!is_array($options) || !is_array($options['body'] ?? null)) {
                         return false;
                     }
-                    
+
                     return isset($options['body']['token'])
                         && $options['body']['token'] === ''
                         && isset($options['body']['client_id'])
