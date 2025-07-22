@@ -47,7 +47,10 @@ final readonly class OpaqueAccessTokenValidator implements AccessTokenValidator
                     'token' => (string) $token,
                 ],
             ];
-            $options = array_merge($options, $clientMetadata->authenticationMethod()->asOptions($clientMetadata));
+            $options = array_merge_recursive(
+                $options,
+                $clientMetadata->authenticationMethod()->asOptions($clientMetadata),
+            );
 
             /** @var array<string, mixed> $claims */
             $claims =  $this->httpClient->request('POST', $introspectionEndpoint, $options)->toArray();
