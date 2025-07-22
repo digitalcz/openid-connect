@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Discovery;
 
-use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
-use DigitalCz\OpenIDConnect\ProviderMetadata;
+use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 
 interface Discoverer
 {
-    /**
-     * @throws DiscoveryException
-     */
-    public function discover(string $issuerUrl): ProviderMetadata;
+    public function discover(string $issuer): IssuerMetadata;
 }

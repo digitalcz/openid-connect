@@ -1,12 +1,4 @@
 parameters:
-    level: 8
+    level: max
     paths:
-        - examples
         - src
-        - tests
-
-    bootstrapFiles:
-        - tests/bootstrap.php
-
-    treatPhpDocTypesAsCertain: false
-    reportUnmatchedIgnoredErrors: false

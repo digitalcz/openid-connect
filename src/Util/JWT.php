@@ -43,6 +43,10 @@ final class JWT
             throw new UnexpectedValueException('Invalid JWT - invalid signature encoding', 0, $e);
         }
 
+        /**
+         * @var array<string, mixed> $header
+         * @var array<string, mixed> $payload
+         */
         return ['header' => $header, 'payload' => $payload, 'signature' => $signature];
     }
 

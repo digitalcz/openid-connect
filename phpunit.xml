@@ -1,16 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd" bootstrap="tests/bootstrap.php"
-         colors="true" beStrictAboutOutputDuringTests="true" cacheDirectory=".phpunit.cache"
-         requireCoverageMetadata="true">
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         cacheDirectory=".phpunit.cache"
+         executionOrder="depends,defects"
+         requireCoverageMetadata="true"
+         beStrictAboutCoverageMetadata="true"
+         beStrictAboutOutputDuringTests="true"
+         displayDetailsOnPhpunitDeprecations="true"
+         failOnPhpunitDeprecation="true"
+         failOnRisky="true"
+         failOnWarning="true">
   <testsuites>
-    <testsuite name="DigitalCz Test Suite">
+    <testsuite name="default">
       <directory>tests</directory>
     </testsuite>
   </testsuites>
-  <source>
+
+  <source ignoreIndirectDeprecations="true" restrictNotices="true" restrictWarnings="true">
     <include>
-      <directory suffix=".php">src/</directory>
+      <directory>src</directory>
     </include>
   </source>
 </phpunit>
