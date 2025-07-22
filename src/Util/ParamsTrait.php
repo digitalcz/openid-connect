@@ -17,7 +17,10 @@ use function sprintf;
 trait ParamsTrait
 {
     /**
-     * Check if parameter exists
+     * Check if a parameter exists in the collection.
+     *
+     * @param string $key The name of the parameter to check.
+     * @return bool True if the parameter exists, false otherwise.
      */
     public function has(string $key): bool
     {
