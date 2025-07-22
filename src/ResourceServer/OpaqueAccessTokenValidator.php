@@ -53,7 +53,7 @@ final readonly class OpaqueAccessTokenValidator implements AccessTokenValidator
             );
 
             /** @var array<string, mixed> $claims */
-            $claims =  $this->httpClient->request('POST', $introspectionEndpoint, $options)->toArray();
+            $claims = $this->httpClient->request('POST', $introspectionEndpoint, $options)->toArray();
 
             if (!isset($claims['active']) || $claims['active'] !== true) {
                 throw new InvalidTokenException('Token is not active');
