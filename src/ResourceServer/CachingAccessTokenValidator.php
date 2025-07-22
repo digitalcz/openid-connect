@@ -51,7 +51,7 @@ final readonly class CachingAccessTokenValidator implements AccessTokenValidator
 
             if ($exp < $now) {
                 // If the token is already expired, do not cache it.
-                throw new InvalidArgumentException('The access token is expired.');
+                throw new InvalidArgumentException('Cannot cache expired access token.');
             }
 
             $item->expiresAt(DateTimeImmutable::createFromTimestamp($exp));
