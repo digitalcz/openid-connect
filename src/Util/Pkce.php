@@ -26,6 +26,10 @@ final class Pkce
         }
 
         // Generate random bytes and encode as base64url
+        // The value 32 ensures a minimum number of random bytes for security purposes.
+        // The calculation ceil($length * 3 / 4) determines the number of random bytes required
+        // to produce a base64-encoded string of the desired length, as each base64 character
+        // represents 6 bits (3/4 of a byte).
         $bytes = random_bytes(max(32, (int) ceil($length * 3 / 4)));
         $verifier = Base64Url::encode($bytes);
 
