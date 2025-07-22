@@ -1,0 +1,218 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DigitalCz\OpenIDConnect\Util;
+
+use DigitalCz\OpenIDConnect\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use UnexpectedValueException;
+
+#[CoversClass(JWT::class)]
+class JWTTest extends TestCase
+{
+    public function testValidateWithValidJwt(): void
+    {
+        $validJwt = $this->createSampleJwt();
+
+        $this->assertTrue(JWT::validate($validJwt));
+    }
+
+    #[DataProvider('invalidJwtProvider')]
+    public function testValidateWithInvalidJwt(string $invalidJwt): void
+    {
+        $this->assertFalse(JWT::validate($invalidJwt));
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function invalidJwtProvider(): array
+    {
+        return [
+            'empty string' => [''],
+            'single part' => ['onlyonepart'],
+            'two parts' => ['two.parts'],
+            'four parts' => ['too.many.parts.here'],
+            'invalid base64' => ['invalid@#$.header@#$.signature@#$'],
+            'malformed header' => ['invalidheader.validpayload.validsignature'],
+            'empty parts' => ['..'],
+        ];
+    }
+
+    public function testParseWithValidJwt(): void
+    {
+        $payload = [
+            'sub' => 'user123',
+            'name' => 'John Doe',
+            'iat' => time(),
+        ];
+        $jwt = $this->createSampleJwt($payload);
+
+        $parsed = JWT::parse($jwt);
+
+        $this->assertIsArray($parsed);
+        $this->assertArrayHasKey('header', $parsed);
+        $this->assertArrayHasKey('payload', $parsed);
+        $this->assertArrayHasKey('signature', $parsed);
+
+        // Check header structure
+        $this->assertIsArray($parsed['header']);
+        $this->assertSame('JWT', $parsed['header']['typ']);
+        $this->assertSame('RS256', $parsed['header']['alg']);
+
+        // Check payload contains our custom data
+        $this->assertIsArray($parsed['payload']);
+        $this->assertSame('user123', $parsed['payload']['sub']);
+        $this->assertSame('John Doe', $parsed['payload']['name']);
+
+        // Check signature is a string
+        $this->assertIsString($parsed['signature']);
+    }
+
+    public function testParseWithInvalidJwt(): void
+    {
+        $this->expectException(UnexpectedValueException::class);
+        JWT::parse('invalid.jwt');
+    }
+
+    public function testParseWithMalformedParts(): void
+    {
+        $this->expectException(UnexpectedValueException::class);
+        JWT::parse('invalid@#$.invalid@#$.invalid@#$');
+    }
+
+    public function testClaimsWithValidJwt(): void
+    {
+        $expectedClaims = [
+            'sub' => 'user456',
+            'name' => 'Jane Smith',
+            'email' => 'jane@example.com',
+            'roles' => ['admin', 'user'],
+            'exp' => time() + 3600,
+        ];
+
+        $jwt = $this->createSampleJwt($expectedClaims);
+        $claims = JWT::claims($jwt);
+
+        $this->assertIsArray($claims);
+        $this->assertSame('user456', $claims['sub']);
+        $this->assertSame('Jane Smith', $claims['name']);
+        $this->assertSame('jane@example.com', $claims['email']);
+        $this->assertSame(['admin', 'user'], $claims['roles']);
+
+        // Check that default claims from createSampleJwt are merged
+        $this->assertSame('https://example.com', $claims['iss']);
+        $this->assertSame('test-client-id', $claims['aud']);
+    }
+
+    public function testClaimsWithInvalidJwt(): void
+    {
+        $this->expectException(UnexpectedValueException::class);
+        JWT::claims('invalid.jwt.token');
+    }
+
+    public function testParseAndClaimsConsistency(): void
+    {
+        $jwt = $this->createSampleJwt(['custom' => 'value']);
+
+        $parsed = JWT::parse($jwt);
+        $claims = JWT::claims($jwt);
+
+        // Claims should match the payload from parse
+        $this->assertSame($parsed['payload'], $claims);
+    }
+
+    public function testWithRealWorldJwtStructure(): void
+    {
+        // Test with more realistic JWT structure
+        $header = [
+            'typ' => 'JWT',
+            'alg' => 'RS256',
+            'kid' => 'key-id-123',
+        ];
+
+        $payload = [
+            'iss' => 'https://accounts.google.com',
+            'aud' => 'client-id-here',
+            'sub' => '1234567890',
+            'exp' => time() + 3600,
+            'iat' => time(),
+            'auth_time' => time() - 10,
+            'nonce' => 'random-nonce',
+            'email' => 'user@example.com',
+            'email_verified' => true,
+            'name' => 'Test User',
+            'picture' => 'https://example.com/avatar.jpg',
+        ];
+
+        // Manually create JWT to test parsing
+        $headerEncoded = Base64Url::encode(Json::encode($header));
+        $payloadEncoded = Base64Url::encode(Json::encode($payload));
+        $signature = Base64Url::encode('fake-signature-for-testing');
+
+        $jwt = "{$headerEncoded}.{$payloadEncoded}.{$signature}";
+
+        $this->assertTrue(JWT::validate($jwt));
+
+        $parsed = JWT::parse($jwt);
+        $this->assertSame($header, $parsed['header']);
+        $this->assertSame($payload, $parsed['payload']);
+        $this->assertSame('fake-signature-for-testing', $parsed['signature']);
+
+        $claims = JWT::claims($jwt);
+        $this->assertSame($payload, $claims);
+    }
+
+    public function testValidateWithEmptyParts(): void
+    {
+        // Create JWT with empty payload
+        $headerEncoded = Base64Url::encode('{"typ":"JWT","alg":"RS256"}');
+        $payloadEncoded = ''; // Empty payload
+        $signature = 'signature';
+
+        $jwt = "{$headerEncoded}.{$payloadEncoded}.{$signature}";
+
+        $this->assertFalse(JWT::validate($jwt));
+    }
+
+    public function testValidateWithInvalidJson(): void
+    {
+        // Create JWT with invalid JSON in header
+        $headerEncoded = Base64Url::encode('{"typ":"JWT","alg":}'); // Invalid JSON
+        $payloadEncoded = Base64Url::encode('{"sub":"123"}');
+        $signature = 'signature';
+
+        $jwt = "{$headerEncoded}.{$payloadEncoded}.{$signature}";
+
+        $this->assertFalse(JWT::validate($jwt));
+    }
+
+    public function testLargeClaims(): void
+    {
+        // Test JWT with large payload
+        $largeClaims = [
+            'sub' => 'user123',
+            'large_data' => str_repeat('data', 1000),
+            'array_data' => array_fill(0, 100, 'item'),
+            'nested' => [
+                'level1' => [
+                    'level2' => [
+                        'level3' => 'deep value',
+                    ],
+                ],
+            ],
+        ];
+
+        $jwt = $this->createSampleJwt($largeClaims);
+
+        $this->assertTrue(JWT::validate($jwt));
+
+        $claims = JWT::claims($jwt);
+        $this->assertSame('user123', $claims['sub']);
+        $this->assertStringContainsString('data', $claims['large_data']);
+        $this->assertCount(100, $claims['array_data']);
+        $this->assertSame('deep value', $claims['nested']['level1']['level2']['level3']);
+    }
+}
