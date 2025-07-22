@@ -79,11 +79,15 @@ trait ParamsTrait
             throw new UnexpectedValueException(sprintf('Parameter "%s" is required and must be a string.', $key));
         }
 
-        if (!$value instanceof Stringable) {
+        if ($value instanceof Stringable) {
+            $value = (string)$value;
+        }
+
+        if (!is_string($value)) {
             throw new UnexpectedValueException(sprintf('Parameter value "%s" cannot be converted to "string".', $key));
         }
 
-        return (string)$value;
+        return $value;
     }
 
     /**
