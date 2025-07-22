@@ -6,6 +6,9 @@ namespace DigitalCz\OpenIDConnect\Client;
 
 use DigitalCz\OpenIDConnect\ResourceServer\AccessToken;
 
+/**
+ * Container for all tokens received in OAuth flow
+ */
 final readonly class Tokens
 {
     public function __construct(
@@ -19,6 +22,8 @@ final readonly class Tokens
     }
 
     /**
+     * Creates tokens container from OAuth token response
+     *
      * @param mixed[] $responseData
      */
     public static function fromTokenResponse(array $responseData): self

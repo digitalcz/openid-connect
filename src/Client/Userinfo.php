@@ -6,6 +6,9 @@ namespace DigitalCz\OpenIDConnect\Client;
 
 use DigitalCz\OpenIDConnect\Util\ParamsTrait;
 
+/**
+ * User profile information from userinfo endpoint
+ */
 final readonly class Userinfo
 {
     use ParamsTrait;
@@ -17,12 +20,15 @@ final readonly class Userinfo
     {
     }
 
+    /** Returns subject identifier */
     public function sub(): string
     {
         return $this->string('sub');
     }
 
     /**
+     * Returns all user claims
+     *
      * @return array<string, mixed>
      */
     public function all(): array

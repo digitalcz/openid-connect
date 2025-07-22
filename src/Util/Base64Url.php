@@ -6,6 +6,9 @@ namespace DigitalCz\OpenIDConnect\Util;
 
 use InvalidArgumentException;
 
+/**
+ * URL-safe base64 encoding utilities
+ */
 final class Base64Url
 {
     /**

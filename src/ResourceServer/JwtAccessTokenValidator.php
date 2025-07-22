@@ -27,6 +27,9 @@ use Jose\Component\Signature\Serializer\JWSSerializerManager;
 use Psr\Clock\ClockInterface;
 use Throwable;
 
+/**
+ * JWT access token validator
+ */
 final class JwtAccessTokenValidator implements AccessTokenValidator
 {
     private readonly ClaimCheckerManager $claimCheckerManager;
@@ -52,11 +55,17 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
         ]);
     }
 
+    /**
+     * Support JWT tokens only
+     */
     public function supports(AccessToken $token): bool
     {
         return $token instanceof JwtAccessToken;
     }
 
+    /**
+     * Validate JWT signature and claims
+     */
     public function validate(AccessToken $token): ValidatedAccessToken
     {
         if (!$token instanceof JwtAccessToken) {
@@ -81,6 +90,7 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
         $jwks = $this->jwksLoader->load($jwksUri);
         $jwkSet = JWKSet::createFromKeyData($jwks);
         $jwsLoader = $this->createJwsLoader();
+        $signature = null;
         $jwsLoader->loadAndVerifyWithKeySet((string) $token, $jwkSet, $signature);
     }
 

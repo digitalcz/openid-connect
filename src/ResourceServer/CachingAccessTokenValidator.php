@@ -11,6 +11,9 @@ use Psr\Clock\ClockInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
+/**
+ * Caching validation decorator
+ */
 final readonly class CachingAccessTokenValidator implements AccessTokenValidator
 {
     private const string CACHE_PREFIX = 'oidc_token_';
@@ -24,11 +27,17 @@ final readonly class CachingAccessTokenValidator implements AccessTokenValidator
     ) {
     }
 
+    /**
+     * Delegate support check to inner validator
+     */
     public function supports(AccessToken $token): bool
     {
         return $this->inner->supports($token);
     }
 
+    /**
+     * Validate with caching based on token expiration
+     */
     public function validate(AccessToken $token): ValidatedAccessToken
     {
         // Use a hashed version of the token as the cache key for security.

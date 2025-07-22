@@ -9,6 +9,9 @@ use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Throwable;
 
+/**
+ * Opaque access token validator
+ */
 final readonly class OpaqueAccessTokenValidator implements AccessTokenValidator
 {
     public function __construct(
@@ -17,11 +20,17 @@ final readonly class OpaqueAccessTokenValidator implements AccessTokenValidator
     ) {
     }
 
+    /**
+     * Support opaque tokens only
+     */
     public function supports(AccessToken $token): bool
     {
         return $token instanceof OpaqueAccessToken;
     }
 
+    /**
+     * Validate via introspection endpoint
+     */
     public function validate(AccessToken $token): ValidatedAccessToken
     {
         if (!$token instanceof OpaqueAccessToken) {

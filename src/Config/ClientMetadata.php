@@ -6,6 +6,9 @@ namespace DigitalCz\OpenIDConnect\Config;
 
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 
+/**
+ * Client configuration value object
+ */
 final readonly class ClientMetadata
 {
     /**

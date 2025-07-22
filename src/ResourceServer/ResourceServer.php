@@ -6,6 +6,9 @@ namespace DigitalCz\OpenIDConnect\ResourceServer;
 
 use LogicException;
 
+/**
+ * Token validation orchestrator
+ */
 final readonly class ResourceServer
 {
     /**
@@ -15,6 +18,9 @@ final readonly class ResourceServer
     {
     }
 
+    /**
+     * Validate access token using appropriate validator
+     */
     public function introspect(AccessToken $token): ValidatedAccessToken
     {
         return $this->getValidator($token)->validate($token);

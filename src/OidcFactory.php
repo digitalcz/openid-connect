@@ -22,6 +22,9 @@ use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * Factory for creating configured OpenID Connect clients.
+ */
 final readonly class OidcFactory
 {
     public function __construct(

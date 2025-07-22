@@ -8,6 +8,9 @@ use DigitalCz\OpenIDConnect\Util\Base64Url;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
+/**
+ * Caching decorator for JWKS.
+ */
 final readonly class CachingJwksLoader implements JwksLoader
 {
     public const int DEFAULT_TTL = 3600;

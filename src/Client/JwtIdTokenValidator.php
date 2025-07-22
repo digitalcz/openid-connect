@@ -28,6 +28,9 @@ use Jose\Component\Signature\Serializer\JWSSerializerManager;
 use Psr\Clock\ClockInterface;
 use Throwable;
 
+/**
+ * JWT-based ID token validator
+ */
 final class JwtIdTokenValidator implements IdTokenValidator
 {
     private readonly ClaimCheckerManager $claimCheckerManager;
@@ -53,6 +56,8 @@ final class JwtIdTokenValidator implements IdTokenValidator
     }
 
     /**
+     * Validates ID token signature, claims, and nonce
+     *
      * @throws InvalidTokenException
      */
     public function validate(IdToken $token, ?string $nonce = null): void
@@ -67,6 +72,8 @@ final class JwtIdTokenValidator implements IdTokenValidator
     }
 
     /**
+     * Validates token signature using JWKS
+     *
      * @throws Exception
      */
     public function validateSignature(IdToken $token): void
@@ -75,6 +82,7 @@ final class JwtIdTokenValidator implements IdTokenValidator
         $jwks = $this->jwksLoader->load($jwksUri);
         $jwkSet = JWKSet::createFromKeyData($jwks);
         $jwsLoader = $this->createJwsLoader();
+        $signature = null;
         $jwsLoader->loadAndVerifyWithKeySet((string)$token, $jwkSet, $signature);
     }
 

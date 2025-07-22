@@ -6,6 +6,9 @@ namespace DigitalCz\OpenIDConnect\Discovery;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * HTTP JWKS loader.
+ */
 final readonly class HttpJwksLoader implements JwksLoader
 {
     public function __construct(

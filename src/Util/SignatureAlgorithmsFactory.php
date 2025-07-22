@@ -20,6 +20,9 @@ use Jose\Component\Signature\Algorithm\RS256;
 use Jose\Component\Signature\Algorithm\RS384;
 use Jose\Component\Signature\Algorithm\RS512;
 
+/**
+ * JOSE algorithm factory
+ */
 final class SignatureAlgorithmsFactory
 {
     /**
@@ -42,6 +45,8 @@ final class SignatureAlgorithmsFactory
     ];
 
     /**
+     * Create available signature algorithms
+     *
      * @return Generator<Algorithm>
      */
     public static function create(): Generator

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Client;
 
+/**
+ * Refresh token representation
+ */
 final readonly class RefreshToken
 {
     public function __construct(
@@ -12,6 +15,8 @@ final readonly class RefreshToken
     }
 
     /**
+     * Creates refresh token from OAuth token response
+     *
      * @param mixed[] $responseData
      */
     public static function fromTokenResponse(array $responseData): ?self

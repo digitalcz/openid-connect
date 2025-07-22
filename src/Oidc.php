@@ -8,6 +8,9 @@ use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
 
+/**
+ * Main OpenID Connect client facade.
+ */
 final readonly class Oidc
 {
     public function __construct(

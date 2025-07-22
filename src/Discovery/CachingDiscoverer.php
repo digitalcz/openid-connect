@@ -9,6 +9,9 @@ use DigitalCz\OpenIDConnect\Util\Base64Url;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
+/**
+ * Caching decorator for discovery.
+ */
 final readonly class CachingDiscoverer implements Discoverer
 {
     public const int DEFAULT_TTL = 3600;

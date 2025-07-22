@@ -28,4 +28,8 @@ $code = readline('Insert the authorization code from the URL: ');
 
 $tokens = $authorizationCode->fetchTokens($code, 'bar');
 
-dd($tokens);
+dump(tokens: $tokens);
+
+$userinfo = $authorizationCode->fetchUserinfo($tokens);
+
+dump(userinfo: $userinfo);

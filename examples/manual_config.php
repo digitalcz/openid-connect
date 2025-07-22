@@ -36,33 +36,4 @@ $clientMetadata = new ClientMetadata(
 // Create OIDC instance with manual configuration
 $oidc = $factory->create($issuerMetadata, $clientMetadata);
 
-echo "OIDC client configured with manual provider metadata!" . PHP_EOL . PHP_EOL;
-
-// Example: Authorization Code Flow
-$authorizationCode = $oidc->authorizationCode();
-
-$authUrl = $authorizationCode->createAuthorizationUrl([
-    'state' => 'random-state-value',
-    'nonce' => 'random-nonce-value',
-    'scope' => 'openid profile email',
-]);
-
-echo "Authorization URL (Authorization Code Flow):" . PHP_EOL;
-echo $authUrl . PHP_EOL . PHP_EOL;
-
-// Example: Client Credentials Flow
-$clientCredentials = $oidc->clientCredentials();
-
-try {
-    echo "Attempting Client Credentials Flow..." . PHP_EOL;
-    $tokens = $clientCredentials->fetchTokens();
-
-    echo "Client Credentials successful!" . PHP_EOL;
-    echo "Access Token: " . $tokens->accessToken() . PHP_EOL;
-    echo "Token Type: " . $tokens->tokenType() . PHP_EOL;
-    echo "Expires In: " . $tokens->expiresIn() . " seconds" . PHP_EOL;
-} catch (Throwable $e) {
-    echo "Client Credentials failed: " . $e->getMessage() . PHP_EOL;
-}
-
-echo PHP_EOL . "Manual configuration example completed!" . PHP_EOL;
+dump($oidc);

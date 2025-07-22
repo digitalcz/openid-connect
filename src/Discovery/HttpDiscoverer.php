@@ -12,6 +12,9 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * HTTP-based OIDC discovery.
+ */
 final class HttpDiscoverer implements Discoverer
 {
     public function __construct(

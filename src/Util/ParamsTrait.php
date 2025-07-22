@@ -11,18 +11,30 @@ use function is_array;
 use function is_scalar;
 use function sprintf;
 
+/**
+ * Type-safe parameter access trait
+ */
 trait ParamsTrait
 {
+    /**
+     * Check if parameter exists
+     */
     public function has(string $key): bool
     {
         return array_key_exists($key, $this->all());
     }
 
+    /**
+     * Get parameter value or default
+     */
     public function get(string $key, mixed $default = null): mixed
     {
         return $this->has($key) ? $this->all()[$key] : $default;
     }
 
+    /**
+     * Get required integer parameter
+     */
     public function integer(string $key): int
     {
         $value = $this->get($key);
@@ -38,6 +50,9 @@ trait ParamsTrait
         return $value;
     }
 
+    /**
+     * Get required boolean parameter
+     */
     public function boolean(string $key): bool
     {
         $value = $this->get($key);
@@ -53,6 +68,9 @@ trait ParamsTrait
         return $value;
     }
 
+    /**
+     * Get required string parameter
+     */
     public function string(string $key): string
     {
         $value = $this->get($key);
@@ -69,6 +87,8 @@ trait ParamsTrait
     }
 
     /**
+     * Get required string array parameter
+     *
      * @return string[]
      */
     public function strings(string $key): array

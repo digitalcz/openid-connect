@@ -9,8 +9,18 @@ use InvalidArgumentException;
 use RuntimeException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * OAuth2 Authorization Code flow implementation for web applications.
+ */
 final readonly class AuthorizationCode
 {
+    use RefreshTokenTrait;
+
+    /**
+     * @param Config $config OIDC configuration
+     * @param HttpClientInterface $httpClient HTTP client for requests
+     * @param IdTokenValidator $validator ID token validator
+     */
     public function __construct(
         private Config $config,
         private HttpClientInterface $httpClient,
@@ -19,7 +29,10 @@ final readonly class AuthorizationCode
     }
 
     /**
-     * @param array<string, string> $params
+     * Create authorization URL for user redirect.
+     *
+     * @param array<string, string> $params Additional query parameters
+     * @return string Authorization URL
      */
     public function createAuthorizationUrl(array $params = []): string
     {
@@ -39,6 +52,13 @@ final readonly class AuthorizationCode
         return $authorizationEndpoint . '?' . http_build_query($params);
     }
 
+    /**
+     * Exchange authorization code for tokens.
+     *
+     * @param string $code Authorization code from callback
+     * @param string|null $nonce Nonce for ID token validation
+     * @return Tokens Access token, refresh token, and ID token
+     */
     public function fetchTokens(string $code, ?string $nonce = null): Tokens
     {
         $issuerMetadata = $this->config->issuerMetadata();
@@ -67,32 +87,23 @@ final readonly class AuthorizationCode
         return $tokens;
     }
 
+    /**
+     * Refresh access tokens using refresh token.
+     *
+     * @param Tokens $tokens Current tokens with refresh token
+     * @return Tokens New tokens with fresh access token
+     */
     public function refreshToken(Tokens $tokens): Tokens
     {
-        if ($tokens->refreshToken() === null) {
-            throw new InvalidArgumentException('Cannot refresh tokens without a refresh token.');
-        }
-
-        $issuerMetadata = $this->config->issuerMetadata();
-        $clientMetadata = $this->config->clientMetadata();
-        $tokenEndpoint = $issuerMetadata->tokenEndpoint();
-        $options = [
-            'body' => [
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $tokens->refreshToken(),
-            ],
-        ];
-        $authOptions = $clientMetadata->authenticationMethod()->asOptions($clientMetadata);
-        $options = array_merge_recursive($options, $authOptions);
-        $response = $this->httpClient->request('POST', $tokenEndpoint, $options);
-        $result = $response->toArray();
-
-        // If the refresh_token is not rotated, preserve the existing one
-        $result['refresh_token'] ??= (string)$tokens->refreshToken();
-
-        return Tokens::fromTokenResponse($result);
+        return $this->doRefreshToken($tokens);
     }
 
+    /**
+     * Fetch user information from userinfo endpoint.
+     *
+     * @param Tokens $tokens Tokens with access token
+     * @return Userinfo User profile information
+     */
     public function fetchUserinfo(Tokens $tokens): Userinfo
     {
         $issuerMetadata = $this->config->issuerMetadata();

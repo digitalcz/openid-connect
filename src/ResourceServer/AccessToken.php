@@ -7,6 +7,9 @@ namespace DigitalCz\OpenIDConnect\ResourceServer;
 use DigitalCz\OpenIDConnect\Util\JWT;
 use Stringable;
 
+/**
+ * Abstract token base class
+ */
 abstract class AccessToken implements Stringable
 {
     public function __construct(
@@ -15,6 +18,8 @@ abstract class AccessToken implements Stringable
     }
 
     /**
+     * Create token from response data
+     *
      * @param mixed[] $responseData
      */
     public static function fromTokenResponse(array $responseData): ?self

@@ -6,6 +6,9 @@ namespace DigitalCz\OpenIDConnect\Config;
 
 use DigitalCz\OpenIDConnect\Util\ParamsTrait;
 
+/**
+ * Provider metadata with endpoints
+ */
 final readonly class IssuerMetadata
 {
     use ParamsTrait;
