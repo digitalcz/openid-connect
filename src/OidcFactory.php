@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect;
 
+use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
 use DigitalCz\OpenIDConnect\Client\JwtIdTokenValidator;
@@ -19,6 +20,9 @@ use DigitalCz\OpenIDConnect\ResourceServer\CachingAccessTokenValidator;
 use DigitalCz\OpenIDConnect\ResourceServer\JwtAccessTokenValidator;
 use DigitalCz\OpenIDConnect\ResourceServer\OpaqueAccessTokenValidator;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
+use DigitalCz\OpenIDConnect\Util\PkceMethod;
+use DigitalCz\OpenIDConnect\Util\SimpleClock;
+use Psr\Clock\ClockInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -27,48 +31,78 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final readonly class OidcFactory
 {
-    public function __construct(
-        private HttpClientInterface $httpClient,
-        private ?CacheInterface $cache = null,
-        private string $cacheSecret = 'default-oidc-cache-secret',
-    ) {
-    }
-
-    public function create(
-        string|IssuerMetadata $issuerMetadata,
-        ClientMetadata $clientMetadata,
+    /**
+     * @param string|array<string, string|string[]|bool>|IssuerMetadata $issuer
+     * @param string|list<string> $defaultScopes
+     */
+    public static function create(
+        HttpClientInterface $httpClient,
+        string|array|IssuerMetadata $issuer,
+        string $clientId,
+        ?string $clientSecret = null,
+        ?string $redirectUri = null,
+        string|array $defaultScopes = ['openid', 'profile', 'email'],
+        string|AuthenticationMethod $authenticationMethod = AuthenticationMethod::ClientSecretPost,
+        string|PkceMethod $pkceMethod = PkceMethod::S256,
+        ?CacheInterface $cache = null,
+        ClockInterface $clock = new SimpleClock(),
+        string $cacheSecret = 'default-oidc-cache-secret',
     ): Oidc {
-        if (is_string($issuerMetadata)) {
-            $discoverer = new HttpDiscoverer($this->httpClient);
-
-            if ($this->cache !== null) {
-                $discoverer = new CachingDiscoverer($discoverer, $this->cache);
-            }
-
-            $config = new DiscoveryConfig($issuerMetadata, $discoverer, $clientMetadata);
-        } else {
-            $config = new StaticConfig($issuerMetadata, $clientMetadata);
+        if (is_string($defaultScopes)) {
+            $defaultScopes = explode(' ', $defaultScopes);
         }
 
-        $jwksLoader = new HttpJwksLoader($this->httpClient);
+        if (is_string($authenticationMethod)) {
+            $authenticationMethod = AuthenticationMethod::from($authenticationMethod);
+        }
 
-        if ($this->cache !== null) {
-            $jwksLoader = new CachingJwksLoader($jwksLoader, $this->cache);
+        if (is_string($pkceMethod)) {
+            $pkceMethod = PkceMethod::from($pkceMethod);
+        }
+
+        $clientMetadata = new ClientMetadata(
+            clientId: $clientId,
+            clientSecret: $clientSecret,
+            redirectUri: $redirectUri,
+            defaultScopes: $defaultScopes,
+            authenticationMethod: $authenticationMethod,
+            pkceMethod: $pkceMethod,
+        );
+
+        if (is_string($issuer)) {
+            $discoverer = new HttpDiscoverer($httpClient);
+
+            if ($cache !== null) {
+                $discoverer = new CachingDiscoverer($discoverer, $cache);
+            }
+
+            $config = new DiscoveryConfig($issuer, $discoverer, $clientMetadata);
+        } elseif (is_array($issuer)) {
+            $config = new StaticConfig(new IssuerMetadata($issuer), $clientMetadata);
+        } else {
+            $config = new StaticConfig($issuer, $clientMetadata);
+        }
+
+        $jwksLoader = new HttpJwksLoader($httpClient);
+
+        if ($cache !== null) {
+            $jwksLoader = new CachingJwksLoader($jwksLoader, $cache);
         }
 
         $idTokenValidator = new JwtIdTokenValidator($config, $jwksLoader);
 
-        $authorizationCode = new AuthorizationCode($config, $this->httpClient, $idTokenValidator);
+        $authorizationCode = new AuthorizationCode($config, $httpClient, $idTokenValidator);
 
-        $clientCredentials = new ClientCredentials($config, $this->httpClient);
+        $clientCredentials = new ClientCredentials($config, $httpClient);
 
-        $opaqueAccessTokenValidator = new OpaqueAccessTokenValidator($config, $this->httpClient);
+        $opaqueAccessTokenValidator = new OpaqueAccessTokenValidator($config, $httpClient);
 
-        if ($this->cache !== null) {
+        if ($cache !== null) {
             $opaqueAccessTokenValidator = new CachingAccessTokenValidator(
-                $opaqueAccessTokenValidator,
-                $this->cache,
-                cacheSecret: $this->cacheSecret,
+                inner: $opaqueAccessTokenValidator,
+                cache: $cache,
+                clock: $clock,
+                cacheSecret: $cacheSecret,
             );
         }
 

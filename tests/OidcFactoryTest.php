@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect;
 
+use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
-use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
+use DigitalCz\OpenIDConnect\Util\PkceMethod;
+use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Clock\ClockInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -21,28 +24,32 @@ class OidcFactoryTest extends TestCase
 {
     private HttpClientInterface&MockObject $httpClient;
     private CacheInterface&MockObject $cache;
-    private ClientMetadata $clientMetadata;
     private IssuerMetadata $issuerMetadata;
 
-    public function testConstructorWithHttpClientOnly(): void
+    public function testCreateWithMinimalParameters(): void
     {
-        $factory = new OidcFactory($this->httpClient);
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+        );
 
-        $this->assertInstanceOf(OidcFactory::class, $factory);
-    }
-
-    public function testConstructorWithHttpClientAndCache(): void
-    {
-        $factory = new OidcFactory($this->httpClient, $this->cache);
-
-        $this->assertInstanceOf(OidcFactory::class, $factory);
+        $this->assertInstanceOf(Oidc::class, $oidc);
+        $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
+        $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
+        $this->assertInstanceOf(ResourceServer::class, $oidc->resourceServer());
     }
 
     public function testCreateWithStaticIssuerMetadata(): void
     {
-        $factory = new OidcFactory($this->httpClient, $this->cache);
-
-        $oidc = $factory->create($this->issuerMetadata, $this->clientMetadata);
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            cache: $this->cache,
+        );
 
         $this->assertInstanceOf(Oidc::class, $oidc);
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
@@ -58,10 +65,16 @@ class OidcFactoryTest extends TestCase
         $this->setupDiscoveryMock($httpClient, 'auth.example.com');
         $this->setupCacheMock($cache);
 
-        $factory = new OidcFactory($httpClient, $cache);
         $discoveryUrl = 'https://auth.example.com';
 
-        $oidc = $factory->create($discoveryUrl, $this->clientMetadata);
+        $oidc = OidcFactory::create(
+            httpClient: $httpClient,
+            issuer: $discoveryUrl,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            cache: $cache,
+        );
 
         $this->assertInstanceOf(Oidc::class, $oidc);
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
@@ -75,10 +88,15 @@ class OidcFactoryTest extends TestCase
 
         $this->setupDiscoveryMock($httpClient, 'auth.example.com');
 
-        $factory = new OidcFactory($httpClient);
         $discoveryUrl = 'https://auth.example.com';
 
-        $oidc = $factory->create($discoveryUrl, $this->clientMetadata);
+        $oidc = OidcFactory::create(
+            httpClient: $httpClient,
+            issuer: $discoveryUrl,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+        );
 
         $this->assertInstanceOf(Oidc::class, $oidc);
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
@@ -88,9 +106,13 @@ class OidcFactoryTest extends TestCase
 
     public function testCreateWithStaticIssuerMetadataWithoutCache(): void
     {
-        $factory = new OidcFactory($this->httpClient);
-
-        $oidc = $factory->create($this->issuerMetadata, $this->clientMetadata);
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+        );
 
         $this->assertInstanceOf(Oidc::class, $oidc);
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
@@ -100,9 +122,14 @@ class OidcFactoryTest extends TestCase
 
     public function testCreateComponentsAreProperlyConfigured(): void
     {
-        $factory = new OidcFactory($this->httpClient, $this->cache);
-
-        $oidc = $factory->create($this->issuerMetadata, $this->clientMetadata);
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            cache: $this->cache,
+        );
 
         // Test that all main components exist
         $authorizationCode = $oidc->authorizationCode();
@@ -130,26 +157,30 @@ class OidcFactoryTest extends TestCase
             $httpClient = $this->createMock(HttpClientInterface::class);
             $this->setupDiscoveryMock($httpClient, 'openid_configuration');
 
-            $factory = new OidcFactory($httpClient);
-            $oidc = $factory->create($url, $this->clientMetadata);
+            $oidc = OidcFactory::create(
+                httpClient: $httpClient,
+                issuer: $url,
+                clientId: 'test-client-id',
+                clientSecret: 'test-client-secret',
+                redirectUri: 'https://client.example.com/callback',
+            );
             $this->assertInstanceOf(Oidc::class, $oidc);
         }
     }
 
-    public function testCreatePreservesClientMetadata(): void
+    public function testCreateWithCustomParameters(): void
     {
-        $factory = new OidcFactory($this->httpClient);
-        $customClientMetadata = new ClientMetadata(
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
             clientId: 'custom-client-123',
             clientSecret: 'custom-secret-456',
             redirectUri: 'https://custom.example.com/callback',
             defaultScopes: ['openid', 'profile', 'custom-scope'],
         );
 
-        $oidc = $factory->create($this->issuerMetadata, $customClientMetadata);
-
         $this->assertInstanceOf(Oidc::class, $oidc);
-        // The factory should preserve and use the provided client metadata
+        // The factory should preserve and use the provided parameters
         // This is verified by the fact that components are created successfully
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
         $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
@@ -161,9 +192,13 @@ class OidcFactoryTest extends TestCase
 
         $this->setupDiscoveryMock($httpClient, 'openid_configuration');
 
-        $factory = new OidcFactory($httpClient);
-
-        $oidc = $factory->create('', $this->clientMetadata);
+        $oidc = OidcFactory::create(
+            httpClient: $httpClient,
+            issuer: '',
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+        );
 
         $this->assertInstanceOf(Oidc::class, $oidc);
     }
@@ -174,10 +209,21 @@ class OidcFactoryTest extends TestCase
 
         $this->setupDiscoveryMock($httpClient, 'other.example.com');
 
-        $factory = new OidcFactory($httpClient);
+        $oidc1 = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+        );
 
-        $oidc1 = $factory->create($this->issuerMetadata, $this->clientMetadata);
-        $oidc2 = $factory->create('https://other.example.com', $this->clientMetadata);
+        $oidc2 = OidcFactory::create(
+            httpClient: $httpClient,
+            issuer: 'https://other.example.com',
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+        );
 
         $this->assertInstanceOf(Oidc::class, $oidc1);
         $this->assertInstanceOf(Oidc::class, $oidc2);
@@ -187,26 +233,105 @@ class OidcFactoryTest extends TestCase
         $this->assertNotSame($oidc1->resourceServer(), $oidc2->resourceServer());
     }
 
-    public function testConstructorWithCustomCacheSecret(): void
+    public function testCreateWithCustomCacheSecret(): void
     {
         $customSecret = 'my-custom-secret-key';
-        $factory = new OidcFactory($this->httpClient, $this->cache, $customSecret);
 
-        $this->assertInstanceOf(OidcFactory::class, $factory);
-    }
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            cache: $this->cache,
+            cacheSecret: $customSecret,
+        );
 
-    public function testCreateWithCustomCacheSecretCreatesValidOidcInstance(): void
-    {
-        $customSecret = 'application-specific-secret';
-
-        $factory = new OidcFactory($this->httpClient, $this->cache, $customSecret);
-        $oidc = $factory->create($this->issuerMetadata, $this->clientMetadata);
-
-        // Verify that the factory creates a valid Oidc instance with custom cache secret
         $this->assertInstanceOf(Oidc::class, $oidc);
         $this->assertInstanceOf(ResourceServer::class, $oidc->resourceServer());
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
         $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
+    }
+
+    public function testCreateWithAuthenticationMethod(): void
+    {
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            authenticationMethod: AuthenticationMethod::ClientSecretPost,
+        );
+
+        $this->assertInstanceOf(Oidc::class, $oidc);
+    }
+
+    public function testCreateWithPkceMethod(): void
+    {
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            redirectUri: 'https://client.example.com/callback',
+            pkceMethod: PkceMethod::S256,
+        );
+
+        $this->assertInstanceOf(Oidc::class, $oidc);
+    }
+
+    public function testCreateWithCustomClock(): void
+    {
+        $clock = $this->createMock(ClockInterface::class);
+
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            clock: $clock,
+        );
+
+        $this->assertInstanceOf(Oidc::class, $oidc);
+    }
+
+    public function testCreateWithAllOptionalParameters(): void
+    {
+        $clock = new SimpleClock();
+
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            defaultScopes: ['openid', 'profile', 'email', 'custom'],
+            authenticationMethod: AuthenticationMethod::ClientSecretBasic,
+            pkceMethod: PkceMethod::S256,
+            cache: $this->cache,
+            cacheSecret: 'test-cache-secret',
+            clock: $clock,
+        );
+
+        $this->assertInstanceOf(Oidc::class, $oidc);
+        $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
+        $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
+        $this->assertInstanceOf(ResourceServer::class, $oidc->resourceServer());
+    }
+
+    public function testCreateWithPublicClient(): void
+    {
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'public-client-id',
+            redirectUri: 'https://client.example.com/callback',
+            authenticationMethod: AuthenticationMethod::None,
+            pkceMethod: PkceMethod::S256,
+        );
+
+        $this->assertInstanceOf(Oidc::class, $oidc);
     }
 
     protected function setUp(): void
@@ -227,13 +352,6 @@ class OidcFactoryTest extends TestCase
             'subject_types_supported' => ['public'],
             'id_token_signing_alg_values_supported' => ['RS256'],
         ]);
-
-        $this->clientMetadata = new ClientMetadata(
-            clientId: 'test-client-id',
-            clientSecret: 'test-client-secret',
-            redirectUri: 'https://client.example.com/callback',
-            defaultScopes: ['openid', 'profile', 'email'],
-        );
     }
 
     private function setupDiscoveryMock(
