@@ -33,7 +33,7 @@ final class HttpDiscoverer implements Discoverer
     {
         $discoveryUrl = rtrim($issuer, '/') . '/.well-known/openid-configuration';
 
-        /** @var array<string, mixed> $response */
+        /** @var array<string, string|string[]|bool> $response */
         $response = $this->httpClient->request('GET', $discoveryUrl)->toArray();
 
         return new IssuerMetadata($response);

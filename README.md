@@ -26,47 +26,43 @@ $ composer require digitalcz/openid-connect
 
 ```php
 use DigitalCz\OpenIDConnect\OidcFactory;
-use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use Symfony\Component\HttpClient\HttpClient;
 
 $httpClient = HttpClient::create();
-$factory = new OidcFactory($httpClient);
 
-$clientMetadata = new ClientMetadata(
-    clientId: 'clientid',
-    clientSecret: 'clientsecret',
-    redirectUri: 'https://example.com/callback'
+$oidc = OidcFactory::create(
+    httpClient: $httpClient,
+    issuer: 'https://auth.example.com',
+    clientId: 'my-client-id',
+    clientSecret: 'my-client-secret',
+    redirectUri: 'https://myapp.example.com/callback',
 );
-
-$oidc = $factory->create('https://example.com', $clientMetadata);
 ```
 
 <details>
-<summary>Using manual configuration</summary>
+<summary>Using manual issuer configuration</summary>
 
 ```php
 use DigitalCz\OpenIDConnect\OidcFactory;
-use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 use Symfony\Component\HttpClient\HttpClient;
 
 $httpClient = HttpClient::create();
-$factory = new OidcFactory($httpClient);
-
-$clientMetadata = new ClientMetadata(
-    clientId: 'clientid',
-    clientSecret: 'clientsecret',
-    redirectUri: 'https://example.com/callback'
-);
 
 $issuerMetadata = new IssuerMetadata([
-    'authorization_endpoint' => 'https://example.com/authorize',
-    'token_endpoint' => 'https://example.com/token',
-    'jwks_uri' => 'https://example.com/.well-known/jwks.json',
-    'issuer' => 'https://example.com',
+    'authorization_endpoint' => 'https://auth.example.com/authorize',
+    'token_endpoint' => 'https://auth.example.com/token',
+    'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
+    'issuer' => 'https://auth.example.com',
 ]);
 
-$oidc = $factory->create($issuerMetadata, $clientMetadata);
+$oidc = OidcFactory::create(
+    httpClient: $httpClient,
+    issuer: $issuerMetadata,
+    clientId: 'my-client-id',
+    clientSecret: 'my-client-secret',
+    redirectUri: 'https://myapp.example.com/callback',
+);
 ```
 </details>
 
@@ -125,10 +121,6 @@ echo "Token expires at: " . date('Y-m-d H:i:s', $validatedToken->exp()) . PHP_EO
 ```
 
 See [examples](examples) for more complete examples
-
-## Change log
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
 ## Testing
 

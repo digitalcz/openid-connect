@@ -2,21 +2,20 @@
 
 declare(strict_types=1);
 
-use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\OidcFactory;
 use Symfony\Component\HttpClient\HttpClient;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 $httpClient = HttpClient::create();
-$factory = new OidcFactory($httpClient);
 
-$clientMetadata = new ClientMetadata(
-    clientId: 'clientid',
-    clientSecret: 'clientsecret',
-    redirectUri: 'https://example.com/callback',
+$oidc = OidcFactory::create(
+    httpClient: $httpClient,
+    issuer: 'https://auth.example.com',
+    clientId: 'my-client-id',
+    clientSecret: 'my-client-secret',
+    redirectUri: 'https://myapp.example.com/callback',
 );
-$oidc = $factory->create('https://samples.auth0.com/', $clientMetadata);
 $authorizationCode = $oidc->authorizationCode();
 
 $url = $authorizationCode->createAuthorizationUrl(['state' => 'foo', 'nonce' => 'bar']);

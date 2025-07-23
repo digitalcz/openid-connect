@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\OidcFactory;
 use DigitalCz\OpenIDConnect\ResourceServer\JwtAccessToken;
 use DigitalCz\OpenIDConnect\ResourceServer\OpaqueAccessToken;
@@ -12,11 +11,13 @@ use Symfony\Component\HttpClient\HttpClient;
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 $httpClient = HttpClient::create();
-$factory = new OidcFactory($httpClient);
 
-$clientMetadata = new ClientMetadata(clientId: 'your-client-id', clientSecret: 'your-client-secret');
-
-$oidc = $factory->create('https://your-issuer.com', $clientMetadata);
+$oidc = OidcFactory::create(
+    httpClient: $httpClient,
+    issuer: 'https://auth.example.com',
+    clientId: 'my-client-id',
+    clientSecret: 'my-client-secret',
+);
 
 $resourceServer = $oidc->resourceServer();
 

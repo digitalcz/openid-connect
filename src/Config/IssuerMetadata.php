@@ -14,7 +14,7 @@ final readonly class IssuerMetadata
     use ParamsTrait;
 
     /**
-     * @param array<string, mixed> $metadata
+     * @param array<string, string|string[]|bool> $metadata
      */
     public function __construct(private array $metadata)
     {

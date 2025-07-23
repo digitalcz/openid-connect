@@ -9,16 +9,16 @@ use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 /**
  * OAuth2 client authentication methods for token requests.
  */
-enum AuthenticationMethod
+enum AuthenticationMethod: string
 {
     /** HTTP Basic authentication with client credentials. */
-    case ClientSecretBasic;
+    case ClientSecretBasic = 'client_secret_basic';
 
     /** Client credentials sent in HTTP request body. */
-    case ClientSecretPost;
+    case ClientSecretPost = 'client_secret_post';
 
     /** Public client with no authentication. */
-    case None;
+    case None = 'none';
 
     /**
      * Convert authentication method to HTTP client options.
