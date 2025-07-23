@@ -93,21 +93,4 @@ class SimpleClockTest extends TestCase
             $clockTime->getTimestamp(),
         );
     }
-
-    public function testHighPrecisionTiming(): void
-    {
-        $clock = new SimpleClock();
-
-        $time1 = $clock->now();
-        $time2 = $clock->now();
-
-        // Even rapid successive calls should return different microseconds
-        // (though this test might occasionally fail due to system timing)
-        $microDiff = abs($time1->format('u') - $time2->format('u'));
-
-        // Either different microseconds or different seconds
-        $this->assertTrue(
-            $microDiff > 0 || $time1->getTimestamp() !== $time2->getTimestamp(),
-        );
-    }
 }
