@@ -74,6 +74,24 @@ final readonly class AuthorizationCode
     }
 
     /**
+     * Create logout URL for user session termination.
+     *
+     * @param array<string, string> $params Additional query parameters
+     * @return string Logout URL with query parameters
+     */
+    public function createLogoutUrl(array $params = []): string
+    {
+        $issuerMetadata = $this->config->issuerMetadata();
+        $clientMetadata = $this->config->clientMetadata();
+
+        $endSessionEndpoint = $issuerMetadata->endSessionEndpoint();
+
+        $params['client_id'] ??= $clientMetadata->clientId();
+
+        return $endSessionEndpoint . '?' . http_build_query($params);
+    }
+
+    /**
      * Exchange authorization code for tokens.
      *
      * @param string $code Authorization code from callback

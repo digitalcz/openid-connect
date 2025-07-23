@@ -6,7 +6,6 @@
 [![License](http://poser.pugx.org/digitalcz/openid-connect/license)](https://packagist.org/packages/digitalcz/openid-connect) 
 [![PHP Version Require](http://poser.pugx.org/digitalcz/openid-connect/require/php)](https://packagist.org/packages/digitalcz/openid-connect)
 [![CI](https://github.com/digitalcz/openid-connect/workflows/CI/badge.svg)](https://github.com/digitalcz/openid-connect/actions)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/digitalcz/openid-connect/badges/quality-score.png?b=1.x)](https://scrutinizer-ci.com/g/digitalcz/openid-connect/?branch=1.x)
 [![codecov](https://codecov.io/gh/digitalcz/openid-connect/branch/1.x/graph/badge.svg?token=QzZ5iMNkg3)](https://codecov.io/gh/digitalcz/openid-connect)
 
 PHP implementation of [OpenID Connect](https://openid.net/specs/openid-connect-core-1_0.html) using symfony/contracts
