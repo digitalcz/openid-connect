@@ -111,13 +111,17 @@ echo "Access Token: " . $tokens->accessToken() . PHP_EOL;
 ### Resource Server (Token Validation)
 
 ```php
+use DigitalCz\OpenIDConnect\ResourceServer\JwtAccessToken;
+use DigitalCz\OpenIDConnect\ResourceServer\OpaqueAccessToken;
+use DigitalCz\OpenIDConnect\Util\JWT;
+
 $resourceServer = $oidc->resourceServer();
 
-// Validate an access token
-$accessToken = $resourceServer->validateAccessToken($tokenString);
+$accessToken = new JwtAccessToken($jwt);
+$validatedToken = $resourceServer->introspect($accessToken);
 
-echo "Token is valid for client: " . $accessToken->clientId() . PHP_EOL;
-echo "Token expires at: " . $accessToken->expiresAt()->format('Y-m-d H:i:s') . PHP_EOL;
+echo "Token is valid for subject: " . $validatedToken->sub() . PHP_EOL;
+echo "Token expires at: " . date('Y-m-d H:i:s', $validatedToken->exp()) . PHP_EOL;
 ```
 
 See [examples](examples) for more complete examples
