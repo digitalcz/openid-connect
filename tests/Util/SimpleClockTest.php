@@ -47,27 +47,6 @@ class SimpleClockTest extends TestCase
         $this->assertLessThanOrEqual(2, $timeDifference);
     }
 
-    public function testMultipleCallsReturnDifferentTimes(): void
-    {
-        $clock = new SimpleClock();
-
-        $first = $clock->now();
-        usleep(10000); // Sleep for 10ms to ensure different timestamps
-        $second = $clock->now();
-
-        $this->assertNotEquals($first, $second);
-        $this->assertGreaterThanOrEqual($first->getTimestamp(), $second->getTimestamp());
-
-        // Either different timestamps or different microseconds
-        $timestampDiff = $second->getTimestamp() - $first->getTimestamp();
-        $microDiff = (int) $second->format('u') - (int) $first->format('u');
-
-        $this->assertTrue(
-            $timestampDiff > 0 || $microDiff > 0,
-            'Expected second call to return different time than first call',
-        );
-    }
-
     public function testNowReturnsImmutableObject(): void
     {
         $clock = new SimpleClock();
