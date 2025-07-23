@@ -25,33 +25,48 @@ $ composer require digitalcz/openid-connect
 #### Using the OIDC discovery endpoint
 
 ```php
-use DigitalCz\OpenIDConnect\ClientMetadata;
-use DigitalCz\OpenIDConnect\ClientFactory;
+use DigitalCz\OpenIDConnect\OidcFactory;
+use DigitalCz\OpenIDConnect\Config\ClientMetadata;
+use Symfony\Component\HttpClient\HttpClient;
 
-$issuerUrl = 'https://example.com';
-$clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
-$client = ClientFactory::create($issuerUrl, $clientMetadata);
+$httpClient = HttpClient::create();
+$factory = new OidcFactory($httpClient);
+
+$clientMetadata = new ClientMetadata(
+    clientId: 'clientid',
+    clientSecret: 'clientsecret',
+    redirectUri: 'https://example.com/callback'
+);
+
+$oidc = $factory->create('https://example.com', $clientMetadata);
 ```
 
 <details>
-<summary>Manually</summary>
+<summary>Using manual configuration</summary>
 
 ```php
-use DigitalCz\OpenIDConnect\Client;
-use DigitalCz\OpenIDConnect\ClientMetadata;
-use DigitalCz\OpenIDConnect\Config;
-use DigitalCz\OpenIDConnect\Http\HttpClientFactory;
-use DigitalCz\OpenIDConnect\Token\TokenVerifierFactory;
-use DigitalCz\OpenIDConnect\ProviderMetadata;
+use DigitalCz\OpenIDConnect\OidcFactory;
+use DigitalCz\OpenIDConnect\Config\ClientMetadata;
+use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
+use Symfony\Component\HttpClient\HttpClient;
 
-$clientMetadata = new ClientMetadata('clientid', 'clientsecret', 'https://example.com/callback');
-$providerMetadata = new ProviderMetadata([
-    ProviderMetadata::AUTHORIZATION_ENDPOINT => 'https://example.com/authorize',
-    ProviderMetadata::TOKEN_ENDPOINT => 'https://example.com/token',
-    // ...
-])
-$config = new Config($providerMetadata, $clientMetadata);
-$client = new Client($config, HttpClientFactory::create());
+$httpClient = HttpClient::create();
+$factory = new OidcFactory($httpClient);
+
+$clientMetadata = new ClientMetadata(
+    clientId: 'clientid',
+    clientSecret: 'clientsecret',
+    redirectUri: 'https://example.com/callback'
+);
+
+$issuerMetadata = new IssuerMetadata([
+    'authorization_endpoint' => 'https://example.com/authorize',
+    'token_endpoint' => 'https://example.com/token',
+    'jwks_uri' => 'https://example.com/.well-known/jwks.json',
+    'issuer' => 'https://example.com',
+]);
+
+$oidc = $factory->create($issuerMetadata, $clientMetadata);
 ```
 </details>
 
@@ -60,50 +75,52 @@ $client = new Client($config, HttpClientFactory::create());
 #### Step 1 - Redirect the user to authorization endpoint
 
 ```php
-use DigitalCz\OpenIDConnect\Param\AuthorizationParams;
+$authorizationCode = $oidc->authorizationCode();
 
-$state = bin2hex(random_bytes(8));
-$_SESSION['oauth_state'] = $state;
-
-$authorizationParams = new AuthorizationParams([
-    AuthorizationParams::SCOPE => 'openid profile',
-    AuthorizationParams::STATE => $state,
+$url = $authorizationCode->createAuthorizationUrl([
+    'state' => 'random-state',
+    'nonce' => 'random-nonce'
 ]);
 
-$url = $client->getAuthorizationUrl($authorizationParams); 
-header('Location: ' . $url);
-exit();
+// Redirect user to $url
 ```
 
-#### Step 2 - Handle callback and exchange code for tokens
+#### Step 2 - Handle the callback and exchange code for tokens
 
 ```php
-use DigitalCz\OpenIDConnect\Param\CallbackParams;
-use DigitalCz\OpenIDConnect\Param\CallbackChecks;
+// Get the authorization code from the callback URL
+$code = $_GET['code'];
+$nonce = 'random-nonce'; // Same nonce used in step 1
 
-$tokens = $client->handleCallback(
-    new CallbackParams($_GET),
-    new CallbackChecks($_SESSION['oauth_state'])
-);
+$tokens = $authorizationCode->fetchTokens($code, $nonce);
+
+echo "Access Token: " . $tokens->accessToken() . PHP_EOL;
+echo "ID Token: " . $tokens->idToken() . PHP_EOL;
+echo "Refresh Token: " . $tokens->refreshToken() . PHP_EOL;
 ```
 
 ### Client Credentials flow
 
 ```php
-use DigitalCz\OpenIDConnect\Grant\ClientCredentials;
-use DigitalCz\OpenIDConnect\Param\TokenParams;
+$clientCredentials = $oidc->clientCredentials();
+$tokens = $clientCredentials->fetchTokens();
 
-$tokens = $client->requestTokens(
-    new TokenParams(
-        new ClientCredentials(),
-        [
-            TokenParams::SCOPE => 'some scope'
-        ]
-    )
-);
+echo "Access Token: " . $tokens->accessToken() . PHP_EOL;
 ```
 
-See [examples](examples) for more
+### Resource Server (Token Validation)
+
+```php
+$resourceServer = $oidc->resourceServer();
+
+// Validate an access token
+$accessToken = $resourceServer->validateAccessToken($tokenString);
+
+echo "Token is valid for client: " . $accessToken->clientId() . PHP_EOL;
+echo "Token expires at: " . $accessToken->expiresAt()->format('Y-m-d H:i:s') . PHP_EOL;
+```
+
+See [examples](examples) for more complete examples
 
 ## Change log
 

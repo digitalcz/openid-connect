@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use DigitalCz\OpenIDConnect\Client\RefreshToken;
+use DigitalCz\OpenIDConnect\Client\Tokens;
 use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\OidcFactory;
 use Symfony\Component\HttpClient\HttpClient;
@@ -17,8 +19,12 @@ $clientMetadata = new ClientMetadata(
     redirectUri: 'https://example.com/callback',
 );
 $oidc = $factory->create('https://samples.auth0.com/', $clientMetadata);
-$clientCredentials = $oidc->clientCredentials();
+$authorizationCode = $oidc->authorizationCode();
 
-$tokens = $clientCredentials->fetchTokens();
+$refreshToken = readline('Enter your refresh token: ');
 
-dump(tokens: $tokens);
+$tokens = new Tokens(refreshToken: new RefreshToken($refreshToken));
+
+$newTokens = $authorizationCode->refreshToken($tokens);
+
+dump(newTokens: $newTokens);

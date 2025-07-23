@@ -17,8 +17,19 @@ $clientMetadata = new ClientMetadata(
     redirectUri: 'https://example.com/callback',
 );
 $oidc = $factory->create('https://samples.auth0.com/', $clientMetadata);
-$clientCredentials = $oidc->clientCredentials();
+$authorizationCode = $oidc->authorizationCode();
 
-$tokens = $clientCredentials->fetchTokens();
+$url = $authorizationCode->createAuthorizationUrl(['state' => 'foo', 'nonce' => 'bar']);
+
+echo "Open the following URL in your browser:" . PHP_EOL;
+echo $url . PHP_EOL . PHP_EOL;
+
+$code = readline('Insert the authorization code from the URL: ');
+
+$tokens = $authorizationCode->fetchTokens($code, 'bar');
 
 dump(tokens: $tokens);
+
+$userinfo = $authorizationCode->fetchUserinfo($tokens);
+
+dump(userinfo: $userinfo);

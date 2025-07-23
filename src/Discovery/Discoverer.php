@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Discovery;
 
-use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
-use DigitalCz\OpenIDConnect\ProviderMetadata;
+use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 
+/**
+ * Interface for OIDC discovery implementations.
+ */
 interface Discoverer
 {
-    /**
-     * @throws DiscoveryException
-     */
-    public function discover(string $issuerUrl): ProviderMetadata;
+    /** Discovers OIDC provider metadata from issuer. */
+    public function discover(string $issuer): IssuerMetadata;
 }

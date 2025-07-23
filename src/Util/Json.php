@@ -6,6 +6,9 @@ namespace DigitalCz\OpenIDConnect\Util;
 
 use JsonException;
 
+/**
+ * Safe JSON operations with error handling
+ */
 final class Json
 {
     /**
