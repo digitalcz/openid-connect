@@ -179,7 +179,7 @@ class JwtIdTokenValidatorTest extends TestCase
         $this->jwksLoader->expects($this->once())
             ->method('load')
             ->with('https://auth.example.com/.well-known/jwks.json')
-            ->willReturn($this->createMockJwks());
+            ->willReturn($this->createSampleJwks());
 
         // This will throw due to signature validation failure in our mock
         $this->expectException(InvalidTokenException::class);
@@ -245,6 +245,123 @@ class JwtIdTokenValidatorTest extends TestCase
         $this->assertTrue(true); // Test passes if no exceptions during setup
     }
 
+    public function testValidateSignatureDirectCall(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = $this->createValidIdToken();
+
+        $this->jwksLoader->expects($this->once())
+            ->method('load')
+            ->with('https://auth.example.com/.well-known/jwks.json')
+            ->willReturn($this->createSampleJwks());
+
+        // Access the validateSignature method via validate() since it's called internally
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
+    public function testValidateSignatureWithInvalidJwks(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = $this->createValidIdToken();
+
+        $this->jwksLoader->method('load')
+            ->willReturn([]); // Invalid JWKS structure
+
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
+    public function testValidateWithExpiredToken(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = $this->createExpiredIdToken();
+
+        $this->setupSuccessfulJwksLoad();
+
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
+    public function testValidateWithFutureToken(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = $this->createFutureIdToken();
+
+        $this->setupSuccessfulJwksLoad();
+
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
+    public function testValidateWithMissingRequiredClaims(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = $this->createIdTokenWithMissingClaims();
+
+        $this->setupSuccessfulJwksLoad();
+
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
+    public function testValidateWithWrongIssuer(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = $this->createIdTokenWithWrongIssuer();
+
+        $this->setupSuccessfulJwksLoad();
+
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
+    public function testValidateWithWrongAudience(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = $this->createIdTokenWithWrongAudience();
+
+        $this->setupSuccessfulJwksLoad();
+
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
+    public function testValidateNonceWithEmptyString(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = $this->createIdTokenWithNonce('');
+
+        $this->setupSuccessfulJwksLoad();
+
+        // Empty string nonce should fail when expecting non-empty nonce
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token, 'expected-nonce');
+    }
+
+    public function testValidateWithCustomMandatoryClaims(): void
+    {
+        $customClaims = ['iss', 'sub', 'aud', 'exp', 'iat', 'custom_claim'];
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock, 10, $customClaims);
+
+        $token = $this->createIdTokenWithCustomClaim();
+        $this->setupSuccessfulJwksLoad();
+
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
+    public function testValidateWithZeroTimeDrift(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader, $this->clock, 0);
+        $token = $this->createValidIdToken();
+
+        $this->setupSuccessfulJwksLoad();
+
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -294,70 +411,115 @@ class JwtIdTokenValidatorTest extends TestCase
 
     private function createValidIdToken(): IdToken
     {
-        // Create a simple fake JWT token for testing
-        // Note: This is not a valid JWT signature, but enough for testing the validator logic
-        $header = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-        $payload = base64_encode(json_encode([
+        $jwt = $this->createSampleJwt([
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'test-client-id',
             'exp' => time() + 3600,
             'iat' => time(),
             'nonce' => 'test-nonce',
-        ]));
-        $signature = base64_encode('fake-signature');
+        ]);
 
-        $fakeJwt = $header . '.' . $payload . '.' . $signature;
-
-        return new IdToken($fakeJwt);
+        return new IdToken($jwt);
     }
 
     private function createInvalidIdToken(): IdToken
     {
-        // Create an invalid token (not proper JWT format)
-        return new IdToken('invalid.jwt.token');
+        return new IdToken($this->createInvalidJwt());
     }
 
     private function createIdTokenWithNonce(string $nonce): IdToken
     {
-        // Create a simple fake JWT token with specific nonce
-        $header = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-        $payload = base64_encode(json_encode([
+        $jwt = $this->createSampleJwt([
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'test-client-id',
             'exp' => time() + 3600,
             'iat' => time(),
             'nonce' => $nonce,
-        ]));
-        $signature = base64_encode('fake-signature');
+        ]);
 
-        $fakeJwt = $header . '.' . $payload . '.' . $signature;
-
-        return new IdToken($fakeJwt);
+        return new IdToken($jwt);
     }
 
     private function setupSuccessfulJwksLoad(): void
     {
-        $this->jwksLoader->method('load')->willReturn($this->createMockJwks());
+        $this->jwksLoader->method('load')->willReturn($this->createSampleJwks());
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function createMockJwks(): array
+    private function createExpiredIdToken(): IdToken
     {
-        return [
-            'keys' => [
-                [
-                    'kty' => 'RSA',
-                    'use' => 'sig',
-                    'kid' => 'test-key-id',
-                    'n' => 'mock-modulus',
-                    'e' => 'AQAB',
-                    'alg' => 'RS256',
-                ],
-            ],
-        ];
+        $jwt = $this->createExpiredJwt([
+            'iss' => 'https://auth.example.com',
+            'sub' => 'user123',
+            'aud' => 'test-client-id',
+            'nonce' => 'test-nonce',
+        ]);
+
+        return new IdToken($jwt);
+    }
+
+    private function createFutureIdToken(): IdToken
+    {
+        $jwt = $this->createSampleJwt([
+            'iss' => 'https://auth.example.com',
+            'sub' => 'user123',
+            'aud' => 'test-client-id',
+            'exp' => time() + 3600,
+            'iat' => time() + 1800, // Issued in the future
+            'nonce' => 'test-nonce',
+        ]);
+
+        return new IdToken($jwt);
+    }
+
+    private function createIdTokenWithMissingClaims(): IdToken
+    {
+        $jwt = $this->createJwtWithMissingClaims(['aud', 'exp', 'iat']);
+
+        return new IdToken($jwt);
+    }
+
+    private function createIdTokenWithWrongIssuer(): IdToken
+    {
+        $jwt = $this->createSampleJwt([
+            'iss' => 'https://wrong-issuer.com', // Wrong issuer
+            'sub' => 'user123',
+            'aud' => 'test-client-id',
+            'exp' => time() + 3600,
+            'iat' => time(),
+            'nonce' => 'test-nonce',
+        ]);
+
+        return new IdToken($jwt);
+    }
+
+    private function createIdTokenWithWrongAudience(): IdToken
+    {
+        $jwt = $this->createSampleJwt([
+            'iss' => 'https://auth.example.com',
+            'sub' => 'user123',
+            'aud' => 'wrong-client-id', // Wrong audience
+            'exp' => time() + 3600,
+            'iat' => time(),
+            'nonce' => 'test-nonce',
+        ]);
+
+        return new IdToken($jwt);
+    }
+
+    private function createIdTokenWithCustomClaim(): IdToken
+    {
+        $jwt = $this->createSampleJwt([
+            'iss' => 'https://auth.example.com',
+            'sub' => 'user123',
+            'aud' => 'test-client-id',
+            'exp' => time() + 3600,
+            'iat' => time(),
+            'nonce' => 'test-nonce',
+            'custom_claim' => 'custom_value',
+        ]);
+
+        return new IdToken($jwt);
     }
 }

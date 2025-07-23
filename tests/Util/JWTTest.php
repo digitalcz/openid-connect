@@ -74,7 +74,7 @@ class JWTTest extends TestCase
     public function testParseWithInvalidJwt(): void
     {
         $this->expectException(UnexpectedValueException::class);
-        JWT::parse('invalid.jwt');
+        JWT::parse($this->createInvalidJwt());
     }
 
     public function testParseWithMalformedParts(): void
@@ -110,7 +110,7 @@ class JWTTest extends TestCase
     public function testClaimsWithInvalidJwt(): void
     {
         $this->expectException(UnexpectedValueException::class);
-        JWT::claims('invalid.jwt.token');
+        JWT::claims($this->createInvalidJwt());
     }
 
     public function testParseAndClaimsConsistency(): void
@@ -147,12 +147,7 @@ class JWTTest extends TestCase
             'picture' => 'https://example.com/avatar.jpg',
         ];
 
-        // Manually create JWT to test parsing
-        $headerEncoded = Base64Url::encode(Json::encode($header));
-        $payloadEncoded = Base64Url::encode(Json::encode($payload));
-        $signature = Base64Url::encode('fake-signature-for-testing');
-
-        $jwt = "{$headerEncoded}.{$payloadEncoded}.{$signature}";
+        $jwt = $this->createCustomJwt($header, $payload);
 
         $this->assertTrue(JWT::validate($jwt));
 
@@ -214,5 +209,168 @@ class JWTTest extends TestCase
         $this->assertStringContainsString('data', $claims['large_data']);
         $this->assertCount(100, $claims['array_data']);
         $this->assertSame('deep value', $claims['nested']['level1']['level2']['level3']);
+    }
+
+    public function testHeaderWithValidJwt(): void
+    {
+        $jwt = $this->createSampleJwt();
+
+        $header = JWT::header($jwt);
+
+        $this->assertIsArray($header);
+        $this->assertSame('JWT', $header['typ']);
+        $this->assertSame('RS256', $header['alg']);
+    }
+
+    public function testHeaderWithCustomHeader(): void
+    {
+        $customHeader = [
+            'typ' => 'JWT',
+            'alg' => 'ES256',
+            'kid' => 'custom-key-id',
+            'cty' => 'application/json',
+        ];
+
+        $jwt = $this->createCustomJwt($customHeader, ['sub' => 'test']);
+
+        $header = JWT::header($jwt);
+
+        $this->assertSame($customHeader, $header);
+        $this->assertSame('ES256', $header['alg']);
+        $this->assertSame('custom-key-id', $header['kid']);
+        $this->assertSame('application/json', $header['cty']);
+    }
+
+    public function testHeaderWithInvalidJwt(): void
+    {
+        $this->expectException(UnexpectedValueException::class);
+        JWT::header($this->createInvalidJwt());
+    }
+
+    public function testClaimWithExistingClaim(): void
+    {
+        $jwt = $this->createSampleJwt([
+            'sub' => 'user789',
+            'email' => 'test@example.com',
+            'roles' => ['admin', 'user'],
+            'custom_number' => 42,
+            'custom_boolean' => true,
+        ]);
+
+        $this->assertSame('user789', JWT::claim($jwt, 'sub'));
+        $this->assertSame('test@example.com', JWT::claim($jwt, 'email'));
+        $this->assertSame(['admin', 'user'], JWT::claim($jwt, 'roles'));
+        $this->assertSame(42, JWT::claim($jwt, 'custom_number'));
+        $this->assertTrue(JWT::claim($jwt, 'custom_boolean'));
+    }
+
+    public function testClaimWithNonExistentClaim(): void
+    {
+        $jwt = $this->createSampleJwt(['sub' => 'user123']);
+
+        $this->assertNull(JWT::claim($jwt, 'nonexistent'));
+        $this->assertNull(JWT::claim($jwt, 'missing_claim'));
+        $this->assertNull(JWT::claim($jwt, ''));
+    }
+
+    public function testClaimWithNullValue(): void
+    {
+        $jwt = $this->createSampleJwt([
+            'sub' => 'user123',
+            'null_claim' => null,
+        ]);
+
+        $this->assertNull(JWT::claim($jwt, 'null_claim'));
+        $this->assertSame('user123', JWT::claim($jwt, 'sub'));
+    }
+
+    public function testClaimWithInvalidJwt(): void
+    {
+        $this->expectException(UnexpectedValueException::class);
+        JWT::claim($this->createInvalidJwt(), 'sub');
+    }
+
+    public function testClaimWithComplexNestedData(): void
+    {
+        $nestedData = [
+            'user_info' => [
+                'profile' => [
+                    'name' => 'John Doe',
+                    'preferences' => [
+                        'theme' => 'dark',
+                        'language' => 'en',
+                    ],
+                ],
+            ],
+            'permissions' => [
+                'read' => true,
+                'write' => false,
+                'admin' => true,
+            ],
+        ];
+
+        $jwt = $this->createSampleJwt($nestedData);
+
+        $userInfo = JWT::claim($jwt, 'user_info');
+        $this->assertIsArray($userInfo);
+        $this->assertSame('John Doe', $userInfo['profile']['name']);
+        $this->assertSame('dark', $userInfo['profile']['preferences']['theme']);
+
+        $permissions = JWT::claim($jwt, 'permissions');
+        $this->assertIsArray($permissions);
+        $this->assertTrue($permissions['read']);
+        $this->assertFalse($permissions['write']);
+        $this->assertTrue($permissions['admin']);
+    }
+
+    public function testHeaderAndClaimsConsistency(): void
+    {
+        $jwt = $this->createSampleJwt(['test' => 'value']);
+
+        $parsed = JWT::parse($jwt);
+        $header = JWT::header($jwt);
+        $claims = JWT::claims($jwt);
+
+        // Header should match the header from parse
+        $this->assertSame($parsed['header'], $header);
+
+        // Claims should match the payload from parse
+        $this->assertSame($parsed['payload'], $claims);
+
+        // Individual claim access should work
+        $this->assertSame('value', JWT::claim($jwt, 'test'));
+    }
+
+    public function testAllMethodsWithSameJwt(): void
+    {
+        $testClaims = [
+            'sub' => 'consistent-user',
+            'iss' => 'test-issuer',
+            'aud' => 'test-audience',
+            'exp' => time() + 3600,
+            'iat' => time(),
+        ];
+
+        $jwt = $this->createSampleJwt($testClaims);
+
+        // Test all methods work with the same JWT
+        $this->assertTrue(JWT::validate($jwt));
+
+        $parsed = JWT::parse($jwt);
+        $this->assertArrayHasKey('header', $parsed);
+        $this->assertArrayHasKey('payload', $parsed);
+        $this->assertArrayHasKey('signature', $parsed);
+
+        $header = JWT::header($jwt);
+        $this->assertSame('JWT', $header['typ']);
+
+        $claims = JWT::claims($jwt);
+        $this->assertSame('consistent-user', $claims['sub']);
+
+        $subClaim = JWT::claim($jwt, 'sub');
+        $this->assertSame('consistent-user', $subClaim);
+
+        $missingClaim = JWT::claim($jwt, 'nonexistent');
+        $this->assertNull($missingClaim);
     }
 }

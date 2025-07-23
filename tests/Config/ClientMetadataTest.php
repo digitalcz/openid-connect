@@ -6,6 +6,7 @@ namespace DigitalCz\OpenIDConnect\Config;
 
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\TestCase;
+use DigitalCz\OpenIDConnect\Util\PkceMethod;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 #[CoversClass(ClientMetadata::class)]
@@ -20,6 +21,7 @@ class ClientMetadataTest extends TestCase
         $this->assertNull($clientMetadata->redirectUri());
         $this->assertSame(['openid', 'profile', 'email'], $clientMetadata->defaultScopes());
         $this->assertSame(AuthenticationMethod::ClientSecretPost, $clientMetadata->authenticationMethod());
+        $this->assertSame(PkceMethod::S256, $clientMetadata->pkceMethod());
     }
 
     public function testConstructorWithAllParameters(): void
@@ -30,6 +32,7 @@ class ClientMetadataTest extends TestCase
             redirectUri: 'https://example.com/callback',
             defaultScopes: ['openid', 'custom'],
             authenticationMethod: AuthenticationMethod::ClientSecretBasic,
+            pkceMethod: PkceMethod::Plain,
         );
 
         $this->assertSame('test-client-id', $clientMetadata->clientId());
@@ -37,6 +40,7 @@ class ClientMetadataTest extends TestCase
         $this->assertSame('https://example.com/callback', $clientMetadata->redirectUri());
         $this->assertSame(['openid', 'custom'], $clientMetadata->defaultScopes());
         $this->assertSame(AuthenticationMethod::ClientSecretBasic, $clientMetadata->authenticationMethod());
+        $this->assertSame(PkceMethod::Plain, $clientMetadata->pkceMethod());
     }
 
     public function testPublicClient(): void
@@ -68,5 +72,26 @@ class ClientMetadataTest extends TestCase
         $clientMetadata = new ClientMetadata(clientId: 'test-client-id', defaultScopes: $customScopes);
 
         $this->assertSame($customScopes, $clientMetadata->defaultScopes());
+    }
+
+    public function testPkceMethodS256(): void
+    {
+        $clientMetadata = new ClientMetadata(clientId: 'test-client-id', pkceMethod: PkceMethod::S256);
+
+        $this->assertSame(PkceMethod::S256, $clientMetadata->pkceMethod());
+    }
+
+    public function testPkceMethodPlain(): void
+    {
+        $clientMetadata = new ClientMetadata(clientId: 'test-client-id', pkceMethod: PkceMethod::Plain);
+
+        $this->assertSame(PkceMethod::Plain, $clientMetadata->pkceMethod());
+    }
+
+    public function testPkceMethodDisabled(): void
+    {
+        $clientMetadata = new ClientMetadata(clientId: 'test-client-id', pkceMethod: null);
+
+        $this->assertNull($clientMetadata->pkceMethod());
     }
 }

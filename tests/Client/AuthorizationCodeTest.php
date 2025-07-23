@@ -650,17 +650,13 @@ class AuthorizationCodeTest extends TestCase
 
     private function createValidJwtString(): string
     {
-        $header = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-        $payload = base64_encode(json_encode([
+        return $this->createSampleJwt([
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'test-client-id',
             'exp' => time() + 3600,
             'iat' => time(),
-        ]));
-        $signature = base64_encode('fake-signature');
-
-        return $header . '.' . $payload . '.' . $signature;
+        ]);
     }
 
     private function createTokensWithRefreshToken(): Tokens
