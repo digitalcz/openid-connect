@@ -606,6 +606,63 @@ class AuthorizationCodeTest extends TestCase
         $this->assertStringContainsString('nonce=custom-nonce-123', $result->url());
     }
 
+    public function testCreateLogoutUrlWithDefaults(): void
+    {
+        $logoutUrl = $this->authorizationCode->createLogoutUrl();
+
+        $this->assertIsString($logoutUrl);
+        $this->assertStringStartsWith('https://auth.example.com/logout', $logoutUrl);
+        $this->assertStringContainsString('client_id=test-client-id', $logoutUrl);
+    }
+
+    public function testCreateLogoutUrlWithCustomParams(): void
+    {
+        $params = [
+            'id_token_hint' => 'test-id-token',
+            'post_logout_redirect_uri' => 'https://client.example.com/logout-callback',
+            'state' => 'logout-state-123',
+        ];
+
+        $logoutUrl = $this->authorizationCode->createLogoutUrl($params);
+
+        $this->assertStringStartsWith('https://auth.example.com/logout', $logoutUrl);
+        $this->assertStringContainsString('client_id=test-client-id', $logoutUrl);
+        $this->assertStringContainsString('id_token_hint=test-id-token', $logoutUrl);
+        $this->assertStringContainsString(
+            'post_logout_redirect_uri=' . urlencode('https://client.example.com/logout-callback'),
+            $logoutUrl,
+        );
+        $this->assertStringContainsString('state=logout-state-123', $logoutUrl);
+    }
+
+    public function testCreateLogoutUrlOverrideClientId(): void
+    {
+        $params = [
+            'client_id' => 'custom-client-id',
+            'post_logout_redirect_uri' => 'https://custom.example.com/logout',
+        ];
+
+        $logoutUrl = $this->authorizationCode->createLogoutUrl($params);
+
+        $this->assertStringContainsString('client_id=custom-client-id', $logoutUrl);
+        $this->assertStringNotContainsString('client_id=test-client-id', $logoutUrl);
+        $this->assertStringContainsString(
+            'post_logout_redirect_uri=' . urlencode('https://custom.example.com/logout'),
+            $logoutUrl,
+        );
+    }
+
+    public function testCreateLogoutUrlWithEmptyParams(): void
+    {
+        $logoutUrl = $this->authorizationCode->createLogoutUrl([]);
+
+        $this->assertStringStartsWith('https://auth.example.com/logout', $logoutUrl);
+        $this->assertStringContainsString('client_id=test-client-id', $logoutUrl);
+        // Should only contain client_id
+        $this->assertStringNotContainsString('id_token_hint=', $logoutUrl);
+        $this->assertStringNotContainsString('post_logout_redirect_uri=', $logoutUrl);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -630,6 +687,7 @@ class AuthorizationCodeTest extends TestCase
             'authorization_endpoint' => 'https://auth.example.com/oauth/authorize',
             'token_endpoint' => 'https://auth.example.com/oauth/token',
             'userinfo_endpoint' => 'https://auth.example.com/userinfo',
+            'end_session_endpoint' => 'https://auth.example.com/logout',
             'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
             'response_types_supported' => ['code'],
             'subject_types_supported' => ['public'],
