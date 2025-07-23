@@ -379,7 +379,7 @@ class ParamsTraitTest extends TestCase
 /**
  * Test class that uses ParamsTrait for testing purposes
  */
-class TestParamsClass // @phpcs:ignore
+class TestParamsClass // @phpcs:ignore PSR1.Classes.ClassDeclaration.MissingNamespace
 {
     use ParamsTrait;
 
