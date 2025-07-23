@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Client;
 
 use DigitalCz\OpenIDConnect\Config\Config;
+use InvalidArgumentException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -12,7 +13,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final readonly class ClientCredentials
 {
-    use RefreshTokenTrait;
+    use RequestTokensTrait;
 
     /**
      * @param Config $config OIDC configuration
@@ -27,37 +28,44 @@ final readonly class ClientCredentials
     /**
      * Obtain access token using client credentials.
      *
+     * @param array<string, string> $params Additional body parameters
      * @return Tokens Access token for API access
      */
-    public function fetchTokens(): Tokens
+    public function fetchTokens(array $params = []): Tokens
     {
-        $issuerMetadata = $this->config->issuerMetadata();
         $clientMetadata = $this->config->clientMetadata();
 
-        $url = $issuerMetadata->tokenEndpoint();
-        $options = [
-            'body' => [
-                'grant_type' => 'client_credentials',
-                'scope' => implode(' ', $clientMetadata->defaultScopes()),
-            ],
-        ];
+        $params['grant_type'] ??= 'client_credentials';
+        $params['scope'] ??= implode(' ', $clientMetadata->defaultScopes());
 
-        $authOptions = $clientMetadata->authenticationMethod()->asOptions($clientMetadata);
-        $options = array_merge_recursive($options, $authOptions);
-
-        $response = $this->httpClient->request('POST', $url, $options);
-
-        return Tokens::fromTokenResponse($response->toArray());
+        return $this->requestTokens($params);
     }
 
     /**
      * Refresh access tokens using refresh token.
      *
      * @param Tokens $tokens Current tokens with refresh token
+     * @param array<string, string> $params Additional body parameters
      * @return Tokens New tokens with fresh access token
      */
-    public function refreshToken(Tokens $tokens): Tokens
+    public function refreshToken(Tokens $tokens, array $params = []): Tokens
     {
-        return $this->doRefreshToken($tokens);
+        if ($tokens->refreshToken() === null) {
+            throw new InvalidArgumentException('Cannot refresh tokens without a refresh token.');
+        }
+
+        $params['grant_type'] ??= 'refresh_token';
+        $params['refresh_token'] ??= (string)$tokens->refreshToken();
+
+        $newTokens = $this->requestTokens($params);
+
+        return new Tokens(
+            accessToken: $newTokens->accessToken(),
+            refreshToken: $newTokens->refreshToken() ?? $tokens->refreshToken(),
+            idToken: $newTokens->idToken() ?? $tokens->idToken(),
+            scope: $newTokens->scope(),
+            tokenType: $newTokens->tokenType(),
+            expiresIn: $newTokens->expiresIn(),
+        );
     }
 }

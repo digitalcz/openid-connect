@@ -57,4 +57,14 @@ final readonly class ClientMetadata
     {
         return $this->pkceMethod;
     }
+
+    /**
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
+    public function applyCredentials(array $options): array
+    {
+        /** @var array<string, mixed> */
+        return array_merge_recursive($options, $this->authenticationMethod->asOptions($this));
+    }
 }

@@ -15,7 +15,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final readonly class AuthorizationCode
 {
-    use RefreshTokenTrait;
+    use RequestTokensTrait;
 
     /**
      * @param Config $config OIDC configuration
@@ -79,33 +79,26 @@ final readonly class AuthorizationCode
      * @param string $code Authorization code from callback
      * @param string|null $nonce Nonce for ID token validation
      * @param string|null $codeVerifier PKCE code verifier (required if PKCE was used)
+     * @param array<string, string> $params Additional body parameters
      * @return Tokens Access token, refresh token, and ID token
      */
-    public function fetchTokens(string $code, ?string $nonce = null, ?string $codeVerifier = null): Tokens
-    {
-        $issuerMetadata = $this->config->issuerMetadata();
+    public function fetchTokens(
+        string $code,
+        ?string $nonce = null,
+        ?string $codeVerifier = null,
+        array $params = [],
+    ): Tokens {
         $clientMetadata = $this->config->clientMetadata();
 
-        $url = $issuerMetadata->tokenEndpoint();
-        $options = [
-            'body' => [
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $clientMetadata->redirectUri(),
-            ],
-        ];
+        $params['grant_type'] ??= 'authorization_code';
+        $params['code'] ??= $code;
+        $params['redirect_uri'] ??= $clientMetadata->redirectUri();
 
-        // Add PKCE code verifier if provided
         if ($codeVerifier !== null) {
-            $options['body']['code_verifier'] = $codeVerifier;
+            $params['code_verifier'] ??= $codeVerifier;
         }
 
-        $authOptions = $clientMetadata->authenticationMethod()->asOptions($clientMetadata);
-        $options = array_merge_recursive($options, $authOptions);
-
-        $response = $this->httpClient->request('POST', $url, $options);
-
-        $tokens = Tokens::fromTokenResponse($response->toArray());
+        $tokens = $this->requestTokens($params);
 
         if ($tokens->idToken() !== null) {
             $this->validator->validate($tokens->idToken(), $nonce);
@@ -118,11 +111,28 @@ final readonly class AuthorizationCode
      * Refresh access tokens using refresh token.
      *
      * @param Tokens $tokens Current tokens with refresh token
+     * @param array<string, string> $params Additional body parameters
      * @return Tokens New tokens with fresh access token
      */
-    public function refreshToken(Tokens $tokens): Tokens
+    public function refreshToken(Tokens $tokens, array $params = []): Tokens
     {
-        return $this->doRefreshToken($tokens);
+        if ($tokens->refreshToken() === null) {
+            throw new InvalidArgumentException('Cannot refresh tokens without a refresh token.');
+        }
+
+        $params['grant_type'] ??= 'refresh_token';
+        $params['refresh_token'] ??= (string)$tokens->refreshToken();
+
+        $newTokens = $this->requestTokens($params);
+
+        return new Tokens(
+            accessToken: $newTokens->accessToken(),
+            refreshToken: $newTokens->refreshToken() ?? $tokens->refreshToken(),
+            idToken: $newTokens->idToken() ?? $tokens->idToken(),
+            scope: $newTokens->scope(),
+            tokenType: $newTokens->tokenType(),
+            expiresIn: $newTokens->expiresIn(),
+        );
     }
 
     /**
