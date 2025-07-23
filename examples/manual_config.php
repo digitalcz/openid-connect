@@ -12,7 +12,6 @@ use DigitalCz\OpenIDConnect\Config\StaticConfig;
 use DigitalCz\OpenIDConnect\Discovery\HttpJwksLoader;
 use DigitalCz\OpenIDConnect\Oidc;
 use DigitalCz\OpenIDConnect\ResourceServer\JwtAccessTokenValidator;
-use DigitalCz\OpenIDConnect\ResourceServer\OpaqueAccessTokenValidator;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
 use Symfony\Component\HttpClient\HttpClient;
