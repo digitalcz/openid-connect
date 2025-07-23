@@ -24,6 +24,7 @@ final readonly class CachingAccessTokenValidator implements AccessTokenValidator
         private CacheInterface $cache,
         private ClockInterface $clock = new SimpleClock(),
         private int $ttl = self::DEFAULT_TTL,
+        private string $cacheSecret = 'default-oidc-cache-secret',
     ) {
     }
 
@@ -40,8 +41,8 @@ final readonly class CachingAccessTokenValidator implements AccessTokenValidator
      */
     public function validate(AccessToken $token): ValidatedAccessToken
     {
-        // Use a hashed version of the token as the cache key for security.
-        $cacheKey = self::CACHE_PREFIX . hash('sha256', (string)$token);
+        // Use HMAC-based cache key generation to prevent timing attacks and cache enumeration.
+        $cacheKey = self::CACHE_PREFIX . hash_hmac('sha256', (string)$token, $this->cacheSecret);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($token): ValidatedAccessToken {
             // If the item is not in the cache, call the real validator.
