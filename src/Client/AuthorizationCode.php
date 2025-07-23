@@ -169,8 +169,10 @@ final readonly class AuthorizationCode
             throw new InvalidArgumentException('Cannot fetch userinfo without an access token.');
         }
 
+        $options = ['auth_bearer' => (string)$accessToken];
+
         /** @var array<string, mixed> $response */
-        $response = $this->httpClient->request('GET', $userinfoEndpoint, ['auth_bearer' => $accessToken])->toArray();
+        $response = $this->httpClient->request('GET', $userinfoEndpoint, $options)->toArray();
 
         $userinfo = new Userinfo($response);
 
