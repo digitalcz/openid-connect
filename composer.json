@@ -1,6 +1,6 @@
 {
   "name": "digitalcz/openid-connect",
-  "description": "PHP implementation of https://openid.net/specs/openid-connect-core-1_0.html using Symfony contracts",
+  "description": "PHP implementation of OpenID Connect using symfony/contracts",
   "license": "MIT",
   "type": "library",
   "keywords": [

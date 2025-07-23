@@ -9,7 +9,7 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/digitalcz/openid-connect/badges/quality-score.png?b=0.x)](https://scrutinizer-ci.com/g/digitalcz/openid-connect/?branch=0.x)
 [![codecov](https://codecov.io/gh/digitalcz/openid-connect/branch/0.x/graph/badge.svg?token=QzZ5iMNkg3)](https://codecov.io/gh/digitalcz/openid-connect)
 
-PHP implementation of https://openid.net/specs/openid-connect-core-1_0.html
+PHP implementation of [OpenID Connect](https://openid.net/specs/openid-connect-core-1_0.html) using symfony/contracts
 
 ## Install
 
