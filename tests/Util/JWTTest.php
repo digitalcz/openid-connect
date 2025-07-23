@@ -127,13 +127,13 @@ class JWTTest extends TestCase
     public function testWithRealWorldJwtStructure(): void
     {
         // Test with more realistic JWT structure
-        $header = [
+        $customHeader = [
             'typ' => 'JWT',
             'alg' => 'RS256',
             'kid' => 'key-id-123',
         ];
 
-        $payload = [
+        $customPayload = [
             'iss' => 'https://accounts.google.com',
             'aud' => 'client-id-here',
             'sub' => '1234567890',
@@ -147,17 +147,17 @@ class JWTTest extends TestCase
             'picture' => 'https://example.com/avatar.jpg',
         ];
 
-        $jwt = $this->createCustomJwt($header, $payload);
+        $jwt = $this->createCustomJwt($customHeader, $customPayload);
 
         $this->assertTrue(JWT::validate($jwt));
 
         $parsed = JWT::parse($jwt);
-        $this->assertSame($header, $parsed['header']);
-        $this->assertSame($payload, $parsed['payload']);
+        $this->assertSame($customHeader, $parsed['header']);
+        $this->assertSame($customPayload, $parsed['payload']);
         $this->assertSame('fake-signature-for-testing', $parsed['signature']);
 
         $claims = JWT::claims($jwt);
-        $this->assertSame($payload, $claims);
+        $this->assertSame($customPayload, $claims);
     }
 
     public function testValidateWithEmptyParts(): void
