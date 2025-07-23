@@ -187,6 +187,28 @@ class OidcFactoryTest extends TestCase
         $this->assertNotSame($oidc1->resourceServer(), $oidc2->resourceServer());
     }
 
+    public function testConstructorWithCustomCacheSecret(): void
+    {
+        $customSecret = 'my-custom-secret-key';
+        $factory = new OidcFactory($this->httpClient, $this->cache, $customSecret);
+
+        $this->assertInstanceOf(OidcFactory::class, $factory);
+    }
+
+    public function testCreateWithCustomCacheSecretCreatesValidOidcInstance(): void
+    {
+        $customSecret = 'application-specific-secret';
+
+        $factory = new OidcFactory($this->httpClient, $this->cache, $customSecret);
+        $oidc = $factory->create($this->issuerMetadata, $this->clientMetadata);
+
+        // Verify that the factory creates a valid Oidc instance with custom cache secret
+        $this->assertInstanceOf(Oidc::class, $oidc);
+        $this->assertInstanceOf(ResourceServer::class, $oidc->resourceServer());
+        $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
+        $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

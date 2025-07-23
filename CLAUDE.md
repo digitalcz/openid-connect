@@ -26,6 +26,7 @@ The library uses a **Factory → Facade → Specialized Services** pattern:
 
 1. **OidcFactory** - Central factory that creates configured OIDC clients
    - Takes HttpClientInterface and optional CacheInterface
+   - Supports configurable cache secret for HMAC-based cache keys
    - Supports both discovery (from issuer URL) and manual configuration
    - Returns an `Oidc` facade instance
 

@@ -30,6 +30,7 @@ final readonly class OidcFactory
     public function __construct(
         private HttpClientInterface $httpClient,
         private ?CacheInterface $cache = null,
+        private string $cacheSecret = 'default-oidc-cache-secret',
     ) {
     }
 
@@ -64,7 +65,11 @@ final readonly class OidcFactory
         $opaqueAccessTokenValidator = new OpaqueAccessTokenValidator($config, $this->httpClient);
 
         if ($this->cache !== null) {
-            $opaqueAccessTokenValidator = new CachingAccessTokenValidator($opaqueAccessTokenValidator, $this->cache);
+            $opaqueAccessTokenValidator = new CachingAccessTokenValidator(
+                $opaqueAccessTokenValidator,
+                $this->cache,
+                cacheSecret: $this->cacheSecret,
+            );
         }
 
         $jwtAccessTokenValidator = new JwtAccessTokenValidator(
