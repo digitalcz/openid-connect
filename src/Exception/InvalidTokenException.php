@@ -9,6 +9,6 @@ use RuntimeException;
 /**
  * Exception thrown when token validation fails.
  */
-final class InvalidTokenException extends RuntimeException implements Exception
+class InvalidTokenException extends RuntimeException implements Exception
 {
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\ResourceServer;
 
 use DateTimeImmutable;
-use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
+use DigitalCz\OpenIDConnect\Exception\TokenExpiredException;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use Psr\Clock\ClockInterface;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -52,7 +52,7 @@ final readonly class CachingAccessTokenValidator implements AccessTokenValidator
 
             if ($exp < $now) {
                 // If the token is already expired, do not cache it.
-                throw new InvalidTokenException('Cannot cache expired access token.');
+                throw new TokenExpiredException('Cannot cache expired access token.');
             }
 
             $item->expiresAt(DateTimeImmutable::createFromTimestamp($exp));

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\ResourceServer;
 
 use DigitalCz\OpenIDConnect\Config\Config;
+use DigitalCz\OpenIDConnect\Exception\IntrospectionException;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Throwable;
@@ -47,14 +48,14 @@ final readonly class OpaqueAccessTokenValidator implements AccessTokenValidator
 
             /** @var array<string, mixed> $claims */
             $claims = $this->httpClient->request('POST', $introspectionEndpoint, $options)->toArray();
-
-            if (!isset($claims['active']) || $claims['active'] !== true) {
-                throw new InvalidTokenException('Token is not active');
-            }
-
-            return new ValidatedAccessToken($token, $claims);
         } catch (Throwable $e) {
-            throw new InvalidTokenException('Token introspection failed: ' . $e->getMessage(), 0, $e);
+            throw new IntrospectionException('Token introspection failed: ' . $e->getMessage(), 0, $e);
         }
+
+        if (!isset($claims['active']) || $claims['active'] !== true) {
+            throw new InvalidTokenException('Token is not active');
+        }
+
+        return new ValidatedAccessToken($token, $claims);
     }
 }

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\ResourceServer;
 
 use ArrayObject;
+use DigitalCz\OpenIDConnect\Exception\ConfigurationException;
 use DigitalCz\OpenIDConnect\TestCase;
 use Generator;
-use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 
@@ -101,7 +101,7 @@ class ResourceServerTest extends TestCase
 
         $resourceServer = new ResourceServer([$this->jwtValidator, $this->opaqueValidator]);
 
-        $this->expectException(LogicException::class);
+        $this->expectException(ConfigurationException::class);
         $this->expectExceptionMessage(
             'No AccessTokenValidator supporting DigitalCz\OpenIDConnect\ResourceServer\JwtAccessToken.',
         );
@@ -113,7 +113,7 @@ class ResourceServerTest extends TestCase
     {
         $resourceServer = new ResourceServer([]);
 
-        $this->expectException(LogicException::class);
+        $this->expectException(ConfigurationException::class);
         $this->expectExceptionMessage(
             'No AccessTokenValidator supporting DigitalCz\OpenIDConnect\ResourceServer\JwtAccessToken.',
         );
@@ -268,7 +268,7 @@ class ResourceServerTest extends TestCase
 
         $resourceServer = new ResourceServer([]);
 
-        $this->expectException(LogicException::class);
+        $this->expectException(ConfigurationException::class);
         $this->expectExceptionMessageMatches('/No AccessTokenValidator supporting .*@anonymous/');
 
         $resourceServer->introspect($customToken);
