@@ -24,6 +24,10 @@ $resourceServer = $oidc->resourceServer();
 // Example token - in real scenario this would come from Authorization header
 $token = readline('Enter access token to validate: ');
 
+if ($token === false) {
+    throw new RuntimeException('Failed to read access token');
+}
+
 $accessToken = JWT::validate($token) ? new JwtAccessToken($token) : new OpaqueAccessToken($token);
 
 $validatedToken = $resourceServer->introspect($accessToken);

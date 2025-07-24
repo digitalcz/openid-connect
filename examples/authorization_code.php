@@ -25,6 +25,10 @@ echo $url . PHP_EOL . PHP_EOL;
 
 $code = readline('Insert the authorization code from the URL: ');
 
+if ($code === false) {
+    throw new RuntimeException('Failed to read authorization code');
+}
+
 $tokens = $authorizationCode->fetchTokens($code, 'bar');
 
 dump(tokens: $tokens);
