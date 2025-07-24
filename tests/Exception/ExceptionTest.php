@@ -15,8 +15,6 @@ use Throwable;
 #[CoversClass(ConfigurationException::class)]
 #[CoversClass(DiscoveryException::class)]
 #[CoversClass(NetworkException::class)]
-#[CoversClass(TokenExpiredException::class)]
-#[CoversClass(TokenSignatureException::class)]
 #[CoversClass(IntrospectionException::class)]
 class ExceptionTest extends TestCase
 {
@@ -56,26 +54,6 @@ class ExceptionTest extends TestCase
         $this->assertSame('test message', $exception->getMessage());
     }
 
-    public function testTokenExpiredExceptionExtendsInvalidTokenException(): void
-    {
-        $exception = new TokenExpiredException('test message');
-
-        $this->assertInstanceOf(InvalidTokenException::class, $exception);
-        $this->assertInstanceOf(Throwable::class, $exception);
-        $this->assertInstanceOf(RuntimeException::class, $exception);
-        $this->assertSame('test message', $exception->getMessage());
-    }
-
-    public function testTokenSignatureExceptionExtendsInvalidTokenException(): void
-    {
-        $exception = new TokenSignatureException('test message');
-
-        $this->assertInstanceOf(InvalidTokenException::class, $exception);
-        $this->assertInstanceOf(Throwable::class, $exception);
-        $this->assertInstanceOf(RuntimeException::class, $exception);
-        $this->assertSame('test message', $exception->getMessage());
-    }
-
     /**
      * @return array<string, array<int, mixed>>
      */
@@ -86,8 +64,6 @@ class ExceptionTest extends TestCase
             'DiscoveryException' => [DiscoveryException::class],
             'NetworkException' => [NetworkException::class],
             'IntrospectionException' => [IntrospectionException::class],
-            'TokenExpiredException' => [TokenExpiredException::class],
-            'TokenSignatureException' => [TokenSignatureException::class],
         ];
     }
 

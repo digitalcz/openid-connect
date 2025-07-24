@@ -7,7 +7,6 @@ namespace DigitalCz\OpenIDConnect\Client;
 use DigitalCz\OpenIDConnect\Config\Config;
 use DigitalCz\OpenIDConnect\Discovery\JwksLoader;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
-use DigitalCz\OpenIDConnect\Exception\TokenSignatureException;
 use DigitalCz\OpenIDConnect\Util\SignatureAlgorithmsFactory;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use Exception;
@@ -85,10 +84,6 @@ final class JwtIdTokenValidator implements IdTokenValidator
         $jwsLoader = $this->createJwsLoader();
         $signature = null;
         $jwsLoader->loadAndVerifyWithKeySet((string)$token, $jwkSet, $signature);
-
-        if ($signature === null) {
-            throw new TokenSignatureException('Token signature verification failed - no signature index returned');
-        }
     }
 
     private function createJwsLoader(): JWSLoader
