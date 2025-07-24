@@ -118,7 +118,9 @@ $refreshToken = $tokens->refreshToken();
 
 // Token classes now have dedicated factory methods
 use DigitalCz\OpenIDConnect\Client\Tokens;
-$tokens = Tokens::create($accessToken, $idToken, $refreshToken);
+$tokens = Tokens::fromTokenResponse($responseData); // Create from OAuth response
+// or using constructor directly:
+$tokens = new Tokens($accessToken, $refreshToken, $idToken);
 ```
 
 ### 5. Manual Configuration
@@ -258,8 +260,8 @@ $tokens = $authorizationCode->fetchTokens($code, $nonce);
 
 $userinfo = $authorizationCode->fetchUserinfo($tokens);
 echo $userinfo->sub(); // Subject
-echo $userinfo->name(); // Name
-echo $userinfo->email(); // Email
+echo $userinfo->get('name'); // Name claim
+echo $userinfo->get('email'); // Email claim
 ```
 
 ### 5. Refresh Token Support
@@ -303,7 +305,6 @@ if ($tokens->refreshToken() !== null) {
 - `Client::getAuthorizationUrl()` - Use `AuthorizationCode::createAuthorizationUrl()`
 - `Client::handleCallback()` - Use `AuthorizationCode::fetchTokens()`
 - `Client::requestTokens()` - Use `ClientCredentials::fetchTokens()`
-- `ClientCredentials::refreshToken()` - Use `RefreshToken::fetchTokens()`
 
 ## Architecture Changes
 
