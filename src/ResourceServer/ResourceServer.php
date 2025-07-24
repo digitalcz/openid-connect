@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\ResourceServer;
 
-use LogicException;
+use DigitalCz\OpenIDConnect\Exception\ConfigurationException;
 
 /**
  * Token validation orchestrator
@@ -34,6 +34,6 @@ final readonly class ResourceServer
             }
         }
 
-        throw new LogicException(sprintf('No AccessTokenValidator supporting %s.', $token::class));
+        throw new ConfigurationException(sprintf('No AccessTokenValidator supporting %s.', $token::class));
     }
 }

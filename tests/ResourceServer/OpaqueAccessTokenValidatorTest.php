@@ -8,6 +8,7 @@ use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config\Config;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
+use DigitalCz\OpenIDConnect\Exception\IntrospectionException;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
 use DigitalCz\OpenIDConnect\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -156,7 +157,7 @@ class OpaqueAccessTokenValidatorTest extends TestCase
         $this->httpClient->method('request')
             ->willThrowException(new RuntimeException('HTTP request failed'));
 
-        $this->expectException(InvalidTokenException::class);
+        $this->expectException(IntrospectionException::class);
         $this->expectExceptionMessage('Token introspection failed: HTTP request failed');
 
         $this->validator->validate($opaqueToken);
@@ -368,7 +369,7 @@ class OpaqueAccessTokenValidatorTest extends TestCase
 
         $this->httpClient->method('request')->willReturn($response);
 
-        $this->expectException(InvalidTokenException::class);
+        $this->expectException(IntrospectionException::class);
         $this->expectExceptionMessage('Token introspection failed: Invalid JSON response');
 
         $this->validator->validate($opaqueToken);

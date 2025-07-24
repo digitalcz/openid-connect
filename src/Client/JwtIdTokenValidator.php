@@ -84,10 +84,6 @@ final class JwtIdTokenValidator implements IdTokenValidator
         $jwsLoader = $this->createJwsLoader();
         $signature = null;
         $jwsLoader->loadAndVerifyWithKeySet((string)$token, $jwkSet, $signature);
-
-        if ($signature === null) {
-            throw new InvalidTokenException('Token signature verification failed - no signature index returned');
-        }
     }
 
     private function createJwsLoader(): JWSLoader
