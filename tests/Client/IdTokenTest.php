@@ -26,7 +26,7 @@ class IdTokenTest extends TestCase
             'access_token' => 'access-token',
         ];
 
-        $idToken = IdToken::fromTokenResponse($responseData);
+        $idToken = IdToken::from($responseData);
 
         $this->assertInstanceOf(IdToken::class, $idToken);
         $this->assertSame($jwtToken, (string) $idToken);
@@ -38,7 +38,7 @@ class IdTokenTest extends TestCase
             'access_token' => 'access-token',
         ];
 
-        $idToken = IdToken::fromTokenResponse($responseData);
+        $idToken = IdToken::tryFrom($responseData);
 
         $this->assertNull($idToken);
     }
@@ -50,7 +50,7 @@ class IdTokenTest extends TestCase
             'access_token' => 'access-token',
         ];
 
-        $idToken = IdToken::fromTokenResponse($responseData);
+        $idToken = IdToken::tryFrom($responseData);
 
         $this->assertNull($idToken);
     }
@@ -62,7 +62,7 @@ class IdTokenTest extends TestCase
             'access_token' => 'access-token',
         ];
 
-        $idToken = IdToken::fromTokenResponse($responseData);
+        $idToken = IdToken::tryFrom($responseData);
 
         $this->assertNull($idToken);
     }
@@ -74,7 +74,7 @@ class IdTokenTest extends TestCase
             'access_token' => 'access-token',
         ];
 
-        $idToken = IdToken::fromTokenResponse($responseData);
+        $idToken = IdToken::tryFrom($responseData);
 
         $this->assertNull($idToken);
     }
