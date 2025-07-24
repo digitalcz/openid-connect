@@ -377,7 +377,7 @@ class ClaimsTraitTest extends TestCase
 }
 
 /**
- * Test class that uses ParamsTrait for testing purposes
+ * Test class that uses ClaimsTrait for testing purposes
  */
 class TestClaimsClass // @phpcs:ignore
 {
