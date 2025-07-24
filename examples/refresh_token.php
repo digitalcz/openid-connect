@@ -22,6 +22,10 @@ $authorizationCode = $oidc->authorizationCode();
 
 $refreshToken = readline('Enter your refresh token: ');
 
+if ($refreshToken === false) {
+    throw new RuntimeException('Failed to read refresh token');
+}
+
 $tokens = new Tokens(refreshToken: new RefreshToken($refreshToken));
 
 $newTokens = $authorizationCode->refreshToken($tokens);
