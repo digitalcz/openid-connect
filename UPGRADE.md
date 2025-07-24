@@ -1,5 +1,7 @@
 # Upgrade Guide from 0.x to 1.x
 
+> **⚠️ Disclaimer**: This upgrade guide was generated with AI assistance and may contain errors or inaccuracies. Please verify all code examples and procedures against the actual library documentation or source code before using in production.
+
 This guide will help you upgrade your code from version 0.x to 1.x of the OpenID Connect library.
 
 ## Overview of Changes
@@ -71,10 +73,13 @@ $tokens = $client->handleCallback(
 $authorizationCode = $oidc->authorizationCode();
 
 // Create authorization URL
-$url = $authorizationCode->createAuthorizationUrl([
+$authorizationUrlResult = $authorizationCode->createAuthorizationUrl([
     'state' => 'foo',
     'nonce' => 'bar'
 ]);
+$url = $authorizationUrlResult->url();
+$state = $authorizationUrlResult->state(); // Generated state if not provided
+$nonce = $authorizationUrlResult->nonce(); // Generated nonce if not provided
 
 // Handle callback
 $code = $_GET['code'];
@@ -119,8 +124,8 @@ $refreshToken = $tokens->refreshToken();
 // Token classes now have dedicated factory methods
 use DigitalCz\OpenIDConnect\Client\Tokens;
 $tokens = Tokens::fromTokenResponse($responseData); // Create from OAuth response
-// or using constructor directly:
-$tokens = new Tokens($accessToken, $refreshToken, $idToken);
+// or using constructor directly (for specific tokens only):
+$tokens = new Tokens(refreshToken: new RefreshToken($refreshToken));
 ```
 
 ### 5. Manual Configuration
@@ -189,11 +194,25 @@ try {
 
 // 1.x
 try {
-    // OIDC operations
+    $authorizationCode = $oidc->authorizationCode();
+    $authUrlResult = $authorizationCode->createAuthorizationUrl(['scope' => 'openid profile']);
+    $tokens = $authorizationCode->fetchTokens($_GET['code'], $nonce);
+    
+    $resourceServer = $oidc->resourceServer();
+    $validatedToken = $resourceServer->introspect($tokens->accessToken());
+    
 } catch (\DigitalCz\OpenIDConnect\Exception\InvalidTokenException $e) {
-    // Handle token validation errors
+    // Handle token validation errors (invalid JWT, expired token, etc.)
+    error_log('Token validation failed: ' . $e->getMessage());
 } catch (\DigitalCz\OpenIDConnect\Exception\NetworkException $e) {
-    // Handle network/HTTP errors
+    // Handle network/HTTP errors (connection timeout, 5xx responses)
+    error_log('Network error: ' . $e->getMessage());
+} catch (\DigitalCz\OpenIDConnect\Exception\ConfigurationException $e) {
+    // Handle configuration errors (missing endpoints, invalid client config)
+    error_log('Configuration error: ' . $e->getMessage());
+} catch (\DigitalCz\OpenIDConnect\Exception\DiscoveryException $e) {
+    // Handle OIDC discovery errors (invalid discovery document)
+    error_log('Discovery error: ' . $e->getMessage());
 }
 ```
 
@@ -270,7 +289,7 @@ echo $userinfo->get('email'); // Email claim
 ```php
 $authorizationCode = $oidc->authorizationCode();
 
-if ($tokens->refreshToken() !== null) {
+if ($tokens->refreshToken()) {
     $newTokens = $authorizationCode->refreshToken($tokens);
 }
 ```
