@@ -145,7 +145,7 @@ class IdTokenTest extends TestCase
         $this->assertSame($jwtToken, $idToken->__toString());
     }
 
-    public function testParamsTraitIntegration(): void
+    public function testClaimsTraitIntegration(): void
     {
         $customPayload = [
             'name' => 'John Doe',
