@@ -127,15 +127,6 @@ class IdTokenTest extends TestCase
         $this->assertArrayHasKey('iat', $claims);
     }
 
-    public function testAll(): void
-    {
-        $jwtToken = $this->createSampleJwt(['custom' => 'value']);
-        $idToken = new IdToken($jwtToken);
-
-        // all() should return the same as claims()
-        $this->assertSame($idToken->claims(), $idToken->claims());
-    }
-
     public function testToString(): void
     {
         $jwtToken = $this->createSampleJwt();
