@@ -12,74 +12,74 @@ use function is_scalar;
 use function sprintf;
 
 /**
- * Type-safe parameter access trait
+ * Type-safe claim access trait
  */
-trait ParamsTrait
+trait ClaimsTrait
 {
     /**
-     * Check if a parameter exists in the collection.
+     * Check if a claim exists in the collection.
      *
-     * @param string $key The name of the parameter to check.
-     * @return bool True if the parameter exists, false otherwise.
+     * @param string $key The name of the claim to check.
+     * @return bool True if the claim exists, false otherwise.
      */
     public function has(string $key): bool
     {
-        return array_key_exists($key, $this->all());
+        return array_key_exists($key, $this->claims());
     }
 
     /**
-     * Get parameter value or default
+     * Get claim value or default
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        return $this->has($key) ? $this->all()[$key] : $default;
+        return $this->has($key) ? $this->claims()[$key] : $default;
     }
 
     /**
-     * Get required integer parameter
+     * Get required integer claim
      */
     public function integer(string $key): int
     {
         $value = $this->get($key);
 
         if ($value === null) {
-            throw new UnexpectedValueException(sprintf('Parameter "%s" is required and must be an integer.', $key));
+            throw new UnexpectedValueException(sprintf('Claim "%s" is required and must be an integer.', $key));
         }
 
         if (!is_int($value)) {
-            throw new UnexpectedValueException(sprintf('Parameter value "%s" cannot be converted to "integer".', $key));
+            throw new UnexpectedValueException(sprintf('Claim value "%s" cannot be converted to "integer".', $key));
         }
 
         return $value;
     }
 
     /**
-     * Get required boolean parameter
+     * Get required boolean claim
      */
     public function boolean(string $key): bool
     {
         $value = $this->get($key);
 
         if ($value === null) {
-            throw new UnexpectedValueException(sprintf('Parameter "%s" is required and must be a boolean.', $key));
+            throw new UnexpectedValueException(sprintf('Claim "%s" is required and must be a boolean.', $key));
         }
 
         if (!is_bool($value)) {
-            throw new UnexpectedValueException(sprintf('Parameter value "%s" cannot be converted to "boolean".', $key));
+            throw new UnexpectedValueException(sprintf('Claim value "%s" cannot be converted to "boolean".', $key));
         }
 
         return $value;
     }
 
     /**
-     * Get required string parameter
+     * Get required string claim
      */
     public function string(string $key): string
     {
         $value = $this->get($key);
 
         if ($value === null) {
-            throw new UnexpectedValueException(sprintf('Parameter "%s" is required and must be a string.', $key));
+            throw new UnexpectedValueException(sprintf('Claim "%s" is required and must be a string.', $key));
         }
 
         if ($value instanceof Stringable) {
@@ -87,14 +87,14 @@ trait ParamsTrait
         }
 
         if (!is_string($value)) {
-            throw new UnexpectedValueException(sprintf('Parameter value "%s" cannot be converted to "string".', $key));
+            throw new UnexpectedValueException(sprintf('Claim value "%s" cannot be converted to "string".', $key));
         }
 
         return $value;
     }
 
     /**
-     * Get required string array parameter
+     * Get required string array claim
      *
      * @return string[]
      */
@@ -104,12 +104,12 @@ trait ParamsTrait
 
         if ($value === null) {
             throw new UnexpectedValueException(
-                sprintf('Parameter "%s" is required and must be an array of strings.', $key),
+                sprintf('Claim "%s" is required and must be an array of strings.', $key),
             );
         }
 
         if (!is_array($value)) {
-            throw new UnexpectedValueException(sprintf('Parameter value "%s" cannot be converted to "array".', $key));
+            throw new UnexpectedValueException(sprintf('Claim value "%s" cannot be converted to "array".', $key));
         }
 
         $strings = [];
@@ -117,7 +117,7 @@ trait ParamsTrait
         foreach ($value as $item) {
             if (!is_scalar($item) && !$item instanceof Stringable) {
                 throw new UnexpectedValueException(
-                    sprintf('Parameter value "%s" cannot be converted to "string".', $key),
+                    sprintf('Claim value "%s" cannot be converted to "string".', $key),
                 );
             }
 
@@ -127,6 +127,10 @@ trait ParamsTrait
         return $strings;
     }
 
-    /** @return array<string, mixed> */
-    abstract public function all(): array;
+    /**
+     * Return all claims as an associative array.
+     *
+     * @return array<string, mixed>
+     */
+    abstract public function claims(): array;
 }

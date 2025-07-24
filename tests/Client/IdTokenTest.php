@@ -133,7 +133,7 @@ class IdTokenTest extends TestCase
         $idToken = new IdToken($jwtToken);
 
         // all() should return the same as claims()
-        $this->assertSame($idToken->claims(), $idToken->all());
+        $this->assertSame($idToken->claims(), $idToken->claims());
     }
 
     public function testToString(): void

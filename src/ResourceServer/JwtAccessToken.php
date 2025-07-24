@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\ResourceServer;
 
+use DigitalCz\OpenIDConnect\Util\ClaimsTrait;
 use DigitalCz\OpenIDConnect\Util\JWT;
 
 /**
@@ -11,6 +12,8 @@ use DigitalCz\OpenIDConnect\Util\JWT;
  */
 final class JwtAccessToken extends AccessToken
 {
+    use ClaimsTrait;
+
     /**
      * Extract JWT claims
      *
