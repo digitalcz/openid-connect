@@ -30,7 +30,7 @@ class RefreshTokenTest extends TestCase
             'expires_in' => 3600,
         ];
 
-        $refreshToken = RefreshToken::fromTokenResponse($responseData);
+        $refreshToken = RefreshToken::tryFrom($responseData);
 
         $this->assertInstanceOf(RefreshToken::class, $refreshToken);
         $this->assertSame('refresh_token_abc123', (string) $refreshToken);
@@ -43,7 +43,7 @@ class RefreshTokenTest extends TestCase
             'token_type' => 'Bearer',
         ];
 
-        $refreshToken = RefreshToken::fromTokenResponse($responseData);
+        $refreshToken = RefreshToken::tryFrom($responseData);
 
         $this->assertNull($refreshToken);
     }
@@ -54,7 +54,7 @@ class RefreshTokenTest extends TestCase
     #[DataProvider('invalidRefreshTokenProvider')]
     public function testFromTokenResponseWithInvalidRefreshToken(array $responseData): void
     {
-        $refreshToken = RefreshToken::fromTokenResponse($responseData);
+        $refreshToken = RefreshToken::tryFrom($responseData);
 
         $this->assertNull($refreshToken);
     }
@@ -90,11 +90,10 @@ class RefreshTokenTest extends TestCase
             'access_token' => 'access_token_xyz',
         ];
 
-        $refreshToken = RefreshToken::fromTokenResponse($responseData);
+        $refreshToken = RefreshToken::tryFrom($responseData);
 
-        // Empty string is still a valid string, so should create token
-        $this->assertInstanceOf(RefreshToken::class, $refreshToken);
-        $this->assertSame('', (string) $refreshToken);
+        // Empty string should not create a valid token
+        $this->assertNull($refreshToken);
     }
 
     public function testToString(): void
@@ -136,7 +135,7 @@ class RefreshTokenTest extends TestCase
             'scope' => 'api:read api:write',
         ];
 
-        $refreshToken = RefreshToken::fromTokenResponse($responseData);
+        $refreshToken = RefreshToken::tryFrom($responseData);
 
         $this->assertNull($refreshToken);
     }
@@ -153,7 +152,7 @@ class RefreshTokenTest extends TestCase
             'scope' => 'openid profile email',
         ];
 
-        $refreshToken = RefreshToken::fromTokenResponse($responseData);
+        $refreshToken = RefreshToken::tryFrom($responseData);
 
         $this->assertInstanceOf(RefreshToken::class, $refreshToken);
         $this->assertSame('refresh_token_abc123', (string) $refreshToken);
@@ -172,7 +171,7 @@ class RefreshTokenTest extends TestCase
             'another_field' => 42,
         ];
 
-        $refreshToken = RefreshToken::fromTokenResponse($responseData);
+        $refreshToken = RefreshToken::tryFrom($responseData);
 
         $this->assertInstanceOf(RefreshToken::class, $refreshToken);
         $this->assertSame('refresh_token_abc123', (string) $refreshToken);

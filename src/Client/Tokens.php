@@ -36,9 +36,9 @@ final readonly class Tokens
         $expiresIn = is_int($expiresIn) ? $expiresIn : null;
 
         return new self(
-            accessToken: AccessToken::fromTokenResponse($responseData),
-            refreshToken: RefreshToken::fromTokenResponse($responseData),
-            idToken: IdToken::fromTokenResponse($responseData),
+            accessToken: AccessToken::tryFrom($responseData),
+            refreshToken: RefreshToken::tryFrom($responseData),
+            idToken: IdToken::tryFrom($responseData),
             scope: $scope,
             tokenType: $tokenType,
             expiresIn: $expiresIn,

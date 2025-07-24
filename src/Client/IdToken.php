@@ -6,6 +6,8 @@ namespace DigitalCz\OpenIDConnect\Client;
 
 use DigitalCz\OpenIDConnect\Util\ClaimsTrait;
 use DigitalCz\OpenIDConnect\Util\JWT;
+use Stringable;
+use UnexpectedValueException;
 
 /**
  * OpenID Connect ID Token with user identity claims.
@@ -23,28 +25,57 @@ final readonly class IdToken
     }
 
     /**
-     * Create ID Token from token response data.
+     * Creates an IDToken instance from various input types.
      *
-     * Factory method that extracts and validates the ID token from an OAuth2/OIDC
-     * token response. Returns null if no ID token is present or if the token
-     * format is invalid.
+     * @param mixed $value The value to create IDToken from. Can be:
+     *                     - string: JWT token string
+     *                     - array: Must contain 'id_token' key with JWT string value
+     *                     - Stringable: Will be converted to string
+     * @return self The IDToken instance
      *
-     * @param mixed[] $responseData The token response data from the authorization server
-     * @return self|null The ID token instance, or null if not present or invalid
+     * @throws UnexpectedValueException If the value cannot be converted to a valid JWT ID token
      */
-    public static function fromTokenResponse(array $responseData): ?self
+    public static function from(mixed $value): self
     {
-        $idToken = $responseData['id_token'] ?? null;
+        if (is_array($value)) {
+            if (!isset($value['id_token'])) {
+                throw new UnexpectedValueException('Cannot create IDToken from array without "id_token" key');
+            }
 
-        if (!is_string($idToken)) {
+            $value = $value['id_token'];
+        }
+
+        if ($value instanceof Stringable) {
+            $value = (string) $value;
+        }
+
+        if (!is_string($value)) {
+            throw new UnexpectedValueException('Cannot create IDToken from ' . get_debug_type($value));
+        }
+
+        if (!JWT::validate($value)) {
+            throw new UnexpectedValueException('Invalid JWT ID token format');
+        }
+
+        return new self($value);
+    }
+
+    /**
+     * Attempts to create an IDToken instance from various input types.
+     *
+     * @param mixed $value The value to create IDToken from. Can be:
+     *                     - string: JWT token string
+     *                     - array: Must contain 'id_token' key with JWT string value
+     *                     - Stringable: Will be converted to string
+     * @return self|null The IDToken instance on success, null on failure
+     */
+    public static function tryFrom(mixed $value): ?self
+    {
+        try {
+            return self::from($value);
+        } catch (UnexpectedValueException) {
             return null;
         }
-
-        if (JWT::validate($idToken)) {
-            return new self($idToken);
-        }
-
-        return null;
     }
 
     /**

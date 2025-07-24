@@ -25,8 +25,8 @@ class TokensTest extends TestCase
 
     public function testConstructorWithAllParameters(): void
     {
-        $accessToken = AccessToken::fromTokenResponse(['access_token' => 'test-access-token']);
-        $refreshToken = RefreshToken::fromTokenResponse(['refresh_token' => 'test-refresh-token']);
+        $accessToken = AccessToken::tryFrom(['access_token' => 'test-access-token']);
+        $refreshToken = RefreshToken::tryFrom(['refresh_token' => 'test-refresh-token']);
         $idToken = new IdToken($this->createSampleJwt());
 
         $tokens = new Tokens(

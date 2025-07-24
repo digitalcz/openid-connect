@@ -6,6 +6,7 @@ namespace DigitalCz\OpenIDConnect\ResourceServer;
 
 use DigitalCz\OpenIDConnect\Util\JWT;
 use Stringable;
+use UnexpectedValueException;
 
 /**
  * Abstract token base class
@@ -18,23 +19,61 @@ abstract class AccessToken implements Stringable
     }
 
     /**
-     * Create token from response data
+     * Creates an AccessToken instance from various input types.
      *
-     * @param mixed[] $responseData
+     * @param mixed $value The value to create AccessToken from. Can be:
+     *                     - string: Access token string
+     *                     - array: Must contain 'access_token' key with token string value
+     *                     - Stringable: Will be converted to string
+     * @return self The AccessToken instance (JWT or Opaque based on format)
+     *
+     * @throws UnexpectedValueException If the value cannot be converted to a valid access token
      */
-    public static function fromTokenResponse(array $responseData): ?self
+    public static function from(mixed $value): self
     {
-        $accessToken = $responseData['access_token'] ?? null;
+        if (is_array($value)) {
+            if (!isset($value['access_token'])) {
+                throw new UnexpectedValueException('Cannot create AccessToken from array without "access_token" key');
+            }
 
-        if (!is_string($accessToken)) {
+            $value = $value['access_token'];
+        }
+
+        if ($value instanceof Stringable) {
+            $value = (string) $value;
+        }
+
+        if (!is_string($value)) {
+            throw new UnexpectedValueException('Cannot create AccessToken from ' . get_debug_type($value));
+        }
+
+        if ($value === '') {
+            throw new UnexpectedValueException('Access token cannot be empty');
+        }
+
+        if (JWT::validate($value)) {
+            return new JwtAccessToken($value);
+        }
+
+        return new OpaqueAccessToken($value);
+    }
+
+    /**
+     * Attempts to create an AccessToken instance from various input types.
+     *
+     * @param mixed $value The value to create AccessToken from. Can be:
+     *                     - string: Access token string
+     *                     - array: Must contain 'access_token' key with token string value
+     *                     - Stringable: Will be converted to string
+     * @return self|null The AccessToken instance on success, null on failure
+     */
+    public static function tryFrom(mixed $value): ?self
+    {
+        try {
+            return self::from($value);
+        } catch (UnexpectedValueException) {
             return null;
         }
-
-        if (JWT::validate($accessToken)) {
-            return new JwtAccessToken($accessToken);
-        }
-
-        return new OpaqueAccessToken($accessToken);
     }
 
     public function __toString(): string
