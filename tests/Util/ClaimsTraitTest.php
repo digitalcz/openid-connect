@@ -10,14 +10,14 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use stdClass;
 use UnexpectedValueException;
 
-#[CoversTrait(ParamsTrait::class)]
-class ParamsTraitTest extends TestCase
+#[CoversTrait(ClaimsTrait::class)]
+class ClaimsTraitTest extends TestCase
 {
-    private TestParamsClass $testClass;
+    private TestClaimsClass $testClass;
 
     public function testHasWithExistingKey(): void
     {
-        $this->testClass = new TestParamsClass(['key1' => 'value1', 'key2' => 'value2']);
+        $this->testClass = new TestClaimsClass(['key1' => 'value1', 'key2' => 'value2']);
 
         $this->assertTrue($this->testClass->has('key1'));
         $this->assertTrue($this->testClass->has('key2'));
@@ -25,21 +25,21 @@ class ParamsTraitTest extends TestCase
 
     public function testHasWithNonExistingKey(): void
     {
-        $this->testClass = new TestParamsClass(['key1' => 'value1']);
+        $this->testClass = new TestClaimsClass(['key1' => 'value1']);
 
         $this->assertFalse($this->testClass->has('nonexistent'));
     }
 
     public function testHasWithNullValue(): void
     {
-        $this->testClass = new TestParamsClass(['key1' => null]);
+        $this->testClass = new TestClaimsClass(['key1' => null]);
 
         $this->assertTrue($this->testClass->has('key1'));
     }
 
     public function testGetWithExistingKey(): void
     {
-        $this->testClass = new TestParamsClass(['key1' => 'value1', 'key2' => 42]);
+        $this->testClass = new TestClaimsClass(['key1' => 'value1', 'key2' => 42]);
 
         $this->assertSame('value1', $this->testClass->get('key1'));
         $this->assertSame(42, $this->testClass->get('key2'));
@@ -47,7 +47,7 @@ class ParamsTraitTest extends TestCase
 
     public function testGetWithNonExistingKeyReturnsDefault(): void
     {
-        $this->testClass = new TestParamsClass(['key1' => 'value1']);
+        $this->testClass = new TestClaimsClass(['key1' => 'value1']);
 
         $this->assertNull($this->testClass->get('nonexistent'));
         $this->assertSame('default', $this->testClass->get('nonexistent', 'default'));
@@ -56,7 +56,7 @@ class ParamsTraitTest extends TestCase
 
     public function testGetWithNullValue(): void
     {
-        $this->testClass = new TestParamsClass(['key1' => null]);
+        $this->testClass = new TestClaimsClass(['key1' => null]);
 
         $this->assertNull($this->testClass->get('key1'));
         $this->assertNull($this->testClass->get('key1', 'default'));
@@ -64,7 +64,7 @@ class ParamsTraitTest extends TestCase
 
     public function testIntegerWithValidInteger(): void
     {
-        $this->testClass = new TestParamsClass(['age' => 25, 'count' => 0, 'negative' => -10]);
+        $this->testClass = new TestClaimsClass(['age' => 25, 'count' => 0, 'negative' => -10]);
 
         $this->assertSame(25, $this->testClass->integer('age'));
         $this->assertSame(0, $this->testClass->integer('count'));
@@ -73,19 +73,19 @@ class ParamsTraitTest extends TestCase
 
     public function testIntegerWithNullValue(): void
     {
-        $this->testClass = new TestParamsClass(['age' => null]);
+        $this->testClass = new TestClaimsClass(['age' => null]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter "age" is required and must be an integer.');
+        $this->expectExceptionMessage('Claim "age" is required and must be an integer.');
         $this->testClass->integer('age');
     }
 
     public function testIntegerWithMissingKey(): void
     {
-        $this->testClass = new TestParamsClass([]);
+        $this->testClass = new TestClaimsClass([]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter "age" is required and must be an integer.');
+        $this->expectExceptionMessage('Claim "age" is required and must be an integer.');
         $this->testClass->integer('age');
     }
 
@@ -95,10 +95,10 @@ class ParamsTraitTest extends TestCase
     #[DataProvider('invalidIntegerProvider')]
     public function testIntegerWithInvalidType($value): void
     {
-        $this->testClass = new TestParamsClass(['value' => $value]);
+        $this->testClass = new TestClaimsClass(['value' => $value]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter value "value" cannot be converted to "integer".');
+        $this->expectExceptionMessage('Claim value "value" cannot be converted to "integer".');
         $this->testClass->integer('value');
     }
 
@@ -119,7 +119,7 @@ class ParamsTraitTest extends TestCase
 
     public function testBooleanWithValidBoolean(): void
     {
-        $this->testClass = new TestParamsClass(['flag1' => true, 'flag2' => false]);
+        $this->testClass = new TestClaimsClass(['flag1' => true, 'flag2' => false]);
 
         $this->assertTrue($this->testClass->boolean('flag1'));
         $this->assertFalse($this->testClass->boolean('flag2'));
@@ -127,19 +127,19 @@ class ParamsTraitTest extends TestCase
 
     public function testBooleanWithNullValue(): void
     {
-        $this->testClass = new TestParamsClass(['flag' => null]);
+        $this->testClass = new TestClaimsClass(['flag' => null]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter "flag" is required and must be a boolean.');
+        $this->expectExceptionMessage('Claim "flag" is required and must be a boolean.');
         $this->testClass->boolean('flag');
     }
 
     public function testBooleanWithMissingKey(): void
     {
-        $this->testClass = new TestParamsClass([]);
+        $this->testClass = new TestClaimsClass([]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter "flag" is required and must be a boolean.');
+        $this->expectExceptionMessage('Claim "flag" is required and must be a boolean.');
         $this->testClass->boolean('flag');
     }
 
@@ -149,10 +149,10 @@ class ParamsTraitTest extends TestCase
     #[DataProvider('invalidBooleanProvider')]
     public function testBooleanWithInvalidType($value): void
     {
-        $this->testClass = new TestParamsClass(['value' => $value]);
+        $this->testClass = new TestClaimsClass(['value' => $value]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter value "value" cannot be converted to "boolean".');
+        $this->expectExceptionMessage('Claim value "value" cannot be converted to "boolean".');
         $this->testClass->boolean('value');
     }
 
@@ -172,7 +172,7 @@ class ParamsTraitTest extends TestCase
 
     public function testStringWithValidString(): void
     {
-        $this->testClass = new TestParamsClass(['name' => 'John', 'empty' => '', 'number_string' => '123']);
+        $this->testClass = new TestClaimsClass(['name' => 'John', 'empty' => '', 'number_string' => '123']);
 
         $this->assertSame('John', $this->testClass->string('name'));
         $this->assertSame('', $this->testClass->string('empty'));
@@ -188,26 +188,26 @@ class ParamsTraitTest extends TestCase
             }
         };
 
-        $this->testClass = new TestParamsClass(['stringable' => $stringable]);
+        $this->testClass = new TestClaimsClass(['stringable' => $stringable]);
 
         $this->assertSame('stringable_value', $this->testClass->string('stringable'));
     }
 
     public function testStringWithNullValue(): void
     {
-        $this->testClass = new TestParamsClass(['name' => null]);
+        $this->testClass = new TestClaimsClass(['name' => null]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter "name" is required and must be a string.');
+        $this->expectExceptionMessage('Claim "name" is required and must be a string.');
         $this->testClass->string('name');
     }
 
     public function testStringWithMissingKey(): void
     {
-        $this->testClass = new TestParamsClass([]);
+        $this->testClass = new TestClaimsClass([]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter "name" is required and must be a string.');
+        $this->expectExceptionMessage('Claim "name" is required and must be a string.');
         $this->testClass->string('name');
     }
 
@@ -217,10 +217,10 @@ class ParamsTraitTest extends TestCase
     #[DataProvider('invalidStringProvider')]
     public function testStringWithInvalidType($value): void
     {
-        $this->testClass = new TestParamsClass(['value' => $value]);
+        $this->testClass = new TestClaimsClass(['value' => $value]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter value "value" cannot be converted to "string".');
+        $this->expectExceptionMessage('Claim value "value" cannot be converted to "string".');
         $this->testClass->string('value');
     }
 
@@ -241,7 +241,7 @@ class ParamsTraitTest extends TestCase
 
     public function testStringsWithValidStringArray(): void
     {
-        $this->testClass = new TestParamsClass([
+        $this->testClass = new TestClaimsClass([
             'tags' => ['tag1', 'tag2', 'tag3'],
             'empty_array' => [],
             'mixed_scalars' => ['string', 123, 3.14, true, false],
@@ -261,54 +261,54 @@ class ParamsTraitTest extends TestCase
             }
         };
 
-        $this->testClass = new TestParamsClass(['items' => ['regular_string', $stringable]]);
+        $this->testClass = new TestClaimsClass(['items' => ['regular_string', $stringable]]);
 
         $this->assertSame(['regular_string', 'stringable_item'], $this->testClass->strings('items'));
     }
 
     public function testStringsWithNullValue(): void
     {
-        $this->testClass = new TestParamsClass(['tags' => null]);
+        $this->testClass = new TestClaimsClass(['tags' => null]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter "tags" is required and must be an array of strings.');
+        $this->expectExceptionMessage('Claim "tags" is required and must be an array of strings.');
         $this->testClass->strings('tags');
     }
 
     public function testStringsWithMissingKey(): void
     {
-        $this->testClass = new TestParamsClass([]);
+        $this->testClass = new TestClaimsClass([]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter "tags" is required and must be an array of strings.');
+        $this->expectExceptionMessage('Claim "tags" is required and must be an array of strings.');
         $this->testClass->strings('tags');
     }
 
     public function testStringsWithNonArrayValue(): void
     {
-        $this->testClass = new TestParamsClass(['tags' => 'not_array']);
+        $this->testClass = new TestClaimsClass(['tags' => 'not_array']);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter value "tags" cannot be converted to "array".');
+        $this->expectExceptionMessage('Claim value "tags" cannot be converted to "array".');
         $this->testClass->strings('tags');
     }
 
     public function testStringsWithNonConvertibleArrayItem(): void
     {
-        $this->testClass = new TestParamsClass(['tags' => ['valid_string', ['nested_array']]]);
+        $this->testClass = new TestClaimsClass(['tags' => ['valid_string', ['nested_array']]]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter value "tags" cannot be converted to "string".');
+        $this->expectExceptionMessage('Claim value "tags" cannot be converted to "string".');
         $this->testClass->strings('tags');
     }
 
     public function testStringsWithObjectInArray(): void
     {
         $nonStringable = new stdClass();
-        $this->testClass = new TestParamsClass(['tags' => ['valid_string', $nonStringable]]);
+        $this->testClass = new TestClaimsClass(['tags' => ['valid_string', $nonStringable]]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter value "tags" cannot be converted to "string".');
+        $this->expectExceptionMessage('Claim value "tags" cannot be converted to "string".');
         $this->testClass->strings('tags');
     }
 
@@ -318,10 +318,10 @@ class ParamsTraitTest extends TestCase
     #[DataProvider('invalidArrayProvider')]
     public function testStringsWithInvalidArrayType($value): void
     {
-        $this->testClass = new TestParamsClass(['value' => $value]);
+        $this->testClass = new TestClaimsClass(['value' => $value]);
 
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Parameter value "value" cannot be converted to "array".');
+        $this->expectExceptionMessage('Claim value "value" cannot be converted to "array".');
         $this->testClass->strings('value');
     }
 
@@ -349,7 +349,7 @@ class ParamsTraitTest extends TestCase
             }
         };
 
-        $this->testClass = new TestParamsClass([
+        $this->testClass = new TestClaimsClass([
             'integer_param' => 42,
             'boolean_param' => true,
             'string_param' => 'test_string',
@@ -377,11 +377,11 @@ class ParamsTraitTest extends TestCase
 }
 
 /**
- * Test class that uses ParamsTrait for testing purposes
+ * Test class that uses ClaimsTrait for testing purposes
  */
-class TestParamsClass // @phpcs:ignore
+class TestClaimsClass // @phpcs:ignore
 {
-    use ParamsTrait;
+    use ClaimsTrait;
 
     /**
      * @param array<string, mixed> $data
@@ -393,7 +393,7 @@ class TestParamsClass // @phpcs:ignore
     /**
      * @return array<string, mixed>
      */
-    public function all(): array
+    public function claims(): array
     {
         return $this->data;
     }

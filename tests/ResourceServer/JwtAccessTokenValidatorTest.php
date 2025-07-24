@@ -108,7 +108,7 @@ class JwtAccessTokenValidatorTest extends TestCase
     public function testValidateWithExpiredToken(): void
     {
         $expiredTime = time() - 3600; // 1 hour ago
-        $expiredJwt = $this->createJwtString([
+        $expiredJwt = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'test-audience',
@@ -127,7 +127,7 @@ class JwtAccessTokenValidatorTest extends TestCase
 
     public function testValidateWithInvalidIssuer(): void
     {
-        $invalidIssuerJwt = $this->createJwtString([
+        $invalidIssuerJwt = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://wrong-issuer.example.com',
             'sub' => 'user123',
             'aud' => 'test-audience',
@@ -146,7 +146,7 @@ class JwtAccessTokenValidatorTest extends TestCase
 
     public function testValidateWithInvalidAudience(): void
     {
-        $invalidAudienceJwt = $this->createJwtString([
+        $invalidAudienceJwt = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'wrong-audience',
@@ -165,7 +165,7 @@ class JwtAccessTokenValidatorTest extends TestCase
 
     public function testValidateWithMissingRequiredClaims(): void
     {
-        $missingClaimsJwt = $this->createJwtString([
+        $missingClaimsJwt = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://auth.example.com',
             'aud' => 'test-audience',
             'exp' => time() + 3600,
@@ -183,7 +183,7 @@ class JwtAccessTokenValidatorTest extends TestCase
     public function testValidateWithFutureIssuedAt(): void
     {
         $futureTime = time() + 3600; // 1 hour in the future
-        $futureIatJwt = $this->createJwtString([
+        $futureIatJwt = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'test-audience',
@@ -203,7 +203,7 @@ class JwtAccessTokenValidatorTest extends TestCase
     public function testValidateWithNotBeforeClaim(): void
     {
         $nbfTime = time() + 3600; // Valid 1 hour from now
-        $nbfJwt = $this->createJwtString([
+        $nbfJwt = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'test-audience',
@@ -232,7 +232,7 @@ class JwtAccessTokenValidatorTest extends TestCase
             ['iss', 'sub', 'exp', 'iat', 'scope'], // Require scope claim
         );
 
-        $jwtWithoutScope = $this->createJwtString([
+        $jwtWithoutScope = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'test-audience',
@@ -252,7 +252,7 @@ class JwtAccessTokenValidatorTest extends TestCase
     public function testValidateWithTimeDriftFails(): void
     {
         $almostExpiredTime = time() + 5; // Expires in 5 seconds
-        $driftJwt = $this->createJwtString([
+        $driftJwt = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'test-audience',
@@ -279,7 +279,7 @@ class JwtAccessTokenValidatorTest extends TestCase
 
     public function testValidateWithArrayAudienceFails(): void
     {
-        $multiAudienceJwt = $this->createJwtString([
+        $multiAudienceJwt = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => ['test-audience', 'another-audience'],
@@ -302,7 +302,7 @@ class JwtAccessTokenValidatorTest extends TestCase
     #[DataProvider('validTokenClaimsProvider')]
     public function testValidateWithVariousValidClaimsAllFail(array $params): void
     {
-        $jwtWithClaims = $this->createJwtString($params);
+        $jwtWithClaims = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], $params);
         $jwtToken = new JwtAccessToken($jwtWithClaims);
 
         // All these should fail due to signature validation with fake JWT
@@ -415,7 +415,7 @@ class JwtAccessTokenValidatorTest extends TestCase
 
     public function testValidateClaimsWithEmptyClaims(): void
     {
-        $emptyClaimsJwt = $this->createJwtString([]);
+        $emptyClaimsJwt = $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], []);
         $jwtToken = new JwtAccessToken($emptyClaimsJwt);
 
         $this->expectException(InvalidTokenException::class);
@@ -531,7 +531,7 @@ class JwtAccessTokenValidatorTest extends TestCase
 
     private function createValidJwtString(): string
     {
-        return $this->createJwtString([
+        return $this->createCustomJwt(['alg' => 'RS256', 'typ' => 'JWT'], [
             'iss' => 'https://auth.example.com',
             'sub' => 'user123',
             'aud' => 'test-audience',
@@ -539,25 +539,6 @@ class JwtAccessTokenValidatorTest extends TestCase
             'iat' => time(),
             'scope' => 'read write',
         ]);
-    }
-
-    /**
-     * @param array<string, mixed> $claims
-     */
-    private function createJwtString(array $claims): string
-    {
-        $headerJson = json_encode(['alg' => 'RS256', 'typ' => 'JWT']);
-        $payloadJson = json_encode($claims);
-
-        if ($headerJson === false || $payloadJson === false) {
-            throw new RuntimeException('Failed to encode JSON');
-        }
-
-        $header = base64_encode($headerJson);
-        $payload = base64_encode($payloadJson);
-        $signature = base64_encode('fake-signature');
-
-        return $header . '.' . $payload . '.' . $signature;
     }
 
     /**

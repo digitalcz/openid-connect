@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Client;
 
-use DigitalCz\OpenIDConnect\Util\ParamsTrait;
+use DigitalCz\OpenIDConnect\Util\ClaimsTrait;
 
 /**
  * User profile information from userinfo endpoint
  */
 final readonly class Userinfo
 {
-    use ParamsTrait;
+    use ClaimsTrait;
 
     /**
      * @param array<string, mixed> $claims
@@ -31,7 +31,7 @@ final readonly class Userinfo
      *
      * @return array<string, mixed>
      */
-    public function all(): array
+    public function claims(): array
     {
         return $this->claims;
     }

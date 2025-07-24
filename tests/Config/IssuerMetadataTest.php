@@ -163,10 +163,10 @@ class IssuerMetadataTest extends TestCase
         $metadata = $this->createSampleMetadata();
         $issuerMetadata = new IssuerMetadata($metadata);
 
-        $this->assertSame($metadata, $issuerMetadata->all());
+        $this->assertSame($metadata, $issuerMetadata->claims());
     }
 
-    public function testParamsTraitIntegration(): void
+    public function testClaimsTraitIntegration(): void
     {
         $metadata = [
             'issuer' => 'https://test.com',
@@ -176,7 +176,7 @@ class IssuerMetadataTest extends TestCase
         ];
         $issuerMetadata = new IssuerMetadata($metadata);
 
-        // Test ParamsTrait methods
+        // Test ClaimsTrait methods
         $this->assertTrue($issuerMetadata->has('issuer'));
         $this->assertFalse($issuerMetadata->has('nonexistent'));
 

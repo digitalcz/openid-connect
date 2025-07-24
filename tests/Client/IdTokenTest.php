@@ -127,15 +127,6 @@ class IdTokenTest extends TestCase
         $this->assertArrayHasKey('iat', $claims);
     }
 
-    public function testAll(): void
-    {
-        $jwtToken = $this->createSampleJwt(['custom' => 'value']);
-        $idToken = new IdToken($jwtToken);
-
-        // all() should return the same as claims()
-        $this->assertSame($idToken->claims(), $idToken->all());
-    }
-
     public function testToString(): void
     {
         $jwtToken = $this->createSampleJwt();
@@ -145,7 +136,7 @@ class IdTokenTest extends TestCase
         $this->assertSame($jwtToken, $idToken->__toString());
     }
 
-    public function testParamsTraitIntegration(): void
+    public function testClaimsTraitIntegration(): void
     {
         $customPayload = [
             'name' => 'John Doe',
@@ -156,7 +147,7 @@ class IdTokenTest extends TestCase
         $jwtToken = $this->createSampleJwt($customPayload);
         $idToken = new IdToken($jwtToken);
 
-        // Test that ParamsTrait methods work
+        // Test that ClaimsTrait methods work
         $this->assertTrue($idToken->has('name'));
         $this->assertFalse($idToken->has('nonexistent'));
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\ResourceServer;
 
-use DigitalCz\OpenIDConnect\Util\ParamsTrait;
+use DigitalCz\OpenIDConnect\Util\ClaimsTrait;
 use Throwable;
 
 /**
@@ -12,7 +12,7 @@ use Throwable;
  */
 final readonly class ValidatedAccessToken
 {
-    use ParamsTrait;
+    use ClaimsTrait;
 
     /**
      * @param array<string, mixed> $claims
@@ -74,7 +74,7 @@ final readonly class ValidatedAccessToken
      *
      * @return array<string, mixed>
      */
-    public function all(): array
+    public function claims(): array
     {
         return $this->claims;
     }

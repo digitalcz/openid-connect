@@ -237,7 +237,7 @@ class OpaqueAccessTokenValidatorTest extends TestCase
         $result = $this->validator->validate($opaqueToken);
 
         $this->assertInstanceOf(ValidatedAccessToken::class, $result);
-        $this->assertSame(['active' => true], $result->all());
+        $this->assertSame(['active' => true], $result->claims());
     }
 
     public function testValidateWithExtensiveResponse(): void
@@ -272,7 +272,7 @@ class OpaqueAccessTokenValidatorTest extends TestCase
         $this->assertIsArray($result->aud());
         $this->assertContains('resource-server-1', $result->aud());
         $this->assertSame('read write admin', $result->scope());
-        $this->assertSame($introspectionResponse, $result->all());
+        $this->assertSame($introspectionResponse, $result->claims());
     }
 
     /**

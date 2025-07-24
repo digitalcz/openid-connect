@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Config;
 
-use DigitalCz\OpenIDConnect\Util\ParamsTrait;
+use DigitalCz\OpenIDConnect\Util\ClaimsTrait;
 
 /**
  * Provider metadata with endpoints
  */
 final readonly class IssuerMetadata
 {
-    use ParamsTrait;
+    use ClaimsTrait;
 
     /**
      * @param array<string, string|string[]|bool> $metadata
@@ -106,7 +106,7 @@ final readonly class IssuerMetadata
     /**
      * @return array<string, mixed>
      */
-    public function all(): array
+    public function claims(): array
     {
         return $this->metadata;
     }

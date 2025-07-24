@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Client;
 
+use DigitalCz\OpenIDConnect\Util\ClaimsTrait;
 use DigitalCz\OpenIDConnect\Util\JWT;
-use DigitalCz\OpenIDConnect\Util\ParamsTrait;
 
 /**
  * OpenID Connect ID Token with user identity claims.
  */
 final readonly class IdToken
 {
-    use ParamsTrait;
+    use ClaimsTrait;
 
     /**
      * @param string $token The raw JWT ID token string
@@ -85,19 +85,6 @@ final readonly class IdToken
     public function claims(): array
     {
         return JWT::claims($this->token);
-    }
-
-    /**
-     * Get all JWT claims from the ID token (alias for claims()).
-     *
-     * Implementation of the ParamsTrait abstract method. This method is
-     * equivalent to claims() and is used by the trait for parameter access.
-     *
-     * @return array<string, mixed> All JWT claims as an associative array
-     */
-    public function all(): array
-    {
-        return $this->claims();
     }
 
     /**
