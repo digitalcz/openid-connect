@@ -156,7 +156,7 @@ class IdTokenTest extends TestCase
         $jwtToken = $this->createSampleJwt($customPayload);
         $idToken = new IdToken($jwtToken);
 
-        // Test that ParamsTrait methods work
+        // Test that ClaimsTrait methods work
         $this->assertTrue($idToken->has('name'));
         $this->assertFalse($idToken->has('nonexistent'));
 
