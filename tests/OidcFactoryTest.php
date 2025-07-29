@@ -6,6 +6,7 @@ namespace DigitalCz\OpenIDConnect;
 
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
+use DigitalCz\OpenIDConnect\Client\AuthorizationUrlResult;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
@@ -80,6 +81,10 @@ class OidcFactoryTest extends TestCase
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
         $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
         $this->assertInstanceOf(ResourceServer::class, $oidc->resourceServer());
+
+        // Trigger discovery by creating authorization URL
+        $result = $oidc->authorizationCode()->createAuthorizationUrl();
+        $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
     }
 
     public function testCreateWithDiscoveryUrlWithoutCache(): void
@@ -102,6 +107,10 @@ class OidcFactoryTest extends TestCase
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
         $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
         $this->assertInstanceOf(ResourceServer::class, $oidc->resourceServer());
+
+        // Trigger discovery by creating authorization URL
+        $result = $oidc->authorizationCode()->createAuthorizationUrl();
+        $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
     }
 
     public function testCreateWithStaticIssuerMetadataWithoutCache(): void
@@ -165,6 +174,10 @@ class OidcFactoryTest extends TestCase
                 redirectUri: 'https://client.example.com/callback',
             );
             $this->assertInstanceOf(Oidc::class, $oidc);
+
+            // Trigger discovery by creating authorization URL
+            $result = $oidc->authorizationCode()->createAuthorizationUrl();
+            $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
         }
     }
 
@@ -201,6 +214,10 @@ class OidcFactoryTest extends TestCase
         );
 
         $this->assertInstanceOf(Oidc::class, $oidc);
+
+        // Trigger discovery by creating authorization URL
+        $result = $oidc->authorizationCode()->createAuthorizationUrl();
+        $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
     }
 
     public function testCreateMultipleInstancesAreIndependent(): void
@@ -231,6 +248,10 @@ class OidcFactoryTest extends TestCase
         $this->assertNotSame($oidc1->authorizationCode(), $oidc2->authorizationCode());
         $this->assertNotSame($oidc1->clientCredentials(), $oidc2->clientCredentials());
         $this->assertNotSame($oidc1->resourceServer(), $oidc2->resourceServer());
+
+        // Trigger discovery for oidc2 by creating authorization URL
+        $result = $oidc2->authorizationCode()->createAuthorizationUrl();
+        $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
     }
 
     public function testCreateWithCustomCacheSecret(): void

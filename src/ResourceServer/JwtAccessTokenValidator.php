@@ -32,7 +32,7 @@ use Throwable;
  */
 final class JwtAccessTokenValidator implements AccessTokenValidator
 {
-    private readonly ClaimCheckerManager $claimCheckerManager;
+    private ?ClaimCheckerManager $claimCheckerManager = null;
     private ?JWSLoader $jwsLoader = null;
 
     /**
@@ -46,13 +46,6 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
         private readonly int $allowedTimeDrift = 10,
         private readonly array $mandatoryClaims = ['iss', 'sub', 'exp', 'iat'],
     ) {
-        $this->claimCheckerManager = new ClaimCheckerManager([
-            new IssuerChecker([$this->config->issuerMetadata()->issuer()]),
-            new AudienceChecker($this->audience),
-            new ExpirationTimeChecker($this->clock, $this->allowedTimeDrift),
-            new IssuedAtChecker($this->clock, $this->allowedTimeDrift),
-            new NotBeforeChecker($this->clock, $this->allowedTimeDrift),
-        ]);
     }
 
     /**
@@ -111,6 +104,17 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
      */
     private function validateClaims(array $claims): void
     {
-        $this->claimCheckerManager->check($claims, $this->mandatoryClaims);
+        $this->createClaimCheckerManager()->check($claims, $this->mandatoryClaims);
+    }
+
+    private function createClaimCheckerManager(): ClaimCheckerManager
+    {
+        return $this->claimCheckerManager ??= new ClaimCheckerManager([
+            new IssuerChecker([$this->config->issuerMetadata()->issuer()]),
+            new AudienceChecker($this->audience),
+            new ExpirationTimeChecker($this->clock, $this->allowedTimeDrift),
+            new IssuedAtChecker($this->clock, $this->allowedTimeDrift),
+            new NotBeforeChecker($this->clock, $this->allowedTimeDrift),
+        ]);
     }
 }
