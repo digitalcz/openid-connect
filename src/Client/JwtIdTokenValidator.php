@@ -33,7 +33,7 @@ use Throwable;
  */
 final class JwtIdTokenValidator implements IdTokenValidator
 {
-    private readonly ClaimCheckerManager $claimCheckerManager;
+    private ?ClaimCheckerManager $claimCheckerManager = null;
     private ?JWSLoader $jwsLoader = null;
 
     /**
@@ -46,13 +46,6 @@ final class JwtIdTokenValidator implements IdTokenValidator
         private readonly int $allowedTimeDrift = 10, // seconds
         private readonly array $mandatoryClaims = ['iss', 'sub', 'aud', 'exp', 'iat'],
     ) {
-        $this->claimCheckerManager = new ClaimCheckerManager([
-            new IssuerChecker([$this->config->issuerMetadata()->issuer()]),
-            new AudienceChecker($this->config->clientMetadata()->clientId()),
-            new ExpirationTimeChecker($this->clock, $this->allowedTimeDrift),
-            new IssuedAtChecker($this->clock, $this->allowedTimeDrift),
-            new NotBeforeChecker($this->clock, $this->allowedTimeDrift),
-        ]);
     }
 
     /**
@@ -100,7 +93,18 @@ final class JwtIdTokenValidator implements IdTokenValidator
 
     private function validateClaims(IdToken $token): void
     {
-        $this->claimCheckerManager->check($token->claims(), $this->mandatoryClaims);
+        $this->createClaimCheckerManager()->check($token->claims(), $this->mandatoryClaims);
+    }
+
+    private function createClaimCheckerManager(): ClaimCheckerManager
+    {
+        return $this->claimCheckerManager ??= new ClaimCheckerManager([
+            new IssuerChecker([$this->config->issuerMetadata()->issuer()]),
+            new AudienceChecker($this->config->clientMetadata()->clientId()),
+            new ExpirationTimeChecker($this->clock, $this->allowedTimeDrift),
+            new IssuedAtChecker($this->clock, $this->allowedTimeDrift),
+            new NotBeforeChecker($this->clock, $this->allowedTimeDrift),
+        ]);
     }
 
     private function validateNonce(IdToken $token, ?string $nonce): void
