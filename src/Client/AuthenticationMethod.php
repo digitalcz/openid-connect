@@ -25,6 +25,8 @@ enum AuthenticationMethod: string
      *
      * @param ClientMetadata $clientMetadata Client metadata with credentials
      * @return array<string, mixed> HTTP client options
+     *
+     * @deprecated Use ClientMetadata::applyCredentials() instead. This method will be removed in v2.0.
      */
     public function asOptions(ClientMetadata $clientMetadata): array
     {

@@ -6,6 +6,7 @@ namespace DigitalCz\OpenIDConnect\Config;
 
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
+use InvalidArgumentException;
 
 /**
  * Client configuration value object
@@ -64,7 +65,24 @@ final readonly class ClientMetadata
      */
     public function applyCredentials(array $options): array
     {
-        /** @var array<string, mixed> */
-        return array_merge_recursive($options, $this->authenticationMethod->asOptions($this));
+        switch ($this->authenticationMethod) {
+            case AuthenticationMethod::ClientSecretPost:
+                $options['body'] ??= [];
+                assert(is_array($options['body']));
+                $options['body']['client_id'] ??= $this->clientId;
+                $options['body']['client_secret'] = $this->clientSecret;
+
+                return $options;
+            case AuthenticationMethod::ClientSecretBasic:
+                $options['auth_basic'] ??= [$this->clientId, $this->clientSecret ?? ''];
+
+                return $options;
+            case AuthenticationMethod::None:
+                $options['body'] ??= [];
+                assert(is_array($options['body']));
+                $options['body']['client_id'] ??= $this->clientId;
+
+                return $options;
+        }
     }
 }
