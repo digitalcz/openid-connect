@@ -69,7 +69,7 @@ final readonly class ClientMetadata
                 $options['body'] ??= [];
                 assert(is_array($options['body']));
                 $options['body']['client_id'] ??= $this->clientId;
-                $options['body']['client_secret'] = $this->clientSecret;
+                $options['body']['client_secret'] ??= $this->clientSecret;
 
                 return $options;
             case AuthenticationMethod::ClientSecretBasic:
