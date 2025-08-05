@@ -6,7 +6,6 @@ namespace DigitalCz\OpenIDConnect\Config;
 
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
-use InvalidArgumentException;
 
 /**
  * Client configuration value object
