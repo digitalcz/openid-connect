@@ -133,4 +133,81 @@ class ClientMetadataTest extends TestCase
 
         $this->assertSame($expected, $result);
     }
+
+    public function testApplyCredentialsWithNoneAuthentication(): void
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'public-client-id',
+            authenticationMethod: AuthenticationMethod::None,
+        );
+
+        $options = [];
+        $result = $clientMetadata->applyCredentials($options);
+
+        $expected = [
+            'body' => [
+                'client_id' => 'public-client-id',
+            ],
+        ];
+
+        $this->assertSame($expected, $result);
+    }
+
+    public function testApplyCredentialsWithNoneAuthenticationPreservesExistingClientId(): void
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'public-client-id',
+            authenticationMethod: AuthenticationMethod::None,
+        );
+
+        $options = ['body' => ['client_id' => 'existing-client-id']];
+        $result = $clientMetadata->applyCredentials($options);
+
+        $expected = [
+            'body' => [
+                'client_id' => 'existing-client-id',
+            ],
+        ];
+
+        $this->assertSame($expected, $result);
+    }
+
+    public function testApplyCredentialsWithEmptyOptions(): void
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            authenticationMethod: AuthenticationMethod::ClientSecretPost,
+        );
+
+        $options = [];
+        $result = $clientMetadata->applyCredentials($options);
+
+        $expected = [
+            'body' => [
+                'client_id' => 'test-client-id',
+                'client_secret' => 'test-client-secret',
+            ],
+        ];
+
+        $this->assertSame($expected, $result);
+    }
+
+    public function testApplyCredentialsWithClientSecretBasicNullSecret(): void
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: null,
+            authenticationMethod: AuthenticationMethod::ClientSecretBasic,
+        );
+
+        $options = [];
+        $result = $clientMetadata->applyCredentials($options);
+
+        $expected = [
+            'auth_basic' => ['test-client-id', ''],
+        ];
+
+        $this->assertSame($expected, $result);
+    }
 }
