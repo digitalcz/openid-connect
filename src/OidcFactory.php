@@ -109,7 +109,7 @@ final readonly class OidcFactory
         $jwtAccessTokenValidator = new JwtAccessTokenValidator(
             $config,
             $jwksLoader,
-            $clientMetadata->clientId(),
+            $config->issuerMetadata()->issuer(),
         );
 
         $resourceServer = new ResourceServer([
