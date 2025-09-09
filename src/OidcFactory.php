@@ -89,7 +89,7 @@ final readonly class OidcFactory
             $jwksLoader = new CachingJwksLoader($jwksLoader, $cache);
         }
 
-        $idTokenValidator = new JwtIdTokenValidator($config, $jwksLoader);
+        $idTokenValidator = new JwtIdTokenValidator($config, $jwksLoader, $clock);
 
         $authorizationCode = new AuthorizationCode($config, $httpClient, $idTokenValidator);
 
@@ -110,6 +110,7 @@ final readonly class OidcFactory
             $config,
             $jwksLoader,
             $clientMetadata->clientId(),
+            $clock,
         );
 
         $resourceServer = new ResourceServer([
