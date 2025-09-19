@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Client;
 
 use DigitalCz\OpenIDConnect\Config\ClientMetadata;
+use RuntimeException;
 
 /**
  * OAuth2 client authentication methods for token requests.
@@ -16,6 +17,12 @@ enum AuthenticationMethod: string
 
     /** Client credentials sent in HTTP request body. */
     case ClientSecretPost = 'client_secret_post';
+
+    /** JWT signed with client secret (HMAC). */
+    case ClientSecretJwt = 'client_secret_jwt';
+
+    /** JWT signed with client private key (RSA/ECDSA). */
+    case PrivateKeyJwt = 'private_key_jwt';
 
     /** Public client with no authentication. */
     case None = 'none';
@@ -40,6 +47,9 @@ enum AuthenticationMethod: string
             self::ClientSecretBasic => [
                 'auth_basic' => [$clientMetadata->clientId(), $clientMetadata->clientSecret() ?? ''],
             ],
+            self::ClientSecretJwt, self::PrivateKeyJwt => throw new RuntimeException(
+                'JWT authentication methods require token endpoint URL. Use ClientMetadata::applyCredentials() instead.',
+            ),
             self::None => [
                 'body' => [
                     'client_id' => $clientMetadata->clientId(),

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Discovery;
 
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
-use DigitalCz\OpenIDConnect\Util\Base64Url;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -20,12 +19,13 @@ final readonly class CachingDiscoverer implements Discoverer
         private Discoverer $inner,
         private CacheInterface $cache,
         private int $ttl = self::DEFAULT_TTL,
+        private string $cacheSecret = 'default-oidc-cache-secret',
     ) {
     }
 
     public function discover(string $issuer): IssuerMetadata
     {
-        $key = 'oidc_discoverer_' . Base64Url::encode($issuer);
+        $key = 'oidc_discoverer_' . hash_hmac('sha256', $issuer, $this->cacheSecret);
 
         return $this->cache->get($key, function (ItemInterface $item) use ($issuer): IssuerMetadata {
             $item->expiresAfter($this->ttl);

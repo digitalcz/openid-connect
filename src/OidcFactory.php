@@ -73,7 +73,7 @@ final readonly class OidcFactory
             $discoverer = new HttpDiscoverer($httpClient);
 
             if ($cache !== null) {
-                $discoverer = new CachingDiscoverer($discoverer, $cache);
+                $discoverer = new CachingDiscoverer($discoverer, $cache, CachingDiscoverer::DEFAULT_TTL, $cacheSecret);
             }
 
             $config = new DiscoveryConfig($issuer, $discoverer, $clientMetadata);
@@ -86,7 +86,7 @@ final readonly class OidcFactory
         $jwksLoader = new HttpJwksLoader($httpClient);
 
         if ($cache !== null) {
-            $jwksLoader = new CachingJwksLoader($jwksLoader, $cache);
+            $jwksLoader = new CachingJwksLoader($jwksLoader, $cache, CachingJwksLoader::DEFAULT_TTL, $cacheSecret);
         }
 
         $idTokenValidator = new JwtIdTokenValidator($config, $jwksLoader, $clock);

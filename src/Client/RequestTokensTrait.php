@@ -19,7 +19,7 @@ trait RequestTokensTrait
 
         $url = $issuerMetadata->tokenEndpoint();
         $options = ['body' => array_filter($params)];
-        $options = $clientMetadata->applyCredentials($options);
+        $options = $clientMetadata->applyCredentials($options, $url);
 
         $response = $this->httpClient->request('POST', $url, $options);
 
