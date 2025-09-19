@@ -25,7 +25,7 @@ final class JwtClientAssertionGenerator
         string $audience,
         JWK $jwk,
         string $algorithm,
-        int $expirationSeconds,
+        int $expirationSeconds = 300,
     ): string {
         $now = $this->clock->now()->getTimestamp();
         $exp = $now + $expirationSeconds;

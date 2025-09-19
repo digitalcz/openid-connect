@@ -140,8 +140,6 @@ class ClientAuthenticatorTest extends TestCase
         $exported = openssl_pkey_export($keyResource, $privateKey);
         $this->assertTrue($exported, 'Failed to export private key');
 
-        openssl_pkey_free($keyResource);
-
         $issuerMetadata = new IssuerMetadata([
             'issuer' => 'https://example.com',
             'authorization_endpoint' => 'https://example.com/auth',
@@ -366,5 +364,135 @@ class ClientAuthenticatorTest extends TestCase
         $this->assertSame(self::CLIENT_SECRET, $options['body']['client_secret']);
         $this->assertArrayHasKey('headers', $options);
         $this->assertSame('application/x-www-form-urlencoded', $options['headers']['Content-Type']);
+    }
+
+    public function testClientSecretJwtWithShortSecretThrowsException(): void
+    {
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            clientSecret: 'short', // Too short for HS256 (needs 32 bytes)
+            authenticationMethod: AuthenticationMethod::ClientSecretJwt,
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid key length.');
+
+        $authenticator->applyAuthentication([]);
+    }
+
+    public function testClientSecretJwtWithHS384RequiresLongerSecret(): void
+    {
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            clientSecret: str_repeat('a', 40), // 40 bytes - sufficient for HS256 but not HS384 (needs 48)
+            authenticationMethod: AuthenticationMethod::ClientSecretJwt,
+            tokenEndpointAuthSigningAlg: 'HS384',
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid key length.');
+
+        $authenticator->applyAuthentication([]);
+    }
+
+    public function testClientSecretJwtWithHS512RequiresLongestSecret(): void
+    {
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            clientSecret: str_repeat('a', 50), // 50 bytes - sufficient for HS384 but not HS512 (needs 64)
+            authenticationMethod: AuthenticationMethod::ClientSecretJwt,
+            tokenEndpointAuthSigningAlg: 'HS512',
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid key length.');
+
+        $authenticator->applyAuthentication([]);
+    }
+
+    public function testClientSecretJwtWithAsymmetricAlgorithmThrowsException(): void
+    {
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            clientSecret: self::CLIENT_SECRET,
+            authenticationMethod: AuthenticationMethod::ClientSecretJwt,
+            tokenEndpointAuthSigningAlg: 'RS256', // Wrong algorithm for symmetric key
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Wrong key type.');
+
+        $authenticator->applyAuthentication([]);
+    }
+
+    public function testPrivateKeyJwtWithSymmetricAlgorithmThrowsException(): void
+    {
+        $keyResource = openssl_pkey_new([
+            'digest_alg' => 'sha256',
+            'private_key_bits' => 2048,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+        ]);
+
+        $this->assertNotFalse($keyResource, 'Failed to generate RSA key');
+
+        $exported = openssl_pkey_export($keyResource, $privateKey);
+        $this->assertTrue($exported, 'Failed to export private key');
+
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            authenticationMethod: AuthenticationMethod::PrivateKeyJwt,
+            privateKey: $privateKey,
+            tokenEndpointAuthSigningAlg: 'HS256', // Wrong algorithm for asymmetric key
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Wrong key type.');
+
+        $authenticator->applyAuthentication([]);
     }
 }

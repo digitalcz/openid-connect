@@ -81,7 +81,6 @@ final readonly class ClientAuthenticator
             $this->issuerMetadata->tokenEndpoint(),
             $jwk,
             $algorithm,
-            300,
         );
 
         $options['body']['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
@@ -117,7 +116,6 @@ final readonly class ClientAuthenticator
             $this->issuerMetadata->tokenEndpoint(),
             $jwk,
             $algorithm,
-            300,
         );
 
         $options['body']['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';

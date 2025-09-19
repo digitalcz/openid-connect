@@ -8,6 +8,7 @@ use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\ClientAuthenticator;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
+use InvalidArgumentException;
 use Jose\Component\Core\JWK;
 use Psr\Clock\ClockInterface;
 
@@ -102,6 +103,16 @@ final readonly class ClientMetadata
      */
     public function applyCredentials(array $options): array
     {
+        // JWT authentication methods require proper IssuerMetadata with token_endpoint
+        $jwtMethods = [AuthenticationMethod::ClientSecretJwt, AuthenticationMethod::PrivateKeyJwt];
+
+        if (in_array($this->authenticationMethod, $jwtMethods, true)) {
+            throw new InvalidArgumentException(
+                'JWT authentication methods (client_secret_jwt, private_key_jwt) are not supported by this deprecated method. ' .
+                'Use ClientAuthenticator with proper IssuerMetadata containing token_endpoint instead.',
+            );
+        }
+
         return new ClientAuthenticator($this, new IssuerMetadata([]))->applyAuthentication($options);
     }
 }

@@ -5,9 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
-use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 use DigitalCz\OpenIDConnect\OidcFactory;
-use Jose\Component\KeyManagement\JWKFactory;
 use Symfony\Component\HttpClient\HttpClient;
 
 /**
@@ -28,6 +26,8 @@ $oidc = OidcFactory::create(
     authenticationMethod: AuthenticationMethod::ClientSecretJwt,
 );
 
+dump($oidc);
+
 echo "Client Secret JWT authentication configured\n\n";
 
 // Example 2: Private Key JWT Authentication with RSA key
@@ -45,9 +45,6 @@ if ($keyResource === false) {
 }
 
 $exported = openssl_pkey_export($keyResource, $privateKey);
-
-// Clean up the key resource
-openssl_pkey_free($keyResource);
 
 if (!$exported || !is_string($privateKey)) {
     throw new RuntimeException('Failed to export RSA private key');
@@ -71,62 +68,5 @@ $oidc = OidcFactory::create(
 );
 
 echo "Private Key JWT authentication configured\n";
-echo "OIDC client with private key ready: Yes\n\n";
 
-// Example 3: Private Key JWT Authentication with JWK
-echo "=== Private Key JWT Authentication (JWK) ===\n";
-
-$jwk = JWKFactory::createFromKey($privateKey, '', ['kid' => 'my-key-id']);
-
-// For JWK-based authentication, you would typically use a more specialized setup
-// This is a simplified example showing the concept
-$keyId = $jwk->get('kid');
-echo "JWK created with key ID: " . (is_string($keyId) ? $keyId : 'none') . "\n";
-echo "Private Key JWT authentication with JWK configured\n\n";
-
-// Example 4: Manual configuration using IssuerMetadata object
-echo "=== Manual Configuration with JWT Authentication ===\n";
-
-$issuerMetadata = new IssuerMetadata([
-    'issuer' => 'https://example.com',
-    'authorization_endpoint' => 'https://example.com/auth',
-    'token_endpoint' => 'https://example.com/token',
-    'userinfo_endpoint' => 'https://example.com/userinfo',
-    'jwks_uri' => 'https://example.com/.well-known/jwks.json',
-]);
-
-$oidc = OidcFactory::create(
-    httpClient: $httpClient,
-    issuer: $issuerMetadata,
-    clientId: 'your-client-id',
-    clientSecret: 'your-client-secret-must-be-long-enough-for-hmac-256-bits',
-    redirectUri: 'https://your-app.com/callback',
-    authenticationMethod: AuthenticationMethod::ClientSecretJwt,
-);
-
-echo "Static configuration with Client Secret JWT authentication\n\n";
-
-// Example 5: Authorization Code Flow Example
-echo "=== Authorization Code Flow with JWT Authentication ===\n";
-
-$authorizationCode = $oidc->authorizationCode();
-$authorizationResult = $authorizationCode->createAuthorizationUrl([
-    'scope' => 'openid profile email',
-    'state' => 'random-state-value',
-]);
-
-echo "Authorization URL: " . $authorizationResult->url() . "\n\n";
-
-// Example 6: Client Credentials Flow
-echo "=== Client Credentials Flow with JWT Authentication ===\n";
-
-echo "Client credentials flow configured with JWT authentication\n";
-echo "This flow uses the JWT authentication method automatically\n\n";
-
-// Example 7: Resource Server Token Validation
-echo "=== Resource Server Token Validation ===\n";
-
-echo "Resource server configured for token validation\n";
-echo "Supports both JWT and opaque token validation\n\n";
-
-echo "=== JWT Authentication Examples Complete ===\n";
+dump($oidc);
