@@ -22,6 +22,7 @@ use DigitalCz\OpenIDConnect\ResourceServer\OpaqueAccessTokenValidator;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
+use Jose\Component\Core\JWK;
 use Psr\Clock\ClockInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -47,6 +48,10 @@ final readonly class OidcFactory
         ?CacheInterface $cache = null,
         ClockInterface $clock = new SimpleClock(),
         string $cacheSecret = 'default-oidc-cache-secret',
+        ?string $privateKey = null,
+        ?JWK $privateKeyJwk = null,
+        ?string $jwksUri = null,
+        ?string $tokenEndpointAuthSigningAlg = null,
     ): Oidc {
         if (is_string($defaultScopes)) {
             $defaultScopes = explode(' ', $defaultScopes);
@@ -67,6 +72,11 @@ final readonly class OidcFactory
             defaultScopes: $defaultScopes,
             authenticationMethod: $authenticationMethod,
             pkceMethod: $pkceMethod,
+            privateKey: $privateKey,
+            privateKeyJwk: $privateKeyJwk,
+            jwksUri: $jwksUri,
+            tokenEndpointAuthSigningAlg: $tokenEndpointAuthSigningAlg,
+            clock: $clock,
         );
 
         if (is_string($issuer)) {

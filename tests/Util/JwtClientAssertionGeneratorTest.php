@@ -191,6 +191,7 @@ class JwtClientAssertionGeneratorTest extends TestCase
         ]);
 
         openssl_pkey_export($keyResource, $privateKey);
+        openssl_pkey_free($keyResource);
 
         return $privateKey;
     }

@@ -46,13 +46,16 @@ if ($keyResource === false) {
 
 $exported = openssl_pkey_export($keyResource, $privateKey);
 
-if (!$exported) {
+// Clean up the key resource
+openssl_pkey_free($keyResource);
+
+if (!$exported || !is_string($privateKey)) {
     throw new RuntimeException('Failed to export RSA private key');
 }
 
 // Create OIDC client with private key JWT authentication using the new factory method
 // Note: In practice, you would load the private key from a secure location
-OidcFactory::create(
+$oidc = OidcFactory::create(
     httpClient: $httpClient,
     issuer: [
         'issuer' => 'https://example.com',
@@ -64,22 +67,22 @@ OidcFactory::create(
     clientId: 'your-client-id',
     redirectUri: 'https://your-app.com/callback',
     authenticationMethod: AuthenticationMethod::PrivateKeyJwt,
+    privateKey: $privateKey,
 );
 
-echo "Private Key JWT authentication configured\n\n";
+echo "Private Key JWT authentication configured\n";
+echo "OIDC client with private key ready: Yes\n\n";
 
 // Example 3: Private Key JWT Authentication with JWK
 echo "=== Private Key JWT Authentication (JWK) ===\n";
 
-if (is_string($privateKey)) {
-    $jwk = JWKFactory::createFromKey($privateKey, '', ['kid' => 'my-key-id']);
+$jwk = JWKFactory::createFromKey($privateKey, '', ['kid' => 'my-key-id']);
 
-    // For JWK-based authentication, you would typically use a more specialized setup
-    // This is a simplified example showing the concept
-    $keyId = $jwk->get('kid');
-    echo "JWK created with key ID: " . (is_string($keyId) ? $keyId : 'none') . "\n";
-    echo "Private Key JWT authentication with JWK configured\n\n";
-}
+// For JWK-based authentication, you would typically use a more specialized setup
+// This is a simplified example showing the concept
+$keyId = $jwk->get('kid');
+echo "JWK created with key ID: " . (is_string($keyId) ? $keyId : 'none') . "\n";
+echo "Private Key JWT authentication with JWK configured\n\n";
 
 // Example 4: Manual configuration using IssuerMetadata object
 echo "=== Manual Configuration with JWT Authentication ===\n";
@@ -92,7 +95,7 @@ $issuerMetadata = new IssuerMetadata([
     'jwks_uri' => 'https://example.com/.well-known/jwks.json',
 ]);
 
-OidcFactory::create(
+$oidc = OidcFactory::create(
     httpClient: $httpClient,
     issuer: $issuerMetadata,
     clientId: 'your-client-id',
@@ -106,8 +109,8 @@ echo "Static configuration with Client Secret JWT authentication\n\n";
 // Example 5: Authorization Code Flow Example
 echo "=== Authorization Code Flow with JWT Authentication ===\n";
 
-// Generate authorization URL
-$authorizationResult = $oidc->authorizationCode()->createAuthorizationUrl([
+$authorizationCode = $oidc->authorizationCode();
+$authorizationResult = $authorizationCode->createAuthorizationUrl([
     'scope' => 'openid profile email',
     'state' => 'random-state-value',
 ]);
