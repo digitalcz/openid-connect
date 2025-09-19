@@ -87,7 +87,7 @@ class AuthenticationMethodTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'JWT authentication methods require token endpoint URL. Use ClientMetadata::applyCredentials() instead.',
+            'JWT authentication methods require token endpoint URL. Use ClientAuthenticator::applyAuthentication() instead.',
         );
 
         AuthenticationMethod::ClientSecretJwt->asOptions($clientMetadata);
@@ -99,7 +99,7 @@ class AuthenticationMethodTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'JWT authentication methods require token endpoint URL. Use ClientMetadata::applyCredentials() instead.',
+            'JWT authentication methods require token endpoint URL. Use ClientAuthenticator::applyAuthentication() instead.',
         );
 
         AuthenticationMethod::PrivateKeyJwt->asOptions($clientMetadata);
