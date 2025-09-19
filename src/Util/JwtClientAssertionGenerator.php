@@ -6,7 +6,6 @@ namespace DigitalCz\OpenIDConnect\Util;
 
 use Jose\Component\Core\AlgorithmManagerFactory;
 use Jose\Component\Core\JWK;
-use Jose\Component\KeyManagement\JWKFactory;
 use Jose\Component\Signature\JWSBuilder;
 use Jose\Component\Signature\Serializer\CompactSerializer;
 use Psr\Clock\ClockInterface;
@@ -21,50 +20,7 @@ final class JwtClientAssertionGenerator
     ) {
     }
 
-    /**
-     * Generate a client assertion JWT using client secret (HMAC)
-     */
-    public function generateWithSecret(
-        string $clientId,
-        string $audience,
-        string $clientSecret,
-        string $algorithm = 'HS256',
-        int $expirationSeconds = 300,
-    ): string {
-        $jwk = JWKFactory::createFromSecret($clientSecret);
-
-        return $this->generateJwt($clientId, $audience, $jwk, $algorithm, $expirationSeconds);
-    }
-
-    /**
-     * Generate a client assertion JWT using private key (RSA/ECDSA)
-     */
-    public function generateWithPrivateKey(
-        string $clientId,
-        string $audience,
-        string $privateKey,
-        string $algorithm = 'RS256',
-        int $expirationSeconds = 300,
-    ): string {
-        $jwk = JWKFactory::createFromKey($privateKey);
-
-        return $this->generateJwt($clientId, $audience, $jwk, $algorithm, $expirationSeconds);
-    }
-
-    /**
-     * Generate a client assertion JWT using JWK
-     */
-    public function generateWithJwk(
-        string $clientId,
-        string $audience,
-        JWK $jwk,
-        string $algorithm = 'RS256',
-        int $expirationSeconds = 300,
-    ): string {
-        return $this->generateJwt($clientId, $audience, $jwk, $algorithm, $expirationSeconds);
-    }
-
-    private function generateJwt(
+    public function generateJwt(
         string $clientId,
         string $audience,
         JWK $jwk,

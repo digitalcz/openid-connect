@@ -20,7 +20,8 @@ class JwtClientAssertionGeneratorTest extends TestCase
 
     public function testGenerateWithSecret(): void
     {
-        $jwt = $this->generator->generateWithSecret(self::CLIENT_ID, self::AUDIENCE, self::CLIENT_SECRET);
+        $jwk = JWKFactory::createFromSecret(self::CLIENT_SECRET);
+        $jwt = $this->generator->generateJwt(self::CLIENT_ID, self::AUDIENCE, $jwk, 'HS256', 300);
 
         $this->assertIsString($jwt);
         $this->assertStringContainsString('.', $jwt);
@@ -53,8 +54,9 @@ class JwtClientAssertionGeneratorTest extends TestCase
     public function testGenerateWithPrivateKey(): void
     {
         $privateKey = $this->generateRsaPrivateKey();
+        $jwk = JWKFactory::createFromKey($privateKey);
 
-        $jwt = $this->generator->generateWithPrivateKey(self::CLIENT_ID, self::AUDIENCE, $privateKey);
+        $jwt = $this->generator->generateJwt(self::CLIENT_ID, self::AUDIENCE, $jwk, 'RS256', 300);
 
         $this->assertIsString($jwt);
 
@@ -81,7 +83,7 @@ class JwtClientAssertionGeneratorTest extends TestCase
         $privateKey = $this->generateRsaPrivateKey();
         $jwk = JWKFactory::createFromKey($privateKey);
 
-        $jwt = $this->generator->generateWithJwk(self::CLIENT_ID, self::AUDIENCE, $jwk);
+        $jwt = $this->generator->generateJwt(self::CLIENT_ID, self::AUDIENCE, $jwk, 'RS256', 300);
 
         $this->assertIsString($jwt);
 
@@ -98,15 +100,12 @@ class JwtClientAssertionGeneratorTest extends TestCase
     public function testDifferentAlgorithms(string $algorithm, string $keyType): void
     {
         if ($keyType === 'secret') {
-            $jwt = $this->generator->generateWithSecret(
-                self::CLIENT_ID,
-                self::AUDIENCE,
-                self::CLIENT_SECRET,
-                $algorithm,
-            );
+            $jwk = JWKFactory::createFromSecret(self::CLIENT_SECRET);
+            $jwt = $this->generator->generateJwt(self::CLIENT_ID, self::AUDIENCE, $jwk, $algorithm, 300);
         } else {
             $privateKey = $this->generateRsaPrivateKey();
-            $jwt = $this->generator->generateWithPrivateKey(self::CLIENT_ID, self::AUDIENCE, $privateKey, $algorithm);
+            $jwk = JWKFactory::createFromKey($privateKey);
+            $jwt = $this->generator->generateJwt(self::CLIENT_ID, self::AUDIENCE, $jwk, $algorithm, 300);
         }
 
         $parsed = JWT::parse($jwt);
@@ -133,14 +132,9 @@ class JwtClientAssertionGeneratorTest extends TestCase
     public function testCustomExpirationTime(): void
     {
         $expirationSeconds = 600; // 10 minutes
+        $jwk = JWKFactory::createFromSecret(self::CLIENT_SECRET);
 
-        $jwt = $this->generator->generateWithSecret(
-            self::CLIENT_ID,
-            self::AUDIENCE,
-            self::CLIENT_SECRET,
-            'HS256',
-            $expirationSeconds,
-        );
+        $jwt = $this->generator->generateJwt(self::CLIENT_ID, self::AUDIENCE, $jwk, 'HS256', $expirationSeconds);
 
         $parsed = JWT::parse($jwt);
         $payload = $parsed['payload'];
@@ -152,9 +146,10 @@ class JwtClientAssertionGeneratorTest extends TestCase
 
     public function testUniqueJti(): void
     {
-        $jwt1 = $this->generator->generateWithSecret(self::CLIENT_ID, self::AUDIENCE, self::CLIENT_SECRET);
+        $jwk = JWKFactory::createFromSecret(self::CLIENT_SECRET);
+        $jwt1 = $this->generator->generateJwt(self::CLIENT_ID, self::AUDIENCE, $jwk, 'HS256', 300);
 
-        $jwt2 = $this->generator->generateWithSecret(self::CLIENT_ID, self::AUDIENCE, self::CLIENT_SECRET);
+        $jwt2 = $this->generator->generateJwt(self::CLIENT_ID, self::AUDIENCE, $jwk, 'HS256', 300);
 
         $parsed1 = JWT::parse($jwt1);
         $parsed2 = JWT::parse($jwt2);
@@ -167,7 +162,7 @@ class JwtClientAssertionGeneratorTest extends TestCase
         $privateKey = $this->generateRsaPrivateKey();
         $jwk = JWKFactory::createFromKey($privateKey, null, ['kid' => 'test-key-id']);
 
-        $jwt = $this->generator->generateWithJwk(self::CLIENT_ID, self::AUDIENCE, $jwk);
+        $jwt = $this->generator->generateJwt(self::CLIENT_ID, self::AUDIENCE, $jwk, 'RS256', 300);
 
         $parsed = JWT::parse($jwt);
         $header = $parsed['header'];

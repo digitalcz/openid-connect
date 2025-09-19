@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\ResourceServer;
 
+use DigitalCz\OpenIDConnect\Client\ClientAuthenticator;
 use DigitalCz\OpenIDConnect\Config\Config;
 use DigitalCz\OpenIDConnect\Exception\IntrospectionException;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
@@ -44,7 +45,9 @@ final readonly class OpaqueAccessTokenValidator implements AccessTokenValidator
 
         try {
             $options = ['body' => ['token' => (string) $token]];
-            $options = $clientMetadata->applyCredentials($options);
+
+            $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+            $options = $authenticator->applyAuthentication($options);
 
             /** @var array<string, mixed> $claims */
             $claims = $this->httpClient->request('POST', $introspectionEndpoint, $options)->toArray();

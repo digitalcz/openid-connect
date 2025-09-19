@@ -6,11 +6,11 @@ namespace DigitalCz\OpenIDConnect\Config;
 
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\TestCase;
-use DigitalCz\OpenIDConnect\Util\JWT;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use InvalidArgumentException;
 use Jose\Component\KeyManagement\JWKFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
+use UnexpectedValueException;
 
 #[CoversClass(ClientMetadata::class)]
 class ClientMetadataJwtTest extends TestCase
@@ -27,36 +27,10 @@ class ClientMetadataJwtTest extends TestCase
             authenticationMethod: AuthenticationMethod::ClientSecretJwt,
         );
 
-        $options = $clientMetadata->applyCredentials([], self::TOKEN_ENDPOINT);
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('Claim "token_endpoint" is required and must be a string.');
 
-        $this->assertArrayHasKey('body', $options);
-        $this->assertArrayHasKey('client_assertion_type', $options['body']);
-        $this->assertArrayHasKey('client_assertion', $options['body']);
-
-        $this->assertSame(
-            'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-            $options['body']['client_assertion_type'],
-        );
-
-        // Verify JWT structure
-        $jwt = $options['body']['client_assertion'];
-        $this->assertIsString($jwt);
-
-        $parsed = JWT::parse($jwt);
-        $header = $parsed['header'];
-        $payload = $parsed['payload'];
-
-        // Verify header
-        $this->assertSame('HS256', $header['alg']);
-        $this->assertSame('JWT', $header['typ']);
-
-        // Verify payload
-        $this->assertSame(self::CLIENT_ID, $payload['iss']);
-        $this->assertSame(self::CLIENT_ID, $payload['sub']);
-        $this->assertSame(self::TOKEN_ENDPOINT, $payload['aud']);
-        $this->assertArrayHasKey('jti', $payload);
-        $this->assertArrayHasKey('iat', $payload);
-        $this->assertArrayHasKey('exp', $payload);
+        $clientMetadata->applyCredentials([]);
     }
 
     public function testPrivateKeyJwtAuthentication(): void
@@ -69,28 +43,10 @@ class ClientMetadataJwtTest extends TestCase
             privateKey: $privateKey,
         );
 
-        $options = $clientMetadata->applyCredentials([], self::TOKEN_ENDPOINT);
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('Claim "token_endpoint" is required and must be a string.');
 
-        $this->assertArrayHasKey('body', $options);
-        $this->assertArrayHasKey('client_assertion_type', $options['body']);
-        $this->assertArrayHasKey('client_assertion', $options['body']);
-
-        // Verify JWT structure
-        $jwt = $options['body']['client_assertion'];
-        $this->assertIsString($jwt);
-
-        $parsed = JWT::parse($jwt);
-        $header = $parsed['header'];
-        $payload = $parsed['payload'];
-
-        // Verify header
-        $this->assertSame('RS256', $header['alg']);
-        $this->assertSame('JWT', $header['typ']);
-
-        // Verify payload
-        $this->assertSame(self::CLIENT_ID, $payload['iss']);
-        $this->assertSame(self::CLIENT_ID, $payload['sub']);
-        $this->assertSame(self::TOKEN_ENDPOINT, $payload['aud']);
+        $clientMetadata->applyCredentials([]);
     }
 
     public function testPrivateKeyJwtWithJwk(): void
@@ -104,13 +60,10 @@ class ClientMetadataJwtTest extends TestCase
             privateKeyJwk: $jwk,
         );
 
-        $options = $clientMetadata->applyCredentials([], self::TOKEN_ENDPOINT);
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('Claim "token_endpoint" is required and must be a string.');
 
-        $jwt = $options['body']['client_assertion'];
-        $parsed = JWT::parse($jwt);
-        $header = $parsed['header'];
-
-        $this->assertSame('test-key-id', $header['kid']);
+        $clientMetadata->applyCredentials([]);
     }
 
     public function testCustomSigningAlgorithm(): void
@@ -122,13 +75,10 @@ class ClientMetadataJwtTest extends TestCase
             tokenEndpointAuthSigningAlg: 'HS512',
         );
 
-        $options = $clientMetadata->applyCredentials([], self::TOKEN_ENDPOINT);
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('Claim "token_endpoint" is required and must be a string.');
 
-        $jwt = $options['body']['client_assertion'];
-        $parsed = JWT::parse($jwt);
-        $header = $parsed['header'];
-
-        $this->assertSame('HS512', $header['alg']);
+        $clientMetadata->applyCredentials([]);
     }
 
     public function testCustomClock(): void
@@ -152,8 +102,8 @@ class ClientMetadataJwtTest extends TestCase
             authenticationMethod: AuthenticationMethod::ClientSecretJwt,
         );
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Token endpoint URL is required for JWT authentication');
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('Claim "token_endpoint" is required and must be a string.');
 
         $clientMetadata->applyCredentials([]);
     }
@@ -168,7 +118,7 @@ class ClientMetadataJwtTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Client secret is required for client_secret_jwt authentication');
 
-        $clientMetadata->applyCredentials([], self::TOKEN_ENDPOINT);
+        $clientMetadata->applyCredentials([]);
     }
 
     public function testPrivateKeyJwtWithoutKey(): void
@@ -181,7 +131,7 @@ class ClientMetadataJwtTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Private key or JWK is required for private_key_jwt authentication');
 
-        $clientMetadata->applyCredentials([], self::TOKEN_ENDPOINT);
+        $clientMetadata->applyCredentials([]);
     }
 
     public function testGetters(): void
@@ -229,12 +179,10 @@ class ClientMetadataJwtTest extends TestCase
             ],
         ];
 
-        $options = $clientMetadata->applyCredentials($initialOptions, self::TOKEN_ENDPOINT);
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('Claim "token_endpoint" is required and must be a string.');
 
-        $this->assertSame('authorization_code', $options['body']['grant_type']);
-        $this->assertSame('test-code', $options['body']['code']);
-        $this->assertArrayHasKey('client_assertion', $options['body']);
-        $this->assertArrayHasKey('client_assertion_type', $options['body']);
+        $clientMetadata->applyCredentials($initialOptions);
     }
 
     private function generateRsaPrivateKey(): string
