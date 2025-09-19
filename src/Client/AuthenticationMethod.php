@@ -48,7 +48,7 @@ enum AuthenticationMethod: string
                 'auth_basic' => [$clientMetadata->clientId(), $clientMetadata->clientSecret() ?? ''],
             ],
             self::ClientSecretJwt, self::PrivateKeyJwt => throw new RuntimeException(
-                'JWT authentication methods require token endpoint URL. Use ClientMetadata::applyCredentials() instead.',
+                'JWT authentication methods require token endpoint URL. Use ClientAuthenticator::applyAuthentication() instead.',
             ),
             self::None => [
                 'body' => [
