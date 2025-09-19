@@ -24,9 +24,6 @@ final readonly class ClientAuthenticator
     /**
      * Apply client authentication credentials to HTTP request options
      *
-     * Note: For JWT authentication methods, the token endpoint URL is always used as the audience
-     * in the client_assertion JWT, regardless of which endpoint is being called (RFC 7523).
-     *
      * @param array<string, mixed> $options HTTP request options
      * @return array<string, mixed> Modified HTTP request options with authentication
      */
