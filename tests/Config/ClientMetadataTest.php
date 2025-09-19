@@ -7,6 +7,7 @@ namespace DigitalCz\OpenIDConnect\Config;
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\TestCase;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 #[CoversClass(ClientMetadata::class)]
@@ -209,5 +210,38 @@ class ClientMetadataTest extends TestCase
         ];
 
         $this->assertSame($expected, $result);
+    }
+
+    public function testApplyCredentialsWithJwtAuthenticationThrowsException(): void
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            authenticationMethod: AuthenticationMethod::ClientSecretJwt,
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'JWT authentication methods (client_secret_jwt, private_key_jwt) are not supported by this deprecated method. ' .
+            'Use ClientAuthenticator with proper IssuerMetadata containing token_endpoint instead.',
+        );
+
+        $clientMetadata->applyCredentials([]);
+    }
+
+    public function testApplyCredentialsWithPrivateKeyJwtThrowsException(): void
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            authenticationMethod: AuthenticationMethod::PrivateKeyJwt,
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'JWT authentication methods (client_secret_jwt, private_key_jwt) are not supported by this deprecated method. ' .
+            'Use ClientAuthenticator with proper IssuerMetadata containing token_endpoint instead.',
+        );
+
+        $clientMetadata->applyCredentials([]);
     }
 }

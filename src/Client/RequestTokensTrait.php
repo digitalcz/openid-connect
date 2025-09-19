@@ -19,7 +19,9 @@ trait RequestTokensTrait
 
         $url = $issuerMetadata->tokenEndpoint();
         $options = ['body' => array_filter($params)];
-        $options = $clientMetadata->applyCredentials($options);
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+        $options = $authenticator->applyAuthentication($options);
 
         $response = $this->httpClient->request('POST', $url, $options);
 

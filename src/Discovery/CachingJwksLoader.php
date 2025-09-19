@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Discovery;
 
-use DigitalCz\OpenIDConnect\Util\Base64Url;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -19,6 +18,7 @@ final readonly class CachingJwksLoader implements JwksLoader
         private JwksLoader $inner,
         private CacheInterface $cache,
         private int $ttl = self::DEFAULT_TTL,
+        private string $cacheSecret = 'default-oidc-cache-secret',
     ) {
     }
 
@@ -27,7 +27,7 @@ final readonly class CachingJwksLoader implements JwksLoader
      */
     public function load(string $jwksUri): array
     {
-        $cacheKey = 'oidc_jwks_' . Base64Url::encode($jwksUri);
+        $cacheKey = 'oidc_jwks_' . hash_hmac('sha256', $jwksUri, $this->cacheSecret);
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($jwksUri): array {
             $item->expiresAfter($this->ttl); // Cache for 1 hour
