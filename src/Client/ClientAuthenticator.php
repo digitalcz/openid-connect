@@ -75,7 +75,7 @@ final readonly class ClientAuthenticator
 
         $clientAssertion = $generator->generateJwt(
             $this->clientMetadata->clientId(),
-            $this->issuerMetadata->tokenEndpoint(),
+            $this->resolveAudience(),
             $jwk,
             $algorithm,
         );
@@ -110,7 +110,7 @@ final readonly class ClientAuthenticator
 
         $clientAssertion = $generator->generateJwt(
             $this->clientMetadata->clientId(),
-            $this->issuerMetadata->tokenEndpoint(),
+            $this->resolveAudience(),
             $jwk,
             $algorithm,
         );
@@ -119,5 +119,19 @@ final readonly class ClientAuthenticator
         $options['body']['client_assertion'] = $clientAssertion;
 
         return $options;
+    }
+
+    /**
+     * Resolve audience value for client assertion JWT
+     */
+    private function resolveAudience(): string
+    {
+        $configuredAudience = $this->clientMetadata->clientAssertionAudience();
+
+        return match ($configuredAudience) {
+            '{issuer}' => $this->issuerMetadata->issuer(),
+            '{token_endpoint}', null => $this->issuerMetadata->tokenEndpoint(),
+            default => $configuredAudience,
+        };
     }
 }
