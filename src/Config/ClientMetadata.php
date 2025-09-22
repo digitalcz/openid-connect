@@ -29,8 +29,8 @@ final readonly class ClientMetadata
         private ?PkceMethod $pkceMethod = PkceMethod::S256,
         private ?string $privateKey = null,
         private ?JWK $privateKeyJwk = null,
-        private ?string $jwksUri = null,
         private ?string $tokenEndpointAuthSigningAlg = null,
+        private ?string $clientAssertionAudience = null,
         private ?ClockInterface $clock = null,
     ) {
     }
@@ -78,14 +78,14 @@ final readonly class ClientMetadata
         return $this->privateKeyJwk;
     }
 
-    public function jwksUri(): ?string
-    {
-        return $this->jwksUri;
-    }
-
     public function tokenEndpointAuthSigningAlg(): ?string
     {
         return $this->tokenEndpointAuthSigningAlg;
+    }
+
+    public function clientAssertionAudience(): ?string
+    {
+        return $this->clientAssertionAudience;
     }
 
     public function clock(): ClockInterface

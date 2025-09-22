@@ -50,8 +50,8 @@ final readonly class OidcFactory
         string $cacheSecret = 'default-oidc-cache-secret',
         ?string $privateKey = null,
         ?JWK $privateKeyJwk = null,
-        ?string $jwksUri = null,
         ?string $tokenEndpointAuthSigningAlg = null,
+        ?string $clientAssertionAudience = null,
     ): Oidc {
         if (is_string($defaultScopes)) {
             $defaultScopes = explode(' ', $defaultScopes);
@@ -74,8 +74,8 @@ final readonly class OidcFactory
             pkceMethod: $pkceMethod,
             privateKey: $privateKey,
             privateKeyJwk: $privateKeyJwk,
-            jwksUri: $jwksUri,
             tokenEndpointAuthSigningAlg: $tokenEndpointAuthSigningAlg,
+            clientAssertionAudience: $clientAssertionAudience,
             clock: $clock,
         );
 

@@ -120,7 +120,7 @@ class ClientAuthenticatorTest extends TestCase
 
         $this->assertSame(self::CLIENT_ID, $payload['iss']);
         $this->assertSame(self::CLIENT_ID, $payload['sub']);
-        $this->assertSame(self::TOKEN_ENDPOINT, $payload['aud']);
+        $this->assertSame(self::TOKEN_ENDPOINT, $payload['aud']); // Default behavior preserved
         $this->assertArrayHasKey('exp', $payload);
         $this->assertArrayHasKey('iat', $payload);
         $this->assertArrayHasKey('jti', $payload);
@@ -171,7 +171,7 @@ class ClientAuthenticatorTest extends TestCase
 
         $this->assertSame(self::CLIENT_ID, $payload['iss']);
         $this->assertSame(self::CLIENT_ID, $payload['sub']);
-        $this->assertSame(self::TOKEN_ENDPOINT, $payload['aud']);
+        $this->assertSame(self::TOKEN_ENDPOINT, $payload['aud']); // Default behavior preserved
         $this->assertArrayHasKey('exp', $payload);
         $this->assertArrayHasKey('iat', $payload);
         $this->assertArrayHasKey('jti', $payload);
@@ -494,5 +494,134 @@ class ClientAuthenticatorTest extends TestCase
         $this->expectExceptionMessage('Wrong key type.');
 
         $authenticator->applyAuthentication([]);
+    }
+
+    public function testClientSecretJwtWithCustomAudience(): void
+    {
+        $customAudience = 'https://custom-audience.example.com';
+
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            clientSecret: self::CLIENT_SECRET,
+            authenticationMethod: AuthenticationMethod::ClientSecretJwt,
+            clientAssertionAudience: $customAudience,
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+        $options = $authenticator->applyAuthentication([]);
+
+        $jwt = $options['body']['client_assertion'];
+        $payload = JWT::claims($jwt);
+
+        $this->assertSame($customAudience, $payload['aud']);
+    }
+
+    public function testClientSecretJwtWithTokenEndpointAudience(): void
+    {
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            clientSecret: self::CLIENT_SECRET,
+            authenticationMethod: AuthenticationMethod::ClientSecretJwt,
+            clientAssertionAudience: '{token_endpoint}',
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+        $options = $authenticator->applyAuthentication([]);
+
+        $jwt = $options['body']['client_assertion'];
+        $payload = JWT::claims($jwt);
+
+        $this->assertSame(self::TOKEN_ENDPOINT, $payload['aud']);
+    }
+
+    public function testClientSecretJwtWithIssuerAudience(): void
+    {
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            clientSecret: self::CLIENT_SECRET,
+            authenticationMethod: AuthenticationMethod::ClientSecretJwt,
+            clientAssertionAudience: '{issuer}',
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+        $options = $authenticator->applyAuthentication([]);
+
+        $jwt = $options['body']['client_assertion'];
+        $payload = JWT::claims($jwt);
+
+        $this->assertSame('https://example.com', $payload['aud']);
+    }
+
+    public function testPrivateKeyJwtWithTokenEndpointAudience(): void
+    {
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $jwk = JWKFactory::createRSAKey(2048, ['alg' => 'RS256', 'use' => 'sig']);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            authenticationMethod: AuthenticationMethod::PrivateKeyJwt,
+            privateKeyJwk: $jwk,
+            clientAssertionAudience: '{token_endpoint}',
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+        $options = $authenticator->applyAuthentication([]);
+
+        $jwt = $options['body']['client_assertion'];
+        $payload = JWT::claims($jwt);
+
+        $this->assertSame(self::TOKEN_ENDPOINT, $payload['aud']);
+    }
+
+    public function testDefaultAudienceBehaviorPreserved(): void
+    {
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/auth',
+            'token_endpoint' => self::TOKEN_ENDPOINT,
+            'jwks_uri' => 'https://example.com/jwks',
+        ]);
+
+        $clientMetadata = new ClientMetadata(
+            clientId: self::CLIENT_ID,
+            clientSecret: self::CLIENT_SECRET,
+            authenticationMethod: AuthenticationMethod::ClientSecretJwt,
+            // No clientAssertionAudience specified - should default to token endpoint
+        );
+
+        $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
+        $options = $authenticator->applyAuthentication([]);
+
+        $jwt = $options['body']['client_assertion'];
+        $payload = JWT::claims($jwt);
+
+        $this->assertSame(self::TOKEN_ENDPOINT, $payload['aud']); // Default behavior preserved
     }
 }

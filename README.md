@@ -65,6 +65,36 @@ $oidc = OidcFactory::create(
 ```
 </details>
 
+### Configuration Options
+
+The `OidcFactory::create()` method accepts the following configuration options:
+
+| Parameter                     | Type                            | Required | Default                          | Description                                                                                                |
+|-------------------------------|---------------------------------|----------|----------------------------------|------------------------------------------------------------------------------------------------------------|
+| `httpClient`                  | `HttpClientInterface`           | ✓        | -                                | HTTP client for making requests                                                                            |
+| `issuer`                      | `string\|array\|IssuerMetadata` | ✓        | -                                | Issuer URL for discovery, metadata array, or IssuerMetadata instance                                       |
+| `clientId`                    | `string`                        | ✓        | -                                | OAuth2/OIDC client identifier                                                                              |
+| `clientSecret`                | `string\|null`                  | -        | `null`                           | OAuth2/OIDC client secret (required for some authentication methods)                                       |
+| `redirectUri`                 | `string\|null`                  | -        | `null`                           | Redirect URI for authorization code flow                                                                   |
+| `defaultScopes`               | `string\|array`                 | -        | `['openid', 'profile', 'email']` | Default scopes to request (space-separated string or array)                                                |
+| `authenticationMethod`        | `string\|AuthenticationMethod`  | -        | `client_secret_post`             | Client authentication method for token endpoint                                                            |
+| `pkceMethod`                  | `string\|PkceMethod`            | -        | `S256`                           | PKCE method for authorization code flow (`S256`, `plain`, or `none`)                                       |
+| `cache`                       | `CacheInterface\|null`          | -        | `null`                           | Optional cache for storing discovery metadata and JWKS                                                     |
+| `clock`                       | `ClockInterface`                | -        | `SimpleClock`                    | Clock implementation for time-based operations                                                             |
+| `cacheSecret`                 | `string`                        | -        | `'default-oidc-cache-secret'`    | Secret used for HMAC-based cache key generation                                                            |
+| `privateKey`                  | `string\|null`                  | -        | `null`                           | PEM-encoded private key for `private_key_jwt` authentication                                               |
+| `privateKeyJwk`               | `JWK\|null`                     | -        | `null`                           | JWK private key for `private_key_jwt` authentication (alternative to `privateKey`)                         |
+| `tokenEndpointAuthSigningAlg` | `string\|null`                  | -        | `null`                           | Signature algorithm for client assertion JWT (e.g., `'HS256'`, `'RS256'`)                                  |
+| `clientAssertionAudience`     | `string\|null`                  | -        | `null`                           | Audience claim for client assertion JWT. Special values: `'{issuer}'`, `'{token_endpoint}'`, or custom URL |
+
+#### Authentication Methods
+
+- `client_secret_post` - Send client credentials in POST body
+- `client_secret_basic` - Send client credentials in Authorization header
+- `client_secret_jwt` - Use JWT signed with client secret
+- `private_key_jwt` - Use JWT signed with private key
+- `none` - No client authentication (public clients)
+
 ### Authorization Code flow
 
 #### Step 1 - Redirect the user to authorization endpoint
