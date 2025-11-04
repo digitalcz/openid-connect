@@ -244,4 +244,38 @@ class ClientMetadataTest extends TestCase
 
         $clientMetadata->applyCredentials([]);
     }
+
+    public function testBackchannelLogoutUri(): void
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            backchannelLogoutUri: 'https://example.com/logout/backchannel',
+        );
+
+        $this->assertSame('https://example.com/logout/backchannel', $clientMetadata->backchannelLogoutUri());
+    }
+
+    public function testBackchannelLogoutUriNull(): void
+    {
+        $clientMetadata = new ClientMetadata(clientId: 'test-client-id');
+
+        $this->assertNull($clientMetadata->backchannelLogoutUri());
+    }
+
+    public function testBackchannelLogoutSessionRequired(): void
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            backchannelLogoutSessionRequired: true,
+        );
+
+        $this->assertTrue($clientMetadata->backchannelLogoutSessionRequired());
+    }
+
+    public function testBackchannelLogoutSessionRequiredDefault(): void
+    {
+        $clientMetadata = new ClientMetadata(clientId: 'test-client-id');
+
+        $this->assertFalse($clientMetadata->backchannelLogoutSessionRequired());
+    }
 }

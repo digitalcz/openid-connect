@@ -125,6 +125,7 @@ final readonly class ClientMetadata
             );
         }
 
-        return new ClientAuthenticator($this, new IssuerMetadata([]))->applyAuthentication($options);
+        $authenticator = new ClientAuthenticator($this, new IssuerMetadata([]));
+        return $authenticator->applyAuthentication($options);
     }
 }

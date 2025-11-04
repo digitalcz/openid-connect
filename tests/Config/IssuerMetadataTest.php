@@ -293,4 +293,38 @@ class IssuerMetadataTest extends TestCase
             'claims_supported' => ['sub', 'name', 'email', 'picture'],
         ];
     }
+
+    public function testBackchannelLogoutSupported(): void
+    {
+        $metadata = $this->createSampleMetadata();
+        $metadata['backchannel_logout_supported'] = true;
+        $issuerMetadata = new IssuerMetadata($metadata);
+
+        $this->assertTrue($issuerMetadata->backchannelLogoutSupported());
+    }
+
+    public function testBackchannelLogoutSupportedDefault(): void
+    {
+        $metadata = $this->createSampleMetadata();
+        $issuerMetadata = new IssuerMetadata($metadata);
+
+        $this->assertFalse($issuerMetadata->backchannelLogoutSupported());
+    }
+
+    public function testBackchannelLogoutSessionSupported(): void
+    {
+        $metadata = $this->createSampleMetadata();
+        $metadata['backchannel_logout_session_supported'] = true;
+        $issuerMetadata = new IssuerMetadata($metadata);
+
+        $this->assertTrue($issuerMetadata->backchannelLogoutSessionSupported());
+    }
+
+    public function testBackchannelLogoutSessionSupportedDefault(): void
+    {
+        $metadata = $this->createSampleMetadata();
+        $issuerMetadata = new IssuerMetadata($metadata);
+
+        $this->assertFalse($issuerMetadata->backchannelLogoutSessionSupported());
+    }
 }
