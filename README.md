@@ -86,6 +86,8 @@ The `OidcFactory::create()` method accepts the following configuration options:
 | `privateKeyJwk`               | `JWK\|null`                     | -        | `null`                           | JWK private key for `private_key_jwt` authentication (alternative to `privateKey`)                         |
 | `tokenEndpointAuthSigningAlg` | `string\|null`                  | -        | `null`                           | Signature algorithm for client assertion JWT (e.g., `'HS256'`, `'RS256'`)                                  |
 | `clientAssertionAudience`     | `string\|null`                  | -        | `null`                           | Audience claim for client assertion JWT. Special values: `'{issuer}'`, `'{token_endpoint}'`, or custom URL |
+| `backchannelLogoutUri`        | `string\|null`                  | -        | `null`                           | Back-channel logout endpoint URI for receiving logout notifications from the OP                            |
+| `backchannelLogoutSessionRequired` | `bool`                     | -        | `false`                          | Whether session ID (`sid`) is required in logout tokens                                                    |
 
 #### Authentication Methods
 
@@ -148,6 +150,69 @@ $validatedToken = $resourceServer->introspect($accessToken);
 echo "Token is valid for subject: " . $validatedToken->sub() . PHP_EOL;
 echo "Token expires at: " . date('Y-m-d H:i:s', $validatedToken->exp()) . PHP_EOL;
 ```
+
+### Back-Channel Logout
+
+Back-Channel Logout allows OpenID Providers to notify your application when a user logs out, enabling secure session termination across all applications.
+
+#### Configuration
+
+Register your back-channel logout endpoint with the OpenID Provider:
+
+```php
+$oidc = OidcFactory::create(
+    httpClient: $httpClient,
+    issuer: 'https://auth.example.com',
+    clientId: 'my-client-id',
+    clientSecret: 'my-client-secret',
+    backchannelLogoutUri: 'https://myapp.example.com/logout/backchannel',
+    backchannelLogoutSessionRequired: true, // Require 'sid' in logout tokens
+);
+```
+
+#### Handling Logout Requests
+
+When the OpenID Provider sends a logout notification, validate the logout token and terminate the appropriate sessions:
+
+```php
+use DigitalCz\OpenIDConnect\Exception\InvalidLogoutTokenException;
+use DigitalCz\OpenIDConnect\Exception\LogoutTokenExpiredException;
+use DigitalCz\OpenIDConnect\Exception\UntrustedLogoutTokenException;
+
+$logoutHandler = $oidc->backChannelLogout();
+
+try {
+    // Validate the logout token (typically from $_POST['logout_token'])
+    $logoutToken = $logoutHandler->handleLogoutRequest($_POST['logout_token']);
+    
+    // Access logout token claims to identify which sessions to terminate
+    $subject = $logoutToken->subject();      // User ID (may be null)
+    $sessionId = $logoutToken->sessionId();  // Session ID (may be null)
+    
+    // Terminate sessions based on available claims
+    if ($subject !== null && $sessionId !== null) {
+        // Terminate specific session for specific user
+        terminateUserSession($subject, $sessionId);
+    } elseif ($subject !== null) {
+        // Terminate all sessions for this user
+        terminateAllUserSessions($subject);
+    } elseif ($sessionId !== null) {
+        // Terminate session by ID only
+        terminateSession($sessionId);
+    }
+    
+    http_response_code(200); // Acknowledge successful processing
+    
+} catch (InvalidLogoutTokenException $e) {
+    http_response_code(400); // Bad Request - malformed token
+} catch (UntrustedLogoutTokenException $e) {
+    http_response_code(403); // Forbidden - invalid signature
+} catch (LogoutTokenExpiredException $e) {
+    http_response_code(410); // Gone - expired token
+}
+```
+
+See [examples/backchannel_logout.php](examples/backchannel_logout.php) for a complete example.
 
 See [examples](examples) for more complete examples
 
