@@ -32,6 +32,8 @@ final readonly class ClientMetadata
         private ?string $tokenEndpointAuthSigningAlg = null,
         private ?string $clientAssertionAudience = null,
         private ?ClockInterface $clock = null,
+        private ?string $backchannelLogoutUri = null,
+        private bool $backchannelLogoutSessionRequired = false,
     ) {
     }
 
@@ -91,6 +93,16 @@ final readonly class ClientMetadata
     public function clock(): ClockInterface
     {
         return $this->clock ?? new SimpleClock();
+    }
+
+    public function backchannelLogoutUri(): ?string
+    {
+        return $this->backchannelLogoutUri;
+    }
+
+    public function backchannelLogoutSessionRequired(): bool
+    {
+        return $this->backchannelLogoutSessionRequired;
     }
 
     /**

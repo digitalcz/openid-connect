@@ -103,6 +103,16 @@ final readonly class IssuerMetadata
         return $this->strings('claims_supported');
     }
 
+    public function backchannelLogoutSupported(): bool
+    {
+        return $this->get('backchannel_logout_supported', false) === true;
+    }
+
+    public function backchannelLogoutSessionSupported(): bool
+    {
+        return $this->get('backchannel_logout_session_supported', false) === true;
+    }
+
     /**
      * @return array<string, mixed>
      */
