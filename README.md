@@ -86,8 +86,8 @@ The `OidcFactory::create()` method accepts the following configuration options:
 | `privateKeyJwk`               | `JWK\|null`                     | -        | `null`                           | JWK private key for `private_key_jwt` authentication (alternative to `privateKey`)                         |
 | `tokenEndpointAuthSigningAlg` | `string\|null`                  | -        | `null`                           | Signature algorithm for client assertion JWT (e.g., `'HS256'`, `'RS256'`)                                  |
 | `clientAssertionAudience`     | `string\|null`                  | -        | `null`                           | Audience claim for client assertion JWT. Special values: `'{issuer}'`, `'{token_endpoint}'`, or custom URL |
-| `backchannelLogoutUri`        | `string\|null`                  | -        | `null`                           | Back-channel logout endpoint URI for receiving logout notifications from the OP                            |
-| `backchannelLogoutSessionRequired` | `bool`                     | -        | `false`                          | Whether session ID (`sid`) is required in logout tokens                                                    |
+| `backchannelLogoutUri`        | `string\|null`                  | -        | `null`                           | Client registration metadata: URI where OP should send logout notifications (not used for token validation) |
+| `backchannelLogoutSessionRequired` | `bool`                     | -        | `false`                          | Client registration metadata: whether RP requires `sid` in logout tokens (not used for token validation)   |
 
 #### Authentication Methods
 
@@ -157,7 +157,7 @@ Back-Channel Logout allows OpenID Providers to notify your application when a us
 
 #### Configuration
 
-Register your back-channel logout endpoint with the OpenID Provider:
+The `backchannelLogoutUri` and `backchannelLogoutSessionRequired` parameters are client registration metadata that you would communicate to the OpenID Provider during client registration. These values are stored in `ClientMetadata` for reference but are not used by the library's logout token validation logic.
 
 ```php
 $oidc = OidcFactory::create(
@@ -166,7 +166,7 @@ $oidc = OidcFactory::create(
     clientId: 'my-client-id',
     clientSecret: 'my-client-secret',
     backchannelLogoutUri: 'https://myapp.example.com/logout/backchannel',
-    backchannelLogoutSessionRequired: true, // Require 'sid' in logout tokens
+    backchannelLogoutSessionRequired: true,
 );
 ```
 

@@ -19,6 +19,8 @@ final readonly class ClientMetadata
 {
     /**
      * @param list<string> $defaultScopes
+     * @param string|null $backchannelLogoutUri Client registration metadata: URI where the OP should send logout notifications
+     * @param bool $backchannelLogoutSessionRequired Client registration metadata: whether the RP requires 'sid' in logout tokens
      */
     public function __construct(
         private string $clientId,
@@ -95,11 +97,31 @@ final readonly class ClientMetadata
         return $this->clock ?? new SimpleClock();
     }
 
+    /**
+     * Get the back-channel logout URI.
+     *
+     * This is client registration metadata that indicates where the OpenID Provider
+     * should send logout notifications. This property is not used by the library's
+     * logout token validation logic - it is provided for applications that need to
+     * communicate this information to the OP during client registration.
+     *
+     * @return string|null The back-channel logout endpoint URI, or null if not configured
+     */
     public function backchannelLogoutUri(): ?string
     {
         return $this->backchannelLogoutUri;
     }
 
+    /**
+     * Check if session ID is required in logout tokens.
+     *
+     * This is client registration metadata that indicates whether the RP requires
+     * the 'sid' (session ID) claim in logout tokens. This property is not used by
+     * the library's logout token validation logic - it is provided for applications
+     * that need to communicate this requirement to the OP during client registration.
+     *
+     * @return bool True if session ID is required, false otherwise
+     */
     public function backchannelLogoutSessionRequired(): bool
     {
         return $this->backchannelLogoutSessionRequired;
