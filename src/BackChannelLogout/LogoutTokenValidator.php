@@ -36,7 +36,6 @@ final class LogoutTokenValidator
     private const LOGOUT_EVENT_URI = 'http://schemas.openid.net/event/backchannel-logout';
 
     private ?ClaimCheckerManager $claimCheckerManager = null;
-    private ?JWSLoader $jwsLoader = null;
 
     /**
      * @param list<string> $mandatoryClaims
@@ -98,7 +97,9 @@ final class LogoutTokenValidator
         $idTokenSigningAlgorithms = $this->config->issuerMetadata()->idTokenSigningAlgValuesSupported();
         $algorithmManagerFactory = new AlgorithmManagerFactory(SignatureAlgorithmsFactory::create());
 
-        return $this->jwsLoader ??= new JWSLoader(
+        // Not cached to ensure algorithm list reflects current configuration
+        // This prevents security issues if validator instance is reused with different configs
+        return new JWSLoader(
             new JWSSerializerManager([new CompactSerializer()]),
             new JWSVerifier($algorithmManagerFactory->create($idTokenSigningAlgorithms)),
             new HeaderCheckerManager([new AlgorithmChecker($idTokenSigningAlgorithms)], [new JWSTokenSupport()]),

@@ -159,6 +159,8 @@ Back-Channel Logout allows OpenID Providers to notify your application when a us
 
 The `backchannelLogoutUri` and `backchannelLogoutSessionRequired` parameters are client registration metadata that you would communicate to the OpenID Provider during client registration. These values are stored in `ClientMetadata` for reference but are not used by the library's logout token validation logic.
 
+**Important:** You must register these values with your OpenID Provider through their admin console, registration API, or dynamic client registration endpoint before back-channel logout will function. The library does not automatically communicate these values to the OP.
+
 ```php
 $oidc = OidcFactory::create(
     httpClient: $httpClient,

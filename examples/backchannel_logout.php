@@ -8,6 +8,12 @@ declare(strict_types=1);
  * This example demonstrates how to handle OpenID Connect Back-Channel Logout requests.
  * Back-Channel Logout allows the OpenID Provider to notify Relying Parties when a user
  * has logged out, enabling secure session termination across all applications.
+ *
+ * SECURITY CONSIDERATIONS:
+ * 1. Implement rate limiting on this endpoint to prevent DoS attacks
+ * 2. Implement replay attack prevention by tracking processed JTIs
+ * 3. Ensure the endpoint responds quickly (< 100ms) as OPs may have timeouts
+ * 4. Use HTTPS in production to protect the logout token in transit
  */
 
 use DigitalCz\OpenIDConnect\Exception\InvalidLogoutTokenException;
@@ -51,6 +57,18 @@ if (empty($logoutTokenString)) {
 try {
     // Validate the logout token
     $logoutToken = $logoutHandler->handleLogoutRequest($logoutTokenString);
+
+    // IMPORTANT: Implement replay attack prevention
+    // The jti (JWT ID) claim uniquely identifies this logout token
+    // You should track processed JTIs to prevent replay attacks:
+    //
+    // $jti = $logoutToken->jwtId();
+    // if (hasProcessedJti($jti)) {
+    //     http_response_code(400);
+    //     echo "Logout token has already been processed\n";
+    //     exit;
+    // }
+    // markJtiAsProcessed($jti, $logoutToken->issuedAt() + 3600); // Store with expiry
 
     // Logout token is valid - now terminate user sessions
     // You can access logout token claims to identify which sessions to terminate:
