@@ -38,8 +38,8 @@
     "phpstan/phpstan-phpunit": "^2.0",
     "phpstan/phpstan-strict-rules": "^2.0",
     "phpunit/phpunit": "^12.2",
-    "symfony/cache": "^7.3",
-    "symfony/http-client": "^7.3",
+    "symfony/cache": "^7.3 || ^8.0",
+    "symfony/http-client": "^7.3 || ^8.0",
     "symfony/var-dumper": "^7.3 || ^8.0"
   },
   "autoload": {
