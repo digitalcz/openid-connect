@@ -149,6 +149,7 @@ final readonly class ClientMetadata
 
         // Split into two lines for PHP 8.3 compatibility (project requires 8.4)
         $authenticator = new ClientAuthenticator($this, new IssuerMetadata([]));
+
         return $authenticator->applyAuthentication($options);
     }
 }
