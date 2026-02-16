@@ -28,8 +28,9 @@ use Symfony\Component\HttpClient\HttpClient;
 require __DIR__ . '/../vendor/autoload.php';
 
 // Simulate getting logout token from request (in production, use proper request handling)
-// phpcs:disable PSR2.ControlStructures.DisallowNullableVariables.Found
-$logoutTokenString = $GLOBALS['_POST']['logout_token'] ?? null;
+// phpcs:disable SlevomatCodingStandard.Variables.DisallowSuperGlobalVariable
+$logoutTokenString = $_POST['logout_token'] ?? null;
+// phpcs:enable SlevomatCodingStandard.Variables.DisallowSuperGlobalVariable
 
 if ($logoutTokenString === null || $logoutTokenString === '') {
     http_response_code(400);
