@@ -119,8 +119,10 @@ final class LogoutTokenValidator
         } catch (Throwable $e) {
             // Check if this is an expiration error
             if (str_contains($e->getMessage(), 'exp')) {
+
                 throw new LogoutTokenExpiredException('Logout token has expired', 0, $e);
             }
+
             throw new InvalidLogoutTokenException('Logout token claim validation failed: ' . $e->getMessage(), 0, $e);
         }
     }
