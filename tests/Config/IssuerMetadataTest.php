@@ -272,28 +272,6 @@ class IssuerMetadataTest extends TestCase
         $this->assertContains('email_verified', $issuerMetadata->claimsSupported());
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function createSampleMetadata(): array
-    {
-        return [
-            'issuer' => 'https://auth.example.com',
-            'authorization_endpoint' => 'https://auth.example.com/oauth/authorize',
-            'token_endpoint' => 'https://auth.example.com/oauth/token',
-            'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
-            'userinfo_endpoint' => 'https://auth.example.com/userinfo',
-            'end_session_endpoint' => 'https://auth.example.com/logout',
-            'introspection_endpoint' => 'https://auth.example.com/introspect',
-            'response_types_supported' => ['code', 'token', 'id_token'],
-            'subject_types_supported' => ['public', 'pairwise'],
-            'id_token_signing_alg_values_supported' => ['RS256', 'ES256'],
-            'token_endpoint_auth_signing_alg_values_supported' => ['RS256', 'HS256'],
-            'scopes_supported' => ['openid', 'profile', 'email', 'offline_access'],
-            'claims_supported' => ['sub', 'name', 'email', 'picture'],
-        ];
-    }
-
     public function testBackchannelLogoutSupported(): void
     {
         $metadata = $this->createSampleMetadata();
@@ -326,5 +304,27 @@ class IssuerMetadataTest extends TestCase
         $issuerMetadata = new IssuerMetadata($metadata);
 
         $this->assertFalse($issuerMetadata->backchannelLogoutSessionSupported());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function createSampleMetadata(): array
+    {
+        return [
+            'issuer' => 'https://auth.example.com',
+            'authorization_endpoint' => 'https://auth.example.com/oauth/authorize',
+            'token_endpoint' => 'https://auth.example.com/oauth/token',
+            'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
+            'userinfo_endpoint' => 'https://auth.example.com/userinfo',
+            'end_session_endpoint' => 'https://auth.example.com/logout',
+            'introspection_endpoint' => 'https://auth.example.com/introspect',
+            'response_types_supported' => ['code', 'token', 'id_token'],
+            'subject_types_supported' => ['public', 'pairwise'],
+            'id_token_signing_alg_values_supported' => ['RS256', 'ES256'],
+            'token_endpoint_auth_signing_alg_values_supported' => ['RS256', 'HS256'],
+            'scopes_supported' => ['openid', 'profile', 'email', 'offline_access'],
+            'claims_supported' => ['sub', 'name', 'email', 'picture'],
+        ];
     }
 }
