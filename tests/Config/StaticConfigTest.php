@@ -13,6 +13,29 @@ class StaticConfigTest extends TestCase
     private IssuerMetadata $issuerMetadata;
     private ClientMetadata $clientMetadata;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://auth.example.com',
+            'authorization_endpoint' => 'https://auth.example.com/oauth/authorize',
+            'token_endpoint' => 'https://auth.example.com/oauth/token',
+            'userinfo_endpoint' => 'https://auth.example.com/userinfo',
+            'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
+            'response_types_supported' => ['code'],
+            'subject_types_supported' => ['public'],
+            'id_token_signing_alg_values_supported' => ['RS256'],
+        ]);
+
+        $this->clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            defaultScopes: ['openid', 'profile', 'email'],
+        );
+    }
+
     public function testConstructor(): void
     {
         $config = new StaticConfig($this->issuerMetadata, $this->clientMetadata);
@@ -127,28 +150,5 @@ class StaticConfigTest extends TestCase
         // The objects should maintain their properties
         $this->assertSame('https://auth.example.com', $issuer->issuer());
         $this->assertSame('test-client-id', $client->clientId());
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->issuerMetadata = new IssuerMetadata([
-            'issuer' => 'https://auth.example.com',
-            'authorization_endpoint' => 'https://auth.example.com/oauth/authorize',
-            'token_endpoint' => 'https://auth.example.com/oauth/token',
-            'userinfo_endpoint' => 'https://auth.example.com/userinfo',
-            'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
-            'response_types_supported' => ['code'],
-            'subject_types_supported' => ['public'],
-            'id_token_signing_alg_values_supported' => ['RS256'],
-        ]);
-
-        $this->clientMetadata = new ClientMetadata(
-            clientId: 'test-client-id',
-            clientSecret: 'test-client-secret',
-            redirectUri: 'https://client.example.com/callback',
-            defaultScopes: ['openid', 'profile', 'email'],
-        );
     }
 }

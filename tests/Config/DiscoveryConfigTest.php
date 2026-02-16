@@ -17,6 +17,32 @@ class DiscoveryConfigTest extends TestCase
     private IssuerMetadata $issuerMetadata;
     private string $issuer;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->issuer = 'https://auth.example.com';
+        $this->discoverer = $this->createMock(Discoverer::class);
+
+        $this->issuerMetadata = new IssuerMetadata([
+            'issuer' => $this->issuer,
+            'authorization_endpoint' => 'https://auth.example.com/oauth/authorize',
+            'token_endpoint' => 'https://auth.example.com/oauth/token',
+            'userinfo_endpoint' => 'https://auth.example.com/userinfo',
+            'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
+            'response_types_supported' => ['code'],
+            'subject_types_supported' => ['public'],
+            'id_token_signing_alg_values_supported' => ['RS256'],
+        ]);
+
+        $this->clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            defaultScopes: ['openid', 'profile', 'email'],
+        );
+    }
+
     public function testConstructor(): void
     {
         $config = new DiscoveryConfig($this->issuer, $this->discoverer, $this->clientMetadata);
@@ -212,31 +238,5 @@ class DiscoveryConfigTest extends TestCase
         $this->assertSame($this->issuerMetadata, $result1);
         $this->assertSame($issuerMetadata2, $result2);
         $this->assertNotSame($result1, $result2);
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->issuer = 'https://auth.example.com';
-        $this->discoverer = $this->createMock(Discoverer::class);
-
-        $this->issuerMetadata = new IssuerMetadata([
-            'issuer' => $this->issuer,
-            'authorization_endpoint' => 'https://auth.example.com/oauth/authorize',
-            'token_endpoint' => 'https://auth.example.com/oauth/token',
-            'userinfo_endpoint' => 'https://auth.example.com/userinfo',
-            'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
-            'response_types_supported' => ['code'],
-            'subject_types_supported' => ['public'],
-            'id_token_signing_alg_values_supported' => ['RS256'],
-        ]);
-
-        $this->clientMetadata = new ClientMetadata(
-            clientId: 'test-client-id',
-            clientSecret: 'test-client-secret',
-            redirectUri: 'https://client.example.com/callback',
-            defaultScopes: ['openid', 'profile', 'email'],
-        );
     }
 }
