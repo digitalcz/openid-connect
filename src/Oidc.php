@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect;
 
+use DigitalCz\OpenIDConnect\BackChannelLogout\BackChannelLogoutHandler;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
@@ -17,6 +18,7 @@ final readonly class Oidc
         private AuthorizationCode $authorizationCode,
         private ClientCredentials $clientCredentials,
         private ResourceServer $resourceServer,
+        private BackChannelLogoutHandler $backChannelLogout,
     ) {
     }
 
@@ -33,5 +35,10 @@ final readonly class Oidc
     public function resourceServer(): ResourceServer
     {
         return $this->resourceServer;
+    }
+
+    public function backChannelLogout(): BackChannelLogoutHandler
+    {
+        return $this->backChannelLogout;
     }
 }

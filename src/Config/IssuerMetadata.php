@@ -88,6 +88,25 @@ final readonly class IssuerMetadata
     }
 
     /**
+     * Whether the provider supports Back-Channel Logout.
+     *
+     * @see https://openid.net/specs/openid-connect-backchannel-1_0.html#BCSupport
+     */
+    public function backchannelLogoutSupported(): bool
+    {
+        return $this->has('backchannel_logout_supported') && $this->boolean('backchannel_logout_supported');
+    }
+
+    /**
+     * Whether the provider can convey a `sid` (Session ID) claim in logout tokens.
+     */
+    public function backchannelLogoutSessionSupported(): bool
+    {
+        return $this->has('backchannel_logout_session_supported')
+            && $this->boolean('backchannel_logout_session_supported');
+    }
+
+    /**
      * @return array<string>
      */
     public function scopesSupported(): array

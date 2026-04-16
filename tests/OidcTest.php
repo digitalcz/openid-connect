@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect;
 
+use DigitalCz\OpenIDConnect\BackChannelLogout\BackChannelLogoutHandler;
+use DigitalCz\OpenIDConnect\BackChannelLogout\JwtLogoutTokenValidator;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
 use DigitalCz\OpenIDConnect\Client\JwtIdTokenValidator;
@@ -25,6 +27,7 @@ class OidcTest extends TestCase
     private AuthorizationCode $authorizationCode;
     private ClientCredentials $clientCredentials;
     private ResourceServer $resourceServer;
+    private BackChannelLogoutHandler $backChannelLogout;
     private Config&MockObject $config;
     private HttpClientInterface $httpClient;
     private IssuerMetadata $issuerMetadata;
@@ -32,14 +35,24 @@ class OidcTest extends TestCase
 
     public function testConstructor(): void
     {
-        $oidc = new Oidc($this->authorizationCode, $this->clientCredentials, $this->resourceServer);
+        $oidc = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
 
         $this->assertInstanceOf(Oidc::class, $oidc);
     }
 
     public function testAuthorizationCode(): void
     {
-        $oidc = new Oidc($this->authorizationCode, $this->clientCredentials, $this->resourceServer);
+        $oidc = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
 
         $result = $oidc->authorizationCode();
 
@@ -49,7 +62,12 @@ class OidcTest extends TestCase
 
     public function testClientCredentials(): void
     {
-        $oidc = new Oidc($this->authorizationCode, $this->clientCredentials, $this->resourceServer);
+        $oidc = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
 
         $result = $oidc->clientCredentials();
 
@@ -59,7 +77,12 @@ class OidcTest extends TestCase
 
     public function testResourceServer(): void
     {
-        $oidc = new Oidc($this->authorizationCode, $this->clientCredentials, $this->resourceServer);
+        $oidc = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
 
         $result = $oidc->resourceServer();
 
@@ -67,9 +90,29 @@ class OidcTest extends TestCase
         $this->assertInstanceOf(ResourceServer::class, $result);
     }
 
+    public function testBackChannelLogout(): void
+    {
+        $oidc = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
+
+        $result = $oidc->backChannelLogout();
+
+        $this->assertSame($this->backChannelLogout, $result);
+        $this->assertInstanceOf(BackChannelLogoutHandler::class, $result);
+    }
+
     public function testAllMethodsReturnSameInstancesConsistently(): void
     {
-        $oidc = new Oidc($this->authorizationCode, $this->clientCredentials, $this->resourceServer);
+        $oidc = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
 
         // Test that multiple calls return the same instances
         $authCode1 = $oidc->authorizationCode();
@@ -83,39 +126,62 @@ class OidcTest extends TestCase
         $resourceServer1 = $oidc->resourceServer();
         $resourceServer2 = $oidc->resourceServer();
         $this->assertSame($resourceServer1, $resourceServer2);
+
+        $backChannelLogout1 = $oidc->backChannelLogout();
+        $backChannelLogout2 = $oidc->backChannelLogout();
+        $this->assertSame($backChannelLogout1, $backChannelLogout2);
     }
 
     public function testReadonlyClassBehavior(): void
     {
-        $oidc = new Oidc($this->authorizationCode, $this->clientCredentials, $this->resourceServer);
+        $oidc = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
 
         // Test that the class is readonly by verifying constructor injection works
         $this->assertSame($this->authorizationCode, $oidc->authorizationCode());
         $this->assertSame($this->clientCredentials, $oidc->clientCredentials());
         $this->assertSame($this->resourceServer, $oidc->resourceServer());
+        $this->assertSame($this->backChannelLogout, $oidc->backChannelLogout());
 
         // The readonly class should maintain state consistently
-        $oidc2 = new Oidc($this->authorizationCode, $this->clientCredentials, $this->resourceServer);
+        $oidc2 = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
 
         $this->assertSame($oidc->authorizationCode(), $oidc2->authorizationCode());
         $this->assertSame($oidc->clientCredentials(), $oidc2->clientCredentials());
         $this->assertSame($oidc->resourceServer(), $oidc2->resourceServer());
+        $this->assertSame($oidc->backChannelLogout(), $oidc2->backChannelLogout());
     }
 
     public function testFacadePattern(): void
     {
         // Test that Oidc acts as a proper facade providing access to all sub-components
-        $oidc = new Oidc($this->authorizationCode, $this->clientCredentials, $this->resourceServer);
+        $oidc = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
 
-        // Verify facade provides access to all three main components
+        // Verify facade provides access to all main components
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
         $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
         $this->assertInstanceOf(ResourceServer::class, $oidc->resourceServer());
+        $this->assertInstanceOf(BackChannelLogoutHandler::class, $oidc->backChannelLogout());
 
         // Verify each component is accessible and distinct
         $this->assertNotSame($oidc->authorizationCode(), $oidc->clientCredentials());
         $this->assertNotSame($oidc->authorizationCode(), $oidc->resourceServer());
         $this->assertNotSame($oidc->clientCredentials(), $oidc->resourceServer());
+        $this->assertNotSame($oidc->backChannelLogout(), $oidc->resourceServer());
     }
 
     public function testWithDifferentImplementations(): void
@@ -144,14 +210,21 @@ class OidcTest extends TestCase
         $authCode2 = new AuthorizationCode($config2, $this->httpClient, $idTokenValidator2);
         $clientCreds2 = new ClientCredentials($config2, $this->httpClient);
         $resourceServer2 = new ResourceServer([]);
+        $backChannelLogout2 = new BackChannelLogoutHandler(new JwtLogoutTokenValidator($config2, $jwksLoader2));
 
-        $oidc1 = new Oidc($this->authorizationCode, $this->clientCredentials, $this->resourceServer);
-        $oidc2 = new Oidc($authCode2, $clientCreds2, $resourceServer2);
+        $oidc1 = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
+        $oidc2 = new Oidc($authCode2, $clientCreds2, $resourceServer2, $backChannelLogout2);
 
         // Verify each Oidc instance maintains its own dependencies
         $this->assertNotSame($oidc1->authorizationCode(), $oidc2->authorizationCode());
         $this->assertNotSame($oidc1->clientCredentials(), $oidc2->clientCredentials());
         $this->assertNotSame($oidc1->resourceServer(), $oidc2->resourceServer());
+        $this->assertNotSame($oidc1->backChannelLogout(), $oidc2->backChannelLogout());
 
         // Verify that the instances are properly typed
         $this->assertInstanceOf(AuthorizationCode::class, $oidc1->authorizationCode());
@@ -160,6 +233,8 @@ class OidcTest extends TestCase
         $this->assertInstanceOf(ClientCredentials::class, $oidc2->clientCredentials());
         $this->assertInstanceOf(ResourceServer::class, $oidc1->resourceServer());
         $this->assertInstanceOf(ResourceServer::class, $oidc2->resourceServer());
+        $this->assertInstanceOf(BackChannelLogoutHandler::class, $oidc1->backChannelLogout());
+        $this->assertInstanceOf(BackChannelLogoutHandler::class, $oidc2->backChannelLogout());
     }
 
     protected function setUp(): void
@@ -195,6 +270,10 @@ class OidcTest extends TestCase
         $jwtValidator = new JwtAccessTokenValidator($this->config, $jwksLoader, $this->clientMetadata->clientId());
 
         $this->resourceServer = new ResourceServer([$jwtValidator, $opaqueValidator]);
+
+        $this->backChannelLogout = new BackChannelLogoutHandler(
+            new JwtLogoutTokenValidator($this->config, $jwksLoader),
+        );
     }
 
     private function createRealIssuerMetadata(): IssuerMetadata
