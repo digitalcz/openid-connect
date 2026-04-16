@@ -7,6 +7,7 @@ namespace DigitalCz\OpenIDConnect;
 use DigitalCz\OpenIDConnect\BackChannelLogout\BackChannelLogoutHandler;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
+use DigitalCz\OpenIDConnect\Client\DeviceAuthorization;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
 
 /**
@@ -17,6 +18,7 @@ final readonly class Oidc
     public function __construct(
         private AuthorizationCode $authorizationCode,
         private ClientCredentials $clientCredentials,
+        private DeviceAuthorization $deviceAuthorization,
         private ResourceServer $resourceServer,
         private BackChannelLogoutHandler $backChannelLogout,
     ) {
@@ -30,6 +32,11 @@ final readonly class Oidc
     public function clientCredentials(): ClientCredentials
     {
         return $this->clientCredentials;
+    }
+
+    public function deviceAuthorization(): DeviceAuthorization
+    {
+        return $this->deviceAuthorization;
     }
 
     public function resourceServer(): ResourceServer
