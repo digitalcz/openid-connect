@@ -102,22 +102,47 @@ The `OidcFactory::create()` method accepts the following configuration options:
 ```php
 $authorizationCode = $oidc->authorizationCode();
 
-$url = $authorizationCode->createAuthorizationUrl([
-    'state' => 'random-state',
-    'nonce' => 'random-nonce'
-]);
+// createAuthorizationUrl() auto-generates cryptographically random state, nonce, and PKCE
+// code_verifier. Retrieve them from the result and persist in session before redirecting.
+$result = $authorizationCode->createAuthorizationUrl();
 
-// Redirect user to $url
+// IMPORTANT: Store security parameters in session before redirecting.
+// - state: must be verified on callback to prevent CSRF attacks
+// - nonce: must be passed to fetchTokens() to validate the ID token
+// - codeVerifier: must be passed to fetchTokens() when PKCE is enabled (default)
+session_start();
+$_SESSION['oauth_state'] = $result->state();
+$_SESSION['oauth_nonce'] = $result->nonce();
+$_SESSION['oauth_code_verifier'] = $result->codeVerifier();
+
+// Redirect user to $result->url()
 ```
 
 #### Step 2 - Handle the callback and exchange code for tokens
 
 ```php
-// Get the authorization code from the callback URL
-$code = $_GET['code'];
-$nonce = 'random-nonce'; // Same nonce used in step 1
+session_start();
 
-$tokens = $authorizationCode->fetchTokens($code, $nonce);
+// IMPORTANT: Always validate the state parameter before proceeding.
+// A missing or mismatched state indicates a potential CSRF attack.
+if (
+    empty($_GET['state'])
+    || !isset($_SESSION['oauth_state'])
+    || !hash_equals($_SESSION['oauth_state'], $_GET['state'])
+) {
+    throw new RuntimeException('Invalid state parameter - possible CSRF attack.');
+}
+
+$code = $_GET['code'];
+
+$tokens = $authorizationCode->fetchTokens(
+    code: $code,
+    nonce: $_SESSION['oauth_nonce'],
+    codeVerifier: $_SESSION['oauth_code_verifier'],
+);
+
+// Clear one-time security parameters from session
+unset($_SESSION['oauth_state'], $_SESSION['oauth_nonce'], $_SESSION['oauth_code_verifier']);
 
 echo "Access Token: " . $tokens->accessToken() . PHP_EOL;
 echo "ID Token: " . $tokens->idToken() . PHP_EOL;
