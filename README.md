@@ -86,6 +86,7 @@ The `OidcFactory::create()` method accepts the following configuration options:
 | `privateKeyJwk`               | `JWK\|null`                     | -        | `null`                           | JWK private key for `private_key_jwt` authentication (alternative to `privateKey`)                         |
 | `tokenEndpointAuthSigningAlg` | `string\|null`                  | -        | `null`                           | Signature algorithm for client assertion JWT (e.g., `'HS256'`, `'RS256'`)                                  |
 | `clientAssertionAudience`     | `string\|null`                  | -        | `null`                           | Audience claim for client assertion JWT. Special values: `'{issuer}'`, `'{token_endpoint}'`, or custom URL |
+| `accessTokenType`             | `string\|null`                  | -        | `null`                           | Expected JWT access-token `typ` header (RFC 9068, e.g. `'at+jwt'`); `null` disables the check              |
 
 #### Authentication Methods
 
@@ -173,6 +174,21 @@ $validatedToken = $resourceServer->introspect($accessToken);
 echo "Token is valid for subject: " . $validatedToken->sub() . PHP_EOL;
 echo "Token expires at: " . date('Y-m-d H:i:s', $validatedToken->exp()) . PHP_EOL;
 ```
+
+To follow [RFC 9068](https://www.rfc-editor.org/rfc/rfc9068) and require JWT access tokens to be explicitly typed
+(rejecting, for example, an ID token presented as an access token), set `accessTokenType`:
+
+```php
+$oidc = OidcFactory::create(
+    httpClient: $httpClient,
+    issuer: 'https://issuer.example.com',
+    clientId: 'my-client',
+    accessTokenType: 'at+jwt',
+);
+```
+
+When set, the `typ` header must be present and equal to the expected value; both `at+jwt` and `application/at+jwt`
+are accepted. It is disabled by default because not all authorization servers emit the `typ` header.
 
 See [examples](examples) for more complete examples
 
