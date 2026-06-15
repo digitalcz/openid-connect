@@ -27,6 +27,8 @@ class SecureUrlTest extends TestCase
     {
         return [
             'https remote' => ['https://auth.example.com/.well-known/openid-configuration'],
+            'uppercase https scheme' => ['HTTPS://auth.example.com/.well-known/openid-configuration'],
+            'mixed-case http loopback scheme' => ['HttP://localhost/.well-known/jwks.json'],
             'http localhost' => ['http://localhost/.well-known/jwks.json'],
             'http 127.0.0.1' => ['http://127.0.0.1:8080/jwks'],
             'http ipv6 loopback' => ['http://[::1]/jwks'],

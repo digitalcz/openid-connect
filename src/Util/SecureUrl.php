@@ -20,20 +20,19 @@ final class SecureUrl
      */
     public static function requireSecure(string $url): void
     {
-        $scheme = parse_url($url, PHP_URL_SCHEME);
+        $parts = parse_url($url);
+
+        // URI schemes are case-insensitive (RFC 3986 §3.1).
+        $scheme = isset($parts['scheme']) ? strtolower($parts['scheme']) : null;
 
         if ($scheme === 'https') {
             return;
         }
 
-        $host = parse_url($url, PHP_URL_HOST);
-
         // parse_url wraps IPv6 hosts in brackets, e.g. "[::1]".
-        if (is_string($host)) {
-            $host = strtolower(trim($host, '[]'));
-        }
+        $host = isset($parts['host']) ? strtolower(trim($parts['host'], '[]')) : null;
 
-        if ($scheme === 'http' && is_string($host) && in_array($host, self::LOOPBACK_HOSTS, true)) {
+        if ($scheme === 'http' && $host !== null && in_array($host, self::LOOPBACK_HOSTS, true)) {
             return;
         }
 
