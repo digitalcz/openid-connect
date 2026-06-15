@@ -6,7 +6,6 @@ namespace DigitalCz\OpenIDConnect\Discovery;
 
 use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
 use DigitalCz\OpenIDConnect\Exception\NetworkException;
-use DigitalCz\OpenIDConnect\Util\SecureUrl;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -33,8 +32,6 @@ final readonly class HttpJwksLoader implements JwksLoader
      */
     public function load(string $jwksUri): array
     {
-        SecureUrl::requireSecure($jwksUri);
-
         try {
             return $this->httpClient->request('GET', $jwksUri)->toArray();
         } catch (TransportExceptionInterface $e) {

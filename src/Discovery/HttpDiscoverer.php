@@ -7,7 +7,6 @@ namespace DigitalCz\OpenIDConnect\Discovery;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
 use DigitalCz\OpenIDConnect\Exception\NetworkException;
-use DigitalCz\OpenIDConnect\Util\SecureUrl;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -32,8 +31,6 @@ final class HttpDiscoverer implements Discoverer
      */
     public function discover(string $issuer): IssuerMetadata
     {
-        SecureUrl::requireSecure($issuer);
-
         $discoveryUrl = rtrim($issuer, '/') . '/.well-known/openid-configuration';
 
         try {

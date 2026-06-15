@@ -176,38 +176,4 @@ class HttpDiscovererTest extends TestCase
 
         $discoverer->discover('https://example.com');
     }
-
-    public function testDiscoverThrowsOnNonHttpsIssuer(): void
-    {
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->expects($this->never())->method('request');
-
-        $discoverer = new HttpDiscoverer($httpClient);
-
-        $this->expectException(DiscoveryException::class);
-        $this->expectExceptionMessage('HTTPS is required');
-
-        $discoverer->discover('http://example.com');
-    }
-
-    public function testDiscoverAllowsHttpForLoopback(): void
-    {
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $response = $this->createMock(ResponseInterface::class);
-
-        $httpClient->expects($this->once())
-            ->method('request')
-            ->with('GET', 'http://localhost/.well-known/openid-configuration')
-            ->willReturn($response);
-
-        $response->expects($this->once())
-            ->method('toArray')
-            ->willReturn(['issuer' => 'http://localhost']);
-
-        $discoverer = new HttpDiscoverer($httpClient);
-
-        $metadata = $discoverer->discover('http://localhost');
-
-        $this->assertSame('http://localhost', $metadata->issuer());
-    }
 }

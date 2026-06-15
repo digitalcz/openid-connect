@@ -10,8 +10,10 @@ use DigitalCz\OpenIDConnect\Client\AuthorizationUrlResult;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
+use DigitalCz\OpenIDConnect\Exception\IntrospectionException;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
 use DigitalCz\OpenIDConnect\ResourceServer\JwtAccessToken;
+use DigitalCz\OpenIDConnect\ResourceServer\OpaqueAccessToken;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
 use DigitalCz\OpenIDConnect\ResourceServer\ValidatedAccessToken;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
@@ -183,6 +185,33 @@ class OidcFactoryTest extends TestCase
             $result = $oidc->authorizationCode()->createAuthorizationUrl();
             $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
         }
+    }
+
+    public function testFactoryEnforcesHttpsOnNonDiscoveryRequests(): void
+    {
+        // Issuer metadata with an insecure (plain HTTP) introspection endpoint.
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://auth.example.com',
+            'token_endpoint' => 'https://auth.example.com/oauth/token',
+            'introspection_endpoint' => 'http://auth.example.com/oauth/introspect',
+            'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
+        ]);
+
+        // The wrapped client must reject before any request reaches the network.
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->expects($this->never())->method('request');
+
+        $oidc = OidcFactory::create(
+            httpClient: $httpClient,
+            issuer: $issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+        );
+
+        $this->expectException(IntrospectionException::class);
+        $this->expectExceptionMessage('HTTPS is required');
+
+        $oidc->resourceServer()->introspect(new OpaqueAccessToken('opaque-token'));
     }
 
     public function testAccessTokenTypeRejectsMismatchWhenConfigured(): void

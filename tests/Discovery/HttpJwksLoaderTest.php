@@ -128,36 +128,4 @@ class HttpJwksLoaderTest extends TestCase
 
         $loader->load('https://example.com/.well-known/jwks.json');
     }
-
-    public function testLoadThrowsOnNonHttpsUri(): void
-    {
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->expects($this->never())->method('request');
-
-        $loader = new HttpJwksLoader($httpClient);
-
-        $this->expectException(DiscoveryException::class);
-        $this->expectExceptionMessage('HTTPS is required');
-
-        $loader->load('http://example.com/.well-known/jwks.json');
-    }
-
-    public function testLoadAllowsHttpForLoopback(): void
-    {
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $response = $this->createMock(ResponseInterface::class);
-
-        $httpClient->expects($this->once())
-            ->method('request')
-            ->with('GET', 'http://127.0.0.1/.well-known/jwks.json')
-            ->willReturn($response);
-
-        $response->expects($this->once())
-            ->method('toArray')
-            ->willReturn(['keys' => []]);
-
-        $loader = new HttpJwksLoader($httpClient);
-
-        $this->assertSame(['keys' => []], $loader->load('http://127.0.0.1/.well-known/jwks.json'));
-    }
 }
