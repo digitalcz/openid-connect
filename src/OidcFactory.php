@@ -52,6 +52,7 @@ final readonly class OidcFactory
         ?JWK $privateKeyJwk = null,
         ?string $tokenEndpointAuthSigningAlg = null,
         ?string $clientAssertionAudience = null,
+        ?string $accessTokenType = null,
     ): Oidc {
         if (is_string($defaultScopes)) {
             $defaultScopes = explode(' ', $defaultScopes);
@@ -121,6 +122,7 @@ final readonly class OidcFactory
             $jwksLoader,
             $clientMetadata->clientId(),
             $clock,
+            expectedTokenType: $accessTokenType,
         );
 
         $resourceServer = new ResourceServer([

@@ -501,6 +501,151 @@ class JwtAccessTokenValidatorTest extends TestCase
         $this->validator->validate($jwtToken);
     }
 
+    public function testValidateAcceptsRealSignedTokenWithAudience(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $jwt = $this->createSignedJwt([
+            'iss' => 'https://auth.example.com',
+            'aud' => 'test-audience',
+        ]);
+
+        $validated = $this->validator->validate(new JwtAccessToken($jwt));
+
+        $this->assertInstanceOf(ValidatedAccessToken::class, $validated);
+    }
+
+    public function testValidateRejectsRealSignedTokenWithoutAudience(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        // Properly signed and otherwise valid, but missing the "aud" claim entirely.
+        $jwt = $this->createSignedJwt([
+            'iss' => 'https://auth.example.com',
+            'aud' => null,
+        ]);
+
+        $this->expectException(InvalidTokenException::class);
+        $this->expectExceptionMessage('Invalid Access Token:');
+
+        $this->validator->validate(new JwtAccessToken($jwt));
+    }
+
+    public function testValidateIgnoresTypHeaderByDefault(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        // Unexpected "typ" header is accepted because token-type checking is opt-in.
+        $jwt = $this->createSignedJwt(
+            ['iss' => 'https://auth.example.com', 'aud' => 'test-audience'],
+            ['typ' => 'unexpected'],
+        );
+
+        $validated = $this->validator->validate(new JwtAccessToken($jwt));
+
+        $this->assertInstanceOf(ValidatedAccessToken::class, $validated);
+    }
+
+    public function testValidateRejectsWrongTokenTypeWhenConfigured(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            'test-audience',
+            new SimpleClock(),
+            10,
+            ['iss', 'sub', 'aud', 'exp', 'iat'],
+            'at+jwt',
+        );
+
+        $jwt = $this->createSignedJwt(
+            ['iss' => 'https://auth.example.com', 'aud' => 'test-audience'],
+            ['typ' => 'JWT'],
+        );
+
+        $this->expectException(InvalidTokenException::class);
+        $this->expectExceptionMessage('Invalid Access Token:');
+
+        $validator->validate(new JwtAccessToken($jwt));
+    }
+
+    public function testValidateAcceptsExpectedTokenTypeWhenConfigured(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            'test-audience',
+            new SimpleClock(),
+            10,
+            ['iss', 'sub', 'aud', 'exp', 'iat'],
+            'at+jwt',
+        );
+
+        $jwt = $this->createSignedJwt(
+            ['iss' => 'https://auth.example.com', 'aud' => 'test-audience'],
+            ['typ' => 'at+jwt'],
+        );
+
+        $validated = $validator->validate(new JwtAccessToken($jwt));
+
+        $this->assertInstanceOf(ValidatedAccessToken::class, $validated);
+    }
+
+    public function testValidateAcceptsApplicationAtJwtFormWhenConfigured(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            'test-audience',
+            new SimpleClock(),
+            10,
+            ['iss', 'sub', 'aud', 'exp', 'iat'],
+            'at+jwt',
+        );
+
+        // RFC 9068 allows the prefixed media type form too.
+        $jwt = $this->createSignedJwt(
+            ['iss' => 'https://auth.example.com', 'aud' => 'test-audience'],
+            ['typ' => 'application/at+jwt'],
+        );
+
+        $validated = $validator->validate(new JwtAccessToken($jwt));
+
+        $this->assertInstanceOf(ValidatedAccessToken::class, $validated);
+    }
+
+    public function testValidateRejectsMissingTypWhenConfigured(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            'test-audience',
+            new SimpleClock(),
+            10,
+            ['iss', 'sub', 'aud', 'exp', 'iat'],
+            'at+jwt',
+        );
+
+        // No typ header at all must be rejected when enforcement is enabled.
+        $jwt = $this->createSignedJwt(
+            ['iss' => 'https://auth.example.com', 'aud' => 'test-audience'],
+            ['typ' => null],
+        );
+
+        $this->expectException(InvalidTokenException::class);
+        $this->expectExceptionMessage('Invalid Access Token:');
+
+        $validator->validate(new JwtAccessToken($jwt));
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

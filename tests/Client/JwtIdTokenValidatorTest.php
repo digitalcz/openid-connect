@@ -362,6 +362,54 @@ class JwtIdTokenValidatorTest extends TestCase
         $validator->validate($token);
     }
 
+    public function testValidateRejectsMultiAudienceWithoutAzp(): void
+    {
+        // Uses the default SimpleClock so real timestamps from createSignedJwt are honored.
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader);
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $jwt = $this->createSignedJwt([
+            'aud' => ['test-client-id', 'other-client'],
+            // no azp
+        ]);
+
+        $this->expectException(InvalidTokenException::class);
+        $this->expectExceptionMessage('Missing azp claim for multi-audience ID token');
+
+        $validator->validate(new IdToken($jwt));
+    }
+
+    public function testValidateRejectsAzpMismatch(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader);
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $jwt = $this->createSignedJwt([
+            'aud' => 'test-client-id',
+            'azp' => 'attacker-client',
+        ]);
+
+        $this->expectException(InvalidTokenException::class);
+        $this->expectExceptionMessage('Invalid azp claim');
+
+        $validator->validate(new IdToken($jwt));
+    }
+
+    public function testValidateAcceptsMultiAudienceWithMatchingAzp(): void
+    {
+        $validator = new JwtIdTokenValidator($this->config, $this->jwksLoader);
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $jwt = $this->createSignedJwt([
+            'aud' => ['test-client-id', 'other-client'],
+            'azp' => 'test-client-id',
+        ]);
+
+        $this->expectNotToPerformAssertions();
+
+        $validator->validate(new IdToken($jwt));
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

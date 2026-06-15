@@ -6,10 +6,18 @@ namespace DigitalCz\OpenIDConnect;
 
 use DigitalCz\OpenIDConnect\Util\Base64Url;
 use DigitalCz\OpenIDConnect\Util\Json;
+use DigitalCz\OpenIDConnect\Util\SignatureAlgorithmsFactory;
+use Jose\Component\Core\AlgorithmManagerFactory;
+use Jose\Component\Core\JWK;
+use Jose\Component\KeyManagement\JWKFactory;
+use Jose\Component\Signature\JWSBuilder;
+use Jose\Component\Signature\Serializer\CompactSerializer;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    private ?JWK $signingKey = null;
+
     /**
      * Create a sample JWT token for testing
      *
@@ -118,5 +126,73 @@ abstract class TestCase extends BaseTestCase
                 ],
             ],
         ];
+    }
+
+    /**
+     * The RSA key used to sign real JWTs in tests (cached per test instance).
+     */
+    protected function signingKey(): JWK
+    {
+        return $this->signingKey ??= JWKFactory::createRSAKey(
+            2048,
+            ['alg' => 'RS256', 'use' => 'sig', 'kid' => 'test-key-id'],
+        );
+    }
+
+    /**
+     * Public JWKS matching {@see signingKey()}, suitable for a JwksLoader mock.
+     *
+     * Returns a plain array (as a decoded JWKS document would be), so it can be
+     * passed to JWKSet::createFromKeyData() exactly like a real loader response.
+     *
+     * @return array<string, mixed>
+     */
+    protected function publicJwks(): array
+    {
+        return ['keys' => [$this->signingKey()->toPublic()->all()]];
+    }
+
+    /**
+     * Create a real RS256-signed compact JWT verifiable against {@see publicJwks()}.
+     *
+     * A claim or header passed as null is omitted (e.g. ['aud' => null] or,
+     * for the header, ['typ' => null]).
+     *
+     * @param array<string, mixed> $payload
+     * @param array<string, mixed> $header
+     */
+    protected function createSignedJwt(array $payload = [], array $header = []): string
+    {
+        $header = array_filter(
+            array_merge([
+                'typ' => 'JWT',
+                'alg' => 'RS256',
+                'kid' => 'test-key-id',
+            ], $header),
+            static fn (mixed $value): bool => $value !== null,
+        );
+
+        $defaultPayload = [
+            'iss' => 'https://auth.example.com',
+            'sub' => '1234567890',
+            'aud' => 'test-audience',
+            'exp' => time() + 3600,
+            'iat' => time(),
+        ];
+
+        $payload = array_filter(
+            array_merge($defaultPayload, $payload),
+            static fn (mixed $value): bool => $value !== null,
+        );
+
+        $algorithmManager = (new AlgorithmManagerFactory(SignatureAlgorithmsFactory::create()))->create(['RS256']);
+
+        $jws = (new JWSBuilder($algorithmManager))
+            ->create()
+            ->withPayload(Json::encode($payload))
+            ->addSignature($this->signingKey(), $header)
+            ->build();
+
+        return (new CompactSerializer())->serialize($jws, 0);
     }
 }

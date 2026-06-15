@@ -19,6 +19,7 @@ use Jose\Component\Checker\IssuerChecker;
 use Jose\Component\Checker\NotBeforeChecker;
 use Jose\Component\Core\AlgorithmManagerFactory;
 use Jose\Component\Core\JWKSet;
+use Jose\Component\Signature\JWS;
 use Jose\Component\Signature\JWSLoader;
 use Jose\Component\Signature\JWSTokenSupport;
 use Jose\Component\Signature\JWSVerifier;
@@ -44,7 +45,8 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
         private readonly string $audience,
         private readonly ClockInterface $clock = new SimpleClock(),
         private readonly int $allowedTimeDrift = 10,
-        private readonly array $mandatoryClaims = ['iss', 'sub', 'exp', 'iat'],
+        private readonly array $mandatoryClaims = ['iss', 'sub', 'aud', 'exp', 'iat'],
+        private readonly ?string $expectedTokenType = null,
     ) {
     }
 
@@ -68,7 +70,8 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
         try {
             $claims = $token->claims();
 
-            $this->validateSignature($token);
+            $jws = $this->validateSignature($token);
+            $this->validateTokenType($jws);
             $this->validateClaims($claims);
 
             return new ValidatedAccessToken($token, $claims);
@@ -77,14 +80,43 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
         }
     }
 
-    private function validateSignature(AccessToken $token): void
+    private function validateSignature(AccessToken $token): JWS
     {
         $jwksUri = $this->config->issuerMetadata()->jwksUri();
         $jwks = $this->jwksLoader->load($jwksUri);
         $jwkSet = JWKSet::createFromKeyData($jwks);
         $jwsLoader = $this->createJwsLoader();
         $signature = null;
-        $jwsLoader->loadAndVerifyWithKeySet((string) $token, $jwkSet, $signature);
+
+        return $jwsLoader->loadAndVerifyWithKeySet((string) $token, $jwkSet, $signature);
+    }
+
+    /**
+     * Optionally enforce the JWT "typ" header (RFC 9068).
+     *
+     * Only applied when an expected token type is configured. The header MUST be
+     * present and equal to the expected type; per RFC 9068 both the bare form
+     * ("at+jwt") and the prefixed media type ("application/at+jwt") are accepted.
+     */
+    private function validateTokenType(JWS $jws): void
+    {
+        if ($this->expectedTokenType === null) {
+            return;
+        }
+
+        $typ = $jws->getSignature(0)->getProtectedHeader()['typ'] ?? null;
+
+        if (!is_string($typ)) {
+            throw new InvalidTokenException('Missing typ header');
+        }
+
+        $normalized = str_starts_with(strtolower($typ), 'application/')
+            ? substr($typ, strlen('application/'))
+            : $typ;
+
+        if (!hash_equals($this->expectedTokenType, $normalized)) {
+            throw new InvalidTokenException('Unexpected token type');
+        }
     }
 
     private function createJwsLoader(): JWSLoader
