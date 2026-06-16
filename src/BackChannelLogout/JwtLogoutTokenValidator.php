@@ -136,7 +136,10 @@ final class JwtLogoutTokenValidator implements LogoutTokenValidator
 
     private function createJwsLoader(): JWSLoader
     {
-        $signingAlgorithms = $this->config->issuerMetadata()->idTokenSigningAlgValuesSupported();
+        $signingAlgorithms = array_values(array_intersect(
+            $this->config->issuerMetadata()->idTokenSigningAlgValuesSupported(),
+            SignatureAlgorithmsFactory::asymmetricAlgorithmNames(),
+        ));
         $algorithmManagerFactory = new AlgorithmManagerFactory(SignatureAlgorithmsFactory::create());
 
         return $this->jwsLoader ??= new JWSLoader(

@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase as BaseTestCase;
 abstract class TestCase extends BaseTestCase
 {
     private ?JWK $signingKey = null;
+    private ?JWK $symmetricKey = null;
 
     /**
      * Create a sample JWT token for testing
@@ -191,6 +192,61 @@ abstract class TestCase extends BaseTestCase
             ->create()
             ->withPayload(Json::encode($payload))
             ->addSignature($this->signingKey(), $header)
+            ->build();
+
+        return (new CompactSerializer())->serialize($jws, 0);
+    }
+
+    /**
+     * The HMAC secret used to sign symmetric (HS256) JWTs in tests.
+     */
+    protected function symmetricKey(): JWK
+    {
+        return $this->symmetricKey ??= JWKFactory::createFromSecret(
+            'this-is-a-shared-secret-used-only-in-tests-32b',
+            ['alg' => 'HS256', 'use' => 'sig', 'kid' => 'hs-key-id'],
+        );
+    }
+
+    /**
+     * A rogue JWKS exposing the HMAC secret as an `oct` key (see {@see symmetricKey()}).
+     *
+     * Used to prove that HS256 tokens are rejected by the algorithm allow-list even
+     * when a matching key is present — not merely by web-token's key-type binding.
+     *
+     * @return array<string, mixed>
+     */
+    protected function symmetricJwks(): array
+    {
+        return ['keys' => [$this->symmetricKey()->all()]];
+    }
+
+    /**
+     * Create an HS256-signed compact JWT (RFC 8725 algorithm-confusion test vector).
+     *
+     * @param array<string, mixed> $payload
+     */
+    protected function createHs256Jwt(array $payload = []): string
+    {
+        $defaultPayload = [
+            'iss' => 'https://auth.example.com',
+            'sub' => '1234567890',
+            'aud' => 'test-audience',
+            'exp' => time() + 3600,
+            'iat' => time(),
+        ];
+
+        $payload = array_filter(
+            array_merge($defaultPayload, $payload),
+            static fn (mixed $value): bool => $value !== null,
+        );
+
+        $algorithmManager = (new AlgorithmManagerFactory(SignatureAlgorithmsFactory::create()))->create(['HS256']);
+
+        $jws = (new JWSBuilder($algorithmManager))
+            ->create()
+            ->withPayload(Json::encode($payload))
+            ->addSignature($this->symmetricKey(), ['typ' => 'JWT', 'alg' => 'HS256', 'kid' => 'hs-key-id'])
             ->build();
 
         return (new CompactSerializer())->serialize($jws, 0);

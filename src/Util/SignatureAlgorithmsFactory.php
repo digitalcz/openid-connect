@@ -26,15 +26,25 @@ use Jose\Component\Signature\Algorithm\RS512;
 final class SignatureAlgorithmsFactory
 {
     /**
+     * Symmetric (HMAC) signature algorithms.
+     *
      * @var array<int, class-string<Algorithm>>
      */
-    private static array $algorithms = [
-        ES256::class,
-        ES384::class,
-        ES512::class,
+    private static array $symmetricAlgorithms = [
         HS256::class,
         HS384::class,
         HS512::class,
+    ];
+
+    /**
+     * Asymmetric (public-key) signature algorithms.
+     *
+     * @var array<int, class-string<Algorithm>>
+     */
+    private static array $asymmetricAlgorithms = [
+        ES256::class,
+        ES384::class,
+        ES512::class,
         EdDSA::class,
         PS256::class,
         PS384::class,
@@ -51,12 +61,36 @@ final class SignatureAlgorithmsFactory
      */
     public static function create(): Generator
     {
-        foreach (self::$algorithms as $class) {
+        foreach ([...self::$symmetricAlgorithms, ...self::$asymmetricAlgorithms] as $class) {
             if (class_exists($class)) {
                 $algorithm = new $class();
 
                 yield $algorithm->name() => $algorithm;
             }
         }
+    }
+
+    /**
+     * Names of the available asymmetric (public-key) signature algorithms.
+     *
+     * Verification of tokens against a provider JWKS must be restricted to these,
+     * never accepting HMAC, per RFC 8725 §3.1 — defense-in-depth against
+     * algorithm-confusion attacks.
+     *
+     * @return list<string>
+     *
+     * @see https://www.rfc-editor.org/rfc/rfc8725#section-3.1
+     */
+    public static function asymmetricAlgorithmNames(): array
+    {
+        $names = [];
+
+        foreach (self::$asymmetricAlgorithms as $class) {
+            if (class_exists($class)) {
+                $names[] = (new $class())->name();
+            }
+        }
+
+        return $names;
     }
 }

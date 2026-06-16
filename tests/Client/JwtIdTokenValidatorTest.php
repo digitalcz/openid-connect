@@ -410,6 +410,37 @@ class JwtIdTokenValidatorTest extends TestCase
         $validator->validate(new IdToken($jwt));
     }
 
+    public function testRejectsHs256TokenEvenWhenAdvertised(): void
+    {
+        // The OP (mis)advertises a symmetric algorithm alongside its JWKS, and the
+        // rogue JWKS even exposes the matching HMAC secret as an `oct` key — so only
+        // the asymmetric algorithm allow-list (RFC 8725 §3.1), not web-token's
+        // key-type binding, can reject this token.
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://auth.example.com',
+            'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
+            'id_token_signing_alg_values_supported' => ['RS256', 'HS256'],
+        ]);
+
+        $config = $this->createMock(Config::class);
+        $config->method('issuerMetadata')->willReturn($issuerMetadata);
+        $config->method('clientMetadata')->willReturn($this->clientMetadata);
+
+        $this->jwksLoader->method('load')->willReturn($this->symmetricJwks());
+
+        $validator = new JwtIdTokenValidator($config, $this->jwksLoader);
+
+        $jwt = $this->createHs256Jwt([
+            'iss' => 'https://auth.example.com',
+            'aud' => 'test-client-id',
+        ]);
+
+        $this->expectException(InvalidTokenException::class);
+        $this->expectExceptionMessage('Invalid ID Token:');
+
+        $validator->validate(new IdToken($jwt));
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
