@@ -36,7 +36,7 @@ final readonly class HttpJwksLoader implements JwksLoader
             return $this->httpClient->request('GET', $jwksUri)->toArray();
         } catch (TransportExceptionInterface $e) {
             throw new NetworkException('Failed to fetch JWKS document: ' . $e->getMessage(), 0, $e);
-        } catch (ClientExceptionInterface | ServerExceptionInterface | RedirectionExceptionInterface $e) {
+        } catch (ClientExceptionInterface | RedirectionExceptionInterface | ServerExceptionInterface $e) {
             throw new DiscoveryException('JWKS endpoint returned error: ' . $e->getMessage(), 0, $e);
         } catch (DecodingExceptionInterface $e) {
             throw new DiscoveryException('Failed to decode JWKS document: ' . $e->getMessage(), 0, $e);
