@@ -220,6 +220,38 @@ class JwtLogoutTokenValidatorTest extends TestCase
         $validator->validateLogoutTokenClaims($token);
     }
 
+    public function testValidateLogoutTokenClaimsRequiresSidWhenSessionRequired(): void
+    {
+        $config = $this->configWithSessionRequired(true);
+        $validator = new JwtLogoutTokenValidator($config, $this->jwksLoader, $this->clock);
+        // base payload carries `sub` but no `sid`
+        $token = $this->createValidLogoutToken();
+
+        $this->expectException(InvalidTokenException::class);
+        $this->expectExceptionMessage('because back-channel logout session is required');
+        $validator->validateLogoutTokenClaims($token);
+    }
+
+    public function testValidateLogoutTokenClaimsAcceptsSidWhenSessionRequired(): void
+    {
+        $config = $this->configWithSessionRequired(true);
+        $validator = new JwtLogoutTokenValidator($config, $this->jwksLoader, $this->clock);
+        $token = $this->createLogoutTokenWithPayload(['sid' => 'session-123']);
+
+        $validator->validateLogoutTokenClaims($token);
+        $this->addToAssertionCount(1);
+    }
+
+    public function testValidateLogoutTokenClaimsAllowsMissingSidWhenSessionNotRequired(): void
+    {
+        // Default config has session not required; `sub` alone is sufficient.
+        $validator = new JwtLogoutTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = $this->createLogoutTokenWithoutClaims(['sid']);
+
+        $validator->validateLogoutTokenClaims($token);
+        $this->addToAssertionCount(1);
+    }
+
     public function testValidateWithSidOnly(): void
     {
         // Token has sid, no sub. Should reach signature check (fail there with our fake JWKS).
@@ -315,8 +347,27 @@ class JwtLogoutTokenValidatorTest extends TestCase
             defaultScopes: ['openid', 'profile', 'email'],
             authenticationMethod: AuthenticationMethod::ClientSecretPost,
             backchannelLogoutUri: 'https://client.example.com/logout/backchannel',
-            backchannelLogoutSessionRequired: true,
+            backchannelLogoutSessionRequired: false,
         );
+    }
+
+    private function configWithSessionRequired(bool $required): Config&MockObject
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            defaultScopes: ['openid', 'profile', 'email'],
+            authenticationMethod: AuthenticationMethod::ClientSecretPost,
+            backchannelLogoutUri: 'https://client.example.com/logout/backchannel',
+            backchannelLogoutSessionRequired: $required,
+        );
+
+        $config = $this->createMock(Config::class);
+        $config->method('issuerMetadata')->willReturn($this->issuerMetadata);
+        $config->method('clientMetadata')->willReturn($clientMetadata);
+
+        return $config;
     }
 
     private function createValidLogoutToken(): LogoutToken

@@ -93,6 +93,7 @@ final class JwtLogoutTokenValidator implements LogoutTokenValidator
      *  - `events` claim is an object that includes the backchannel-logout event URI with an empty object value
      *  - `nonce` claim MUST NOT be present
      *  - At least one of `sub` or `sid` MUST be present
+     *  - `sid` MUST be present when the client registered `backchannel_logout_session_required`
      *
      * @throws InvalidTokenException
      */
@@ -124,6 +125,12 @@ final class JwtLogoutTokenValidator implements LogoutTokenValidator
 
         if (!$token->has('sub') && !$token->has('sid')) {
             throw new InvalidTokenException('Logout Token MUST contain either a "sub" or "sid" claim');
+        }
+
+        if ($this->config->clientMetadata()->backchannelLogoutSessionRequired() && !$token->has('sid')) {
+            throw new InvalidTokenException(
+                'Logout Token MUST contain a "sid" claim because back-channel logout session is required',
+            );
         }
     }
 
