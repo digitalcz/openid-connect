@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Discovery;
 
+use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
 use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\TestCase;
@@ -125,6 +126,53 @@ class HttpDiscovererTest extends TestCase
 
         $this->expectException(DiscoveryException::class);
         $this->expectExceptionMessage('Unexpected error during OIDC discovery:');
+
+        $discoverer->discover('https://example.com');
+    }
+
+    public function testDiscoverReturnsMetadataWhenIssuerMatches(): void
+    {
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+
+        $httpClient->expects($this->once())
+            ->method('request')
+            ->with('GET', 'https://example.com/.well-known/openid-configuration')
+            ->willReturn($response);
+
+        $response->expects($this->once())
+            ->method('toArray')
+            ->willReturn([
+                'issuer' => 'https://example.com',
+                'jwks_uri' => 'https://example.com/.well-known/jwks.json',
+            ]);
+
+        $discoverer = new HttpDiscoverer($httpClient);
+
+        $metadata = $discoverer->discover('https://example.com');
+
+        $this->assertInstanceOf(IssuerMetadata::class, $metadata);
+        $this->assertSame('https://example.com', $metadata->issuer());
+    }
+
+    public function testDiscoverThrowsOnIssuerMismatch(): void
+    {
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+
+        $httpClient->expects($this->once())
+            ->method('request')
+            ->with('GET', 'https://example.com/.well-known/openid-configuration')
+            ->willReturn($response);
+
+        $response->expects($this->once())
+            ->method('toArray')
+            ->willReturn(['issuer' => 'https://attacker.example.com']);
+
+        $discoverer = new HttpDiscoverer($httpClient);
+
+        $this->expectException(DiscoveryException::class);
+        $this->expectExceptionMessage('OIDC discovery issuer mismatch');
 
         $discoverer->discover('https://example.com');
     }

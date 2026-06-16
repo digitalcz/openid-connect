@@ -9,7 +9,13 @@ use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\AuthorizationUrlResult;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
+use DigitalCz\OpenIDConnect\Exception\IntrospectionException;
+use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
+use DigitalCz\OpenIDConnect\ResourceServer\JwtAccessToken;
+use DigitalCz\OpenIDConnect\ResourceServer\OpaqueAccessToken;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
+use DigitalCz\OpenIDConnect\ResourceServer\ValidatedAccessToken;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -164,7 +170,7 @@ class OidcFactoryTest extends TestCase
 
         foreach ($discoveryUrls as $url) {
             $httpClient = $this->createMock(HttpClientInterface::class);
-            $this->setupDiscoveryMock($httpClient, 'openid_configuration');
+            $this->setupDiscoveryMock($httpClient, 'openid_configuration', $url);
 
             $oidc = OidcFactory::create(
                 httpClient: $httpClient,
@@ -179,6 +185,82 @@ class OidcFactoryTest extends TestCase
             $result = $oidc->authorizationCode()->createAuthorizationUrl();
             $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
         }
+    }
+
+    public function testFactoryEnforcesHttpsOnNonDiscoveryRequests(): void
+    {
+        // Issuer metadata with an insecure (plain HTTP) introspection endpoint.
+        $issuerMetadata = new IssuerMetadata([
+            'issuer' => 'https://auth.example.com',
+            'token_endpoint' => 'https://auth.example.com/oauth/token',
+            'introspection_endpoint' => 'http://auth.example.com/oauth/introspect',
+            'jwks_uri' => 'https://auth.example.com/.well-known/jwks.json',
+        ]);
+
+        // The wrapped client must reject before any request reaches the network.
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->expects($this->never())->method('request');
+
+        $oidc = OidcFactory::create(
+            httpClient: $httpClient,
+            issuer: $issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+        );
+
+        $this->expectException(IntrospectionException::class);
+        $this->expectExceptionMessage('HTTPS is required');
+
+        $oidc->resourceServer()->introspect(new OpaqueAccessToken('opaque-token'));
+    }
+
+    public function testAccessTokenTypeRejectsMismatchWhenConfigured(): void
+    {
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('toArray')->willReturn($this->publicJwks());
+        $httpClient->method('request')
+            ->with('GET', 'https://auth.example.com/.well-known/jwks.json')
+            ->willReturn($response);
+
+        $oidc = OidcFactory::create(
+            httpClient: $httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            accessTokenType: 'at+jwt',
+        );
+
+        // Signed, otherwise-valid token, but with the wrong "typ" header.
+        $jwt = $this->createSignedJwt(
+            ['iss' => 'https://auth.example.com', 'aud' => 'test-client-id'],
+            ['typ' => 'JWT'],
+        );
+
+        $this->expectException(InvalidTokenException::class);
+
+        $oidc->resourceServer()->introspect(new JwtAccessToken($jwt));
+    }
+
+    public function testAccessTokenTypeAllowsAnyTypeByDefault(): void
+    {
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('toArray')->willReturn($this->publicJwks());
+        $httpClient->method('request')
+            ->with('GET', 'https://auth.example.com/.well-known/jwks.json')
+            ->willReturn($response);
+
+        // No accessTokenType configured -> the same typ:"JWT" token is accepted.
+        $oidc = OidcFactory::create(httpClient: $httpClient, issuer: $this->issuerMetadata, clientId: 'test-client-id');
+
+        $jwt = $this->createSignedJwt(
+            ['iss' => 'https://auth.example.com', 'aud' => 'test-client-id'],
+            ['typ' => 'JWT'],
+        );
+
+        $validated = $oidc->resourceServer()->introspect(new JwtAccessToken($jwt));
+
+        $this->assertInstanceOf(ValidatedAccessToken::class, $validated);
     }
 
     public function testCreateWithCustomParameters(): void
@@ -203,8 +285,6 @@ class OidcFactoryTest extends TestCase
     {
         $httpClient = $this->createMock(HttpClientInterface::class);
 
-        $this->setupDiscoveryMock($httpClient, 'openid_configuration');
-
         $oidc = OidcFactory::create(
             httpClient: $httpClient,
             issuer: '',
@@ -215,16 +295,16 @@ class OidcFactoryTest extends TestCase
 
         $this->assertInstanceOf(Oidc::class, $oidc);
 
-        // Trigger discovery by creating authorization URL
-        $result = $oidc->authorizationCode()->createAuthorizationUrl();
-        $this->assertInstanceOf(AuthorizationUrlResult::class, $result);
+        // An empty (insecure) issuer is rejected once discovery is triggered.
+        $this->expectException(DiscoveryException::class);
+        $oidc->authorizationCode()->createAuthorizationUrl();
     }
 
     public function testCreateMultipleInstancesAreIndependent(): void
     {
         $httpClient = $this->createMock(HttpClientInterface::class);
 
-        $this->setupDiscoveryMock($httpClient, 'other.example.com');
+        $this->setupDiscoveryMock($httpClient, 'auth.example.com');
 
         $oidc1 = OidcFactory::create(
             httpClient: $this->httpClient,
@@ -236,7 +316,7 @@ class OidcFactoryTest extends TestCase
 
         $oidc2 = OidcFactory::create(
             httpClient: $httpClient,
-            issuer: 'https://other.example.com',
+            issuer: 'https://auth.example.com',
             clientId: 'test-client-id',
             clientSecret: 'test-client-secret',
             redirectUri: 'https://client.example.com/callback',
@@ -378,9 +458,10 @@ class OidcFactoryTest extends TestCase
     private function setupDiscoveryMock(
         HttpClientInterface&MockObject $httpClient,
         ?string $expectedUrlPattern = null,
+        string $issuer = 'https://auth.example.com',
     ): void {
         $discoveryData = [
-            'issuer' => 'https://auth.example.com',
+            'issuer' => $issuer,
             'authorization_endpoint' => 'https://auth.example.com/oauth/authorize',
             'token_endpoint' => 'https://auth.example.com/oauth/token',
             'userinfo_endpoint' => 'https://auth.example.com/userinfo',

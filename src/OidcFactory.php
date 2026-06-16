@@ -21,6 +21,7 @@ use DigitalCz\OpenIDConnect\ResourceServer\JwtAccessTokenValidator;
 use DigitalCz\OpenIDConnect\ResourceServer\OpaqueAccessTokenValidator;
 use DigitalCz\OpenIDConnect\ResourceServer\ResourceServer;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
+use DigitalCz\OpenIDConnect\Util\SecureHttpClient;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use Jose\Component\Core\JWK;
 use Psr\Clock\ClockInterface;
@@ -52,6 +53,7 @@ final readonly class OidcFactory
         ?JWK $privateKeyJwk = null,
         ?string $tokenEndpointAuthSigningAlg = null,
         ?string $clientAssertionAudience = null,
+        ?string $accessTokenType = null,
     ): Oidc {
         if (is_string($defaultScopes)) {
             $defaultScopes = explode(' ', $defaultScopes);
@@ -64,6 +66,9 @@ final readonly class OidcFactory
         if (is_string($pkceMethod)) {
             $pkceMethod = PkceMethod::from($pkceMethod);
         }
+
+        // Enforce transport security (HTTPS) on every outbound request from a single choke point.
+        $httpClient = new SecureHttpClient($httpClient);
 
         $clientMetadata = new ClientMetadata(
             clientId: $clientId,
@@ -121,6 +126,7 @@ final readonly class OidcFactory
             $jwksLoader,
             $clientMetadata->clientId(),
             $clock,
+            expectedTokenType: $accessTokenType,
         );
 
         $resourceServer = new ResourceServer([

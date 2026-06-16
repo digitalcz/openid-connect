@@ -58,6 +58,7 @@ final class JwtIdTokenValidator implements IdTokenValidator
         try {
             $this->validateSignature($token);
             $this->validateClaims($token);
+            $this->validateAuthorizedParty($token);
             $this->validateNonce($token, $nonce);
         } catch (Throwable $e) {
             throw new InvalidTokenException('Invalid ID Token: ' . $e->getMessage(), 0, $e);
@@ -105,6 +106,37 @@ final class JwtIdTokenValidator implements IdTokenValidator
             new IssuedAtChecker($this->clock, $this->allowedTimeDrift),
             new NotBeforeChecker($this->clock, $this->allowedTimeDrift),
         ]);
+    }
+
+    /**
+     * Validates the "azp" (authorized party) claim per OIDC Core 3.1.3.7.
+     *
+     * If the ID token has multiple audiences, "azp" MUST be present. When "azp"
+     * is present, it MUST equal this client's client_id.
+     *
+     * @throws InvalidTokenException
+     */
+    private function validateAuthorizedParty(IdToken $token): void
+    {
+        $claims = $token->claims();
+        $clientId = $this->config->clientMetadata()->clientId();
+
+        $audience = $claims['aud'] ?? null;
+        $hasMultipleAudiences = is_array($audience) && count($audience) > 1;
+
+        $azp = $claims['azp'] ?? null;
+
+        if ($azp === null) {
+            if ($hasMultipleAudiences) {
+                throw new InvalidTokenException('Missing azp claim for multi-audience ID token');
+            }
+
+            return;
+        }
+
+        if (!is_string($azp) || !hash_equals($clientId, $azp)) {
+            throw new InvalidTokenException('Invalid azp claim');
+        }
     }
 
     private function validateNonce(IdToken $token, ?string $nonce): void

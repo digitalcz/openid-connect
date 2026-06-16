@@ -36,8 +36,6 @@ final class HttpDiscoverer implements Discoverer
         try {
             /** @var array<string, string|string[]|bool> $response */
             $response = $this->httpClient->request('GET', $discoveryUrl)->toArray();
-
-            return new IssuerMetadata($response);
         } catch (TransportExceptionInterface $e) {
             throw new NetworkException('Failed to fetch OIDC discovery document: ' . $e->getMessage(), 0, $e);
         } catch (ClientExceptionInterface | ServerExceptionInterface | RedirectionExceptionInterface $e) {
@@ -46,6 +44,30 @@ final class HttpDiscoverer implements Discoverer
             throw new DiscoveryException('Failed to decode OIDC discovery document: ' . $e->getMessage(), 0, $e);
         } catch (Throwable $e) {
             throw new DiscoveryException('Unexpected error during OIDC discovery: ' . $e->getMessage(), 0, $e);
+        }
+
+        $this->assertIssuerMatches($issuer, $response);
+
+        return new IssuerMetadata($response);
+    }
+
+    /**
+     * Verifies the discovery document's issuer matches the configured issuer (OIDC Discovery 1.0 §4.3).
+     *
+     * @param array<string, string|string[]|bool> $response
+     *
+     * @throws DiscoveryException
+     */
+    private function assertIssuerMatches(string $issuer, array $response): void
+    {
+        $returnedIssuer = $response['issuer'] ?? null;
+
+        if (!is_string($returnedIssuer) || rtrim($returnedIssuer, '/') !== rtrim($issuer, '/')) {
+            throw new DiscoveryException(sprintf(
+                'OIDC discovery issuer mismatch: expected "%s", got "%s".',
+                $issuer,
+                is_string($returnedIssuer) ? $returnedIssuer : '(missing)',
+            ));
         }
     }
 }
