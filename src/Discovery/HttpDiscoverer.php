@@ -38,7 +38,7 @@ final class HttpDiscoverer implements Discoverer
             $response = $this->httpClient->request('GET', $discoveryUrl)->toArray();
         } catch (TransportExceptionInterface $e) {
             throw new NetworkException('Failed to fetch OIDC discovery document: ' . $e->getMessage(), 0, $e);
-        } catch (ClientExceptionInterface | ServerExceptionInterface | RedirectionExceptionInterface $e) {
+        } catch (ClientExceptionInterface | RedirectionExceptionInterface | ServerExceptionInterface $e) {
             throw new DiscoveryException('OIDC discovery endpoint returned error: ' . $e->getMessage(), 0, $e);
         } catch (DecodingExceptionInterface $e) {
             throw new DiscoveryException('Failed to decode OIDC discovery document: ' . $e->getMessage(), 0, $e);
