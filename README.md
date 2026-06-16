@@ -87,6 +87,8 @@ The `OidcFactory::create()` method accepts the following configuration options:
 | `tokenEndpointAuthSigningAlg` | `string\|null`                  | -        | `null`                           | Signature algorithm for client assertion JWT (e.g., `'HS256'`, `'RS256'`)                                  |
 | `clientAssertionAudience`     | `string\|null`                  | -        | `null`                           | Audience claim for client assertion JWT. Special values: `'{issuer}'`, `'{token_endpoint}'`, or custom URL |
 | `accessTokenType`             | `string\|null`                  | -        | `null`                           | Expected JWT access-token `typ` header (RFC 9068, e.g. `'at+jwt'`); `null` disables the check              |
+| `backchannelLogoutUri`        | `string\|null`                  | -        | `null`                           | RP endpoint the OP POSTs logout tokens to (informational; exposed via `clientMetadata()`)                  |
+| `backchannelLogoutSessionRequired` | `bool`                     | -        | `false`                          | Require the `sid` claim in logout tokens (rejected without it when `true`)                                 |
 
 #### Authentication Methods
 
@@ -189,6 +191,42 @@ $oidc = OidcFactory::create(
 
 When set, the `typ` header must be present and equal to the expected value; both `at+jwt` and `application/at+jwt`
 are accepted. It is disabled by default because not all authorization servers emit the `typ` header.
+
+### Back-Channel Logout
+
+Implements [OpenID Connect Back-Channel Logout 1.0](https://openid.net/specs/openid-connect-backchannel-1_0.html).
+The OP sends a server-to-server POST with a `logout_token` to your registered back-channel logout endpoint. Pass that
+token to the handler — it verifies the signature against the issuer JWKS and validates the logout-token claims
+(`iss`, `aud`, `iat`, `events`, no `nonce`, and `sub` and/or `sid`).
+
+```php
+use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
+
+$handler = $oidc->backChannelLogout();
+
+try {
+    // $_POST['logout_token'] is the form-encoded parameter sent by the OP
+    $logoutToken = $handler->handleLogoutRequest($_POST['logout_token']);
+} catch (InvalidTokenException $e) {
+    http_response_code(400);
+    return;
+}
+
+// Terminate the matching session(s). Use sid (this session) and/or sub (all of the user's sessions).
+$sid = $logoutToken->sid(); // ?string
+$sub = $logoutToken->sub(); // ?string
+
+http_response_code(200);
+```
+
+Two responsibilities the spec leaves to the application are intentionally left to you:
+
+- **Replay protection** — verify the `jti` (exposed via `$logoutToken->jti()`) has not been seen recently before
+  acting on the token.
+- **Session termination** — map `sid`/`sub` to your session store and destroy the relevant session(s).
+
+If the client is registered with `backchannelLogoutSessionRequired: true`, logout tokens without a `sid` claim are
+rejected.
 
 See [examples](examples) for more complete examples
 
