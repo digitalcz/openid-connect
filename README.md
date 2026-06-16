@@ -161,6 +161,52 @@ $tokens = $clientCredentials->fetchTokens();
 echo "Access Token: " . $tokens->accessToken() . PHP_EOL;
 ```
 
+### Device Authorization flow
+
+Implements the OAuth 2.0 Device Authorization Grant ([RFC 8628](https://www.rfc-editor.org/rfc/rfc8628)) for
+browserless and input-constrained devices. Requires the provider to expose a `device_authorization_endpoint`.
+
+#### Step 1 - Request a device and user code
+
+```php
+$device = $oidc->deviceAuthorization();
+
+$response = $device->requestDeviceAuthorization();
+
+// Show these to the user, who completes authorization on another device.
+echo "Go to: " . $response->verificationUri() . PHP_EOL;
+echo "Enter code: " . $response->userCode() . PHP_EOL;
+
+// verificationUriComplete() embeds the code so the user can skip typing it (e.g. as a QR code).
+if ($response->verificationUriComplete() !== null) {
+    echo "Or open: " . $response->verificationUriComplete() . PHP_EOL;
+}
+```
+
+#### Step 2 - Poll for tokens
+
+`pollForTokens()` blocks until the user completes (or denies) authorization, honoring the server's polling
+`interval` and backing off automatically on `slow_down`:
+
+```php
+use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationDeniedException;
+use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationExpiredException;
+
+try {
+    $tokens = $device->pollForTokens($response);
+    echo "Access Token: " . $tokens->accessToken() . PHP_EOL;
+} catch (DeviceAuthorizationDeniedException $e) {
+    echo "User denied the request." . PHP_EOL;
+} catch (DeviceAuthorizationExpiredException $e) {
+    echo "Device code expired - restart the flow." . PHP_EOL;
+}
+```
+
+If you need to drive the polling loop yourself, call `fetchTokens()` for a single attempt. It throws a typed
+exception per RFC 8628 error code: `DeviceAuthorizationPendingException`, `SlowDownException`,
+`DeviceAuthorizationExpiredException`, `DeviceAuthorizationDeniedException`, or the base
+`DeviceAuthorizationException` for any other error.
+
 ### Resource Server (Token Validation)
 
 ```php
