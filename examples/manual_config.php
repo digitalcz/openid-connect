@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use DigitalCz\OpenIDConnect\BackChannelLogout\BackChannelLogoutHandler;
+use DigitalCz\OpenIDConnect\BackChannelLogout\JwtLogoutTokenValidator;
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
@@ -70,7 +72,10 @@ $jwtAccessTokenValidator = new JwtAccessTokenValidator(
 // Optionally, you can also use an opaque access token validator
 $resourceServer = new ResourceServer([$jwtAccessTokenValidator]);
 
+// Create back-channel logout handler
+$backChannelLogout = new BackChannelLogoutHandler(new JwtLogoutTokenValidator($config, $jwksLoader));
+
 // Create OIDC instance manually
-$oidc = new Oidc($authorizationCode, $clientCredentials, $resourceServer);
+$oidc = new Oidc($authorizationCode, $clientCredentials, $resourceServer, $backChannelLogout);
 
 dump($oidc);

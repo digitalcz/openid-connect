@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect;
 
+use DigitalCz\OpenIDConnect\BackChannelLogout\BackChannelLogoutHandler;
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\AuthorizationUrlResult;
@@ -45,6 +46,23 @@ class OidcFactoryTest extends TestCase
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
         $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
         $this->assertInstanceOf(ResourceServer::class, $oidc->resourceServer());
+        $this->assertInstanceOf(BackChannelLogoutHandler::class, $oidc->backChannelLogout());
+    }
+
+    public function testCreateWithBackchannelLogoutParameters(): void
+    {
+        $oidc = OidcFactory::create(
+            httpClient: $this->httpClient,
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+            redirectUri: 'https://client.example.com/callback',
+            backchannelLogoutUri: 'https://client.example.com/logout/backchannel',
+            backchannelLogoutSessionRequired: true,
+        );
+
+        $this->assertInstanceOf(Oidc::class, $oidc);
+        $this->assertInstanceOf(BackChannelLogoutHandler::class, $oidc->backChannelLogout());
     }
 
     public function testCreateWithStaticIssuerMetadata(): void

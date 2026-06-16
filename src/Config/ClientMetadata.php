@@ -32,6 +32,8 @@ final readonly class ClientMetadata
         private ?string $tokenEndpointAuthSigningAlg = null,
         private ?string $clientAssertionAudience = null,
         private ?ClockInterface $clock = null,
+        private ?string $backchannelLogoutUri = null,
+        private bool $backchannelLogoutSessionRequired = false,
     ) {
     }
 
@@ -91,6 +93,23 @@ final readonly class ClientMetadata
     public function clock(): ClockInterface
     {
         return $this->clock ?? new SimpleClock();
+    }
+
+    /**
+     * The URI the OP will POST logout tokens to, or null if back-channel logout
+     * is not configured for this client.
+     */
+    public function backchannelLogoutUri(): ?string
+    {
+        return $this->backchannelLogoutUri;
+    }
+
+    /**
+     * Whether this client requires a `sid` (Session ID) claim in logout tokens.
+     */
+    public function backchannelLogoutSessionRequired(): bool
+    {
+        return $this->backchannelLogoutSessionRequired;
     }
 
     /**

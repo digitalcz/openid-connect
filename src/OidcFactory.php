@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect;
 
+use DigitalCz\OpenIDConnect\BackChannelLogout\BackChannelLogoutHandler;
+use DigitalCz\OpenIDConnect\BackChannelLogout\JwtLogoutTokenValidator;
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
@@ -54,6 +56,8 @@ final readonly class OidcFactory
         ?string $tokenEndpointAuthSigningAlg = null,
         ?string $clientAssertionAudience = null,
         ?string $accessTokenType = null,
+        ?string $backchannelLogoutUri = null,
+        bool $backchannelLogoutSessionRequired = false,
     ): Oidc {
         if (is_string($defaultScopes)) {
             $defaultScopes = explode(' ', $defaultScopes);
@@ -82,6 +86,8 @@ final readonly class OidcFactory
             tokenEndpointAuthSigningAlg: $tokenEndpointAuthSigningAlg,
             clientAssertionAudience: $clientAssertionAudience,
             clock: $clock,
+            backchannelLogoutUri: $backchannelLogoutUri,
+            backchannelLogoutSessionRequired: $backchannelLogoutSessionRequired,
         );
 
         if (is_string($issuer)) {
@@ -134,6 +140,10 @@ final readonly class OidcFactory
             $opaqueAccessTokenValidator,
         ]);
 
-        return new Oidc($authorizationCode, $clientCredentials, $resourceServer);
+        $backChannelLogoutHandler = new BackChannelLogoutHandler(
+            new JwtLogoutTokenValidator($config, $jwksLoader, $clock),
+        );
+
+        return new Oidc($authorizationCode, $clientCredentials, $resourceServer, $backChannelLogoutHandler);
     }
 }

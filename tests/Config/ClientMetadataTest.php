@@ -23,6 +23,20 @@ class ClientMetadataTest extends TestCase
         $this->assertSame(['openid', 'profile', 'email'], $clientMetadata->defaultScopes());
         $this->assertSame(AuthenticationMethod::ClientSecretPost, $clientMetadata->authenticationMethod());
         $this->assertSame(PkceMethod::S256, $clientMetadata->pkceMethod());
+        $this->assertNull($clientMetadata->backchannelLogoutUri());
+        $this->assertFalse($clientMetadata->backchannelLogoutSessionRequired());
+    }
+
+    public function testBackchannelLogoutConfiguration(): void
+    {
+        $clientMetadata = new ClientMetadata(
+            clientId: 'test-client-id',
+            backchannelLogoutUri: 'https://rp.example.com/logout/backchannel',
+            backchannelLogoutSessionRequired: true,
+        );
+
+        $this->assertSame('https://rp.example.com/logout/backchannel', $clientMetadata->backchannelLogoutUri());
+        $this->assertTrue($clientMetadata->backchannelLogoutSessionRequired());
     }
 
     public function testConstructorWithAllParameters(): void

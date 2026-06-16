@@ -166,6 +166,38 @@ class IssuerMetadataTest extends TestCase
         $this->assertSame($metadata, $issuerMetadata->claims());
     }
 
+    public function testBackchannelLogoutSupportedDefaultsToFalse(): void
+    {
+        $issuerMetadata = new IssuerMetadata($this->createSampleMetadata());
+
+        $this->assertFalse($issuerMetadata->backchannelLogoutSupported());
+        $this->assertFalse($issuerMetadata->backchannelLogoutSessionSupported());
+    }
+
+    public function testBackchannelLogoutSupportedTrue(): void
+    {
+        $metadata = $this->createSampleMetadata();
+        $metadata['backchannel_logout_supported'] = true;
+        $metadata['backchannel_logout_session_supported'] = true;
+
+        $issuerMetadata = new IssuerMetadata($metadata);
+
+        $this->assertTrue($issuerMetadata->backchannelLogoutSupported());
+        $this->assertTrue($issuerMetadata->backchannelLogoutSessionSupported());
+    }
+
+    public function testBackchannelLogoutSupportedFalse(): void
+    {
+        $metadata = $this->createSampleMetadata();
+        $metadata['backchannel_logout_supported'] = false;
+        $metadata['backchannel_logout_session_supported'] = false;
+
+        $issuerMetadata = new IssuerMetadata($metadata);
+
+        $this->assertFalse($issuerMetadata->backchannelLogoutSupported());
+        $this->assertFalse($issuerMetadata->backchannelLogoutSessionSupported());
+    }
+
     public function testClaimsTraitIntegration(): void
     {
         $metadata = [
