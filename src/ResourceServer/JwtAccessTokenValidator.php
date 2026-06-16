@@ -97,6 +97,7 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
      * Only applied when an expected token type is configured. The header MUST be
      * present and equal to the expected type; per RFC 9068 both the bare form
      * ("at+jwt") and the prefixed media type ("application/at+jwt") are accepted.
+     * The comparison is case-insensitive, as media types are (RFC 9068 / RFC 2045).
      */
     private function validateTokenType(JWS $jws): void
     {
@@ -110,11 +111,12 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
             throw new InvalidTokenException('Missing typ header');
         }
 
-        $normalized = str_starts_with(strtolower($typ), 'application/')
+        $typ = strtolower($typ);
+        $normalized = str_starts_with($typ, 'application/')
             ? substr($typ, strlen('application/'))
             : $typ;
 
-        if (!hash_equals($this->expectedTokenType, $normalized)) {
+        if (!hash_equals(strtolower($this->expectedTokenType), $normalized)) {
             throw new InvalidTokenException('Unexpected token type');
         }
     }

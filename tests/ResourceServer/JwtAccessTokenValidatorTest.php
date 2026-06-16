@@ -620,6 +620,31 @@ class JwtAccessTokenValidatorTest extends TestCase
         $this->assertInstanceOf(ValidatedAccessToken::class, $validated);
     }
 
+    public function testValidateAcceptsCaseInsensitiveTokenTypeWhenConfigured(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            'test-audience',
+            new SimpleClock(),
+            10,
+            ['iss', 'sub', 'aud', 'exp', 'iat'],
+            'at+jwt',
+        );
+
+        // Media types are case-insensitive (RFC 9068 / RFC 2045).
+        $jwt = $this->createSignedJwt(
+            ['iss' => 'https://auth.example.com', 'aud' => 'test-audience'],
+            ['typ' => 'Application/AT+JWT'],
+        );
+
+        $validated = $validator->validate(new JwtAccessToken($jwt));
+
+        $this->assertInstanceOf(ValidatedAccessToken::class, $validated);
+    }
+
     public function testValidateRejectsMissingTypWhenConfigured(): void
     {
         $this->jwksLoader->method('load')->willReturn($this->publicJwks());
