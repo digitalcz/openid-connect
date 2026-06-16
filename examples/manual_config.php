@@ -7,6 +7,7 @@ use DigitalCz\OpenIDConnect\BackChannelLogout\JwtLogoutTokenValidator;
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
+use DigitalCz\OpenIDConnect\Client\DeviceAuthorization;
 use DigitalCz\OpenIDConnect\Client\JwtIdTokenValidator;
 use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
@@ -62,6 +63,9 @@ $authorizationCode = new AuthorizationCode($config, $httpClient, $idTokenValidat
 // Create client credentials flow handler
 $clientCredentials = new ClientCredentials($config, $httpClient);
 
+// Create device authorization flow handler
+$deviceAuthorization = new DeviceAuthorization($config, $httpClient);
+
 // Create access token validators for resource server
 $jwtAccessTokenValidator = new JwtAccessTokenValidator(
     $config,
@@ -76,6 +80,6 @@ $resourceServer = new ResourceServer([$jwtAccessTokenValidator]);
 $backChannelLogout = new BackChannelLogoutHandler(new JwtLogoutTokenValidator($config, $jwksLoader));
 
 // Create OIDC instance manually
-$oidc = new Oidc($authorizationCode, $clientCredentials, $resourceServer, $backChannelLogout);
+$oidc = new Oidc($authorizationCode, $clientCredentials, $deviceAuthorization, $resourceServer, $backChannelLogout);
 
 dump($oidc);

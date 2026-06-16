@@ -8,6 +8,7 @@ use DigitalCz\OpenIDConnect\BackChannelLogout\BackChannelLogoutHandler;
 use DigitalCz\OpenIDConnect\BackChannelLogout\JwtLogoutTokenValidator;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
+use DigitalCz\OpenIDConnect\Client\DeviceAuthorization;
 use DigitalCz\OpenIDConnect\Client\JwtIdTokenValidator;
 use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config\Config;
@@ -26,6 +27,7 @@ class OidcTest extends TestCase
 {
     private AuthorizationCode $authorizationCode;
     private ClientCredentials $clientCredentials;
+    private DeviceAuthorization $deviceAuthorization;
     private ResourceServer $resourceServer;
     private BackChannelLogoutHandler $backChannelLogout;
     private Config&MockObject $config;
@@ -38,6 +40,7 @@ class OidcTest extends TestCase
         $oidc = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
@@ -50,6 +53,7 @@ class OidcTest extends TestCase
         $oidc = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
@@ -65,6 +69,7 @@ class OidcTest extends TestCase
         $oidc = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
@@ -80,6 +85,7 @@ class OidcTest extends TestCase
         $oidc = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
@@ -95,6 +101,7 @@ class OidcTest extends TestCase
         $oidc = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
@@ -105,11 +112,28 @@ class OidcTest extends TestCase
         $this->assertInstanceOf(BackChannelLogoutHandler::class, $result);
     }
 
+    public function testDeviceAuthorization(): void
+    {
+        $oidc = new Oidc(
+            $this->authorizationCode,
+            $this->clientCredentials,
+            $this->deviceAuthorization,
+            $this->resourceServer,
+            $this->backChannelLogout,
+        );
+
+        $result = $oidc->deviceAuthorization();
+
+        $this->assertSame($this->deviceAuthorization, $result);
+        $this->assertInstanceOf(DeviceAuthorization::class, $result);
+    }
+
     public function testAllMethodsReturnSameInstancesConsistently(): void
     {
         $oidc = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
@@ -137,6 +161,7 @@ class OidcTest extends TestCase
         $oidc = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
@@ -151,12 +176,14 @@ class OidcTest extends TestCase
         $oidc2 = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
 
         $this->assertSame($oidc->authorizationCode(), $oidc2->authorizationCode());
         $this->assertSame($oidc->clientCredentials(), $oidc2->clientCredentials());
+        $this->assertSame($oidc->deviceAuthorization(), $oidc2->deviceAuthorization());
         $this->assertSame($oidc->resourceServer(), $oidc2->resourceServer());
         $this->assertSame($oidc->backChannelLogout(), $oidc2->backChannelLogout());
     }
@@ -167,6 +194,7 @@ class OidcTest extends TestCase
         $oidc = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
@@ -209,20 +237,23 @@ class OidcTest extends TestCase
         $idTokenValidator2 = new JwtIdTokenValidator($config2, $jwksLoader2);
         $authCode2 = new AuthorizationCode($config2, $this->httpClient, $idTokenValidator2);
         $clientCreds2 = new ClientCredentials($config2, $this->httpClient);
+        $deviceAuth2 = new DeviceAuthorization($config2, $this->httpClient);
         $resourceServer2 = new ResourceServer([]);
         $backChannelLogout2 = new BackChannelLogoutHandler(new JwtLogoutTokenValidator($config2, $jwksLoader2));
 
         $oidc1 = new Oidc(
             $this->authorizationCode,
             $this->clientCredentials,
+            $this->deviceAuthorization,
             $this->resourceServer,
             $this->backChannelLogout,
         );
-        $oidc2 = new Oidc($authCode2, $clientCreds2, $resourceServer2, $backChannelLogout2);
+        $oidc2 = new Oidc($authCode2, $clientCreds2, $deviceAuth2, $resourceServer2, $backChannelLogout2);
 
         // Verify each Oidc instance maintains its own dependencies
         $this->assertNotSame($oidc1->authorizationCode(), $oidc2->authorizationCode());
         $this->assertNotSame($oidc1->clientCredentials(), $oidc2->clientCredentials());
+        $this->assertNotSame($oidc1->deviceAuthorization(), $oidc2->deviceAuthorization());
         $this->assertNotSame($oidc1->resourceServer(), $oidc2->resourceServer());
         $this->assertNotSame($oidc1->backChannelLogout(), $oidc2->backChannelLogout());
 
@@ -265,6 +296,8 @@ class OidcTest extends TestCase
         $this->authorizationCode = new AuthorizationCode($this->config, $this->httpClient, $idTokenValidator);
 
         $this->clientCredentials = new ClientCredentials($this->config, $this->httpClient);
+
+        $this->deviceAuthorization = new DeviceAuthorization($this->config, $this->httpClient);
 
         $opaqueValidator = new OpaqueAccessTokenValidator($this->config, $this->httpClient);
         $jwtValidator = new JwtAccessTokenValidator($this->config, $jwksLoader, $this->clientMetadata->clientId());

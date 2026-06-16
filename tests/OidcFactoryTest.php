@@ -9,6 +9,7 @@ use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\AuthorizationUrlResult;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
+use DigitalCz\OpenIDConnect\Client\DeviceAuthorization;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
 use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
 use DigitalCz\OpenIDConnect\Exception\IntrospectionException;
@@ -45,6 +46,7 @@ class OidcFactoryTest extends TestCase
         $this->assertInstanceOf(Oidc::class, $oidc);
         $this->assertInstanceOf(AuthorizationCode::class, $oidc->authorizationCode());
         $this->assertInstanceOf(ClientCredentials::class, $oidc->clientCredentials());
+        $this->assertInstanceOf(DeviceAuthorization::class, $oidc->deviceAuthorization());
         $this->assertInstanceOf(ResourceServer::class, $oidc->resourceServer());
         $this->assertInstanceOf(BackChannelLogoutHandler::class, $oidc->backChannelLogout());
     }

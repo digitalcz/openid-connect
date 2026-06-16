@@ -87,6 +87,11 @@ final readonly class IssuerMetadata
         return $this->string('introspection_endpoint');
     }
 
+    public function deviceAuthorizationEndpoint(): string
+    {
+        return $this->string('device_authorization_endpoint');
+    }
+
     /**
      * Whether the provider supports Back-Channel Logout.
      *

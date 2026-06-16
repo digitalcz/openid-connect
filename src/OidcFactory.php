@@ -9,6 +9,7 @@ use DigitalCz\OpenIDConnect\BackChannelLogout\JwtLogoutTokenValidator;
 use DigitalCz\OpenIDConnect\Client\AuthenticationMethod;
 use DigitalCz\OpenIDConnect\Client\AuthorizationCode;
 use DigitalCz\OpenIDConnect\Client\ClientCredentials;
+use DigitalCz\OpenIDConnect\Client\DeviceAuthorization;
 use DigitalCz\OpenIDConnect\Client\JwtIdTokenValidator;
 use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config\DiscoveryConfig;
@@ -116,6 +117,8 @@ final readonly class OidcFactory
 
         $clientCredentials = new ClientCredentials($config, $httpClient);
 
+        $deviceAuthorization = new DeviceAuthorization($config, $httpClient, $clock);
+
         $opaqueAccessTokenValidator = new OpaqueAccessTokenValidator($config, $httpClient);
 
         if ($cache !== null) {
@@ -144,6 +147,12 @@ final readonly class OidcFactory
             new JwtLogoutTokenValidator($config, $jwksLoader, $clock),
         );
 
-        return new Oidc($authorizationCode, $clientCredentials, $resourceServer, $backChannelLogoutHandler);
+        return new Oidc(
+            $authorizationCode,
+            $clientCredentials,
+            $deviceAuthorization,
+            $resourceServer,
+            $backChannelLogoutHandler,
+        );
     }
 }
