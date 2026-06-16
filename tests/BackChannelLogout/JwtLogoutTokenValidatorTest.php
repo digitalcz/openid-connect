@@ -73,6 +73,45 @@ class JwtLogoutTokenValidatorTest extends TestCase
         ];
     }
 
+    public function testValidateAcceptsProperlySignedLogoutToken(): void
+    {
+        $validator = new JwtLogoutTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = new LogoutToken($this->createSignedJwt([
+            'iss' => 'https://auth.example.com',
+            'aud' => 'test-client-id',
+            'iat' => time(),
+            'jti' => 'unique-jti-id',
+            'sub' => 'user-42',
+            'events' => [JwtLogoutTokenValidator::LOGOUT_EVENT_URI => []],
+        ]));
+
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        // Full happy path: signature verifies, standard claims and logout-specific rules pass.
+        $validator->validate($token);
+        $this->addToAssertionCount(1);
+    }
+
+    public function testValidateRejectsSignedTokenWithExpiredExp(): void
+    {
+        $validator = new JwtLogoutTokenValidator($this->config, $this->jwksLoader, $this->clock);
+        $token = new LogoutToken($this->createSignedJwt([
+            'iss' => 'https://auth.example.com',
+            'aud' => 'test-client-id',
+            'iat' => time() - 7200,
+            'exp' => time() - 3600,
+            'jti' => 'unique-jti-id',
+            'sub' => 'user-42',
+            'events' => [JwtLogoutTokenValidator::LOGOUT_EVENT_URI => []],
+        ]));
+
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        // Signature verifies, but the expired `exp` must be rejected by the claim checker.
+        $this->expectException(InvalidTokenException::class);
+        $validator->validate($token);
+    }
+
     public function testValidateWithInvalidSignature(): void
     {
         $validator = new JwtLogoutTokenValidator($this->config, $this->jwksLoader, $this->clock);
