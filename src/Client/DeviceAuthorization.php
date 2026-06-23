@@ -15,6 +15,7 @@ use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Exception\SlowDownException;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use Psr\Clock\ClockInterface;
+use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpClientExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -68,8 +69,12 @@ final readonly class DeviceAuthorization
         $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
         $options = $authenticator->applyAuthentication($options);
 
-        /** @var array<string, mixed> $data */
-        $data = $this->httpClient->request('POST', $url, $options)->toArray();
+        try {
+            /** @var array<string, mixed> $data */
+            $data = $this->httpClient->request('POST', $url, $options)->toArray();
+        } catch (HttpClientExceptionInterface $e) {
+            throw new NetworkException('Device authorization request failed: ' . $e->getMessage(), 0, $e);
+        }
 
         return DeviceAuthorizationResponse::fromResponse($data);
     }
@@ -104,10 +109,12 @@ final readonly class DeviceAuthorization
         $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
         $options = $authenticator->applyAuthentication($options);
 
-        $response = $this->httpClient->request('POST', $url, $options);
-
-        /** @var array<string, mixed> $data */
-        $data = $response->toArray(false);
+        try {
+            /** @var array<string, mixed> $data */
+            $data = $this->httpClient->request('POST', $url, $options)->toArray(false);
+        } catch (HttpClientExceptionInterface $e) {
+            throw new NetworkException('Device token request failed: ' . $e->getMessage(), 0, $e);
+        }
 
         if (isset($data['error']) && is_string($data['error'])) {
             throw $this->mapError($data['error'], $data);

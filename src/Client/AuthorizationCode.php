@@ -11,6 +11,7 @@ use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Util\Pkce;
 use InvalidArgumentException;
 use RuntimeException;
+use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpClientExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -190,8 +191,12 @@ final readonly class AuthorizationCode
 
         $options = ['auth_bearer' => (string)$accessToken];
 
-        /** @var array<string, mixed> $response */
-        $response = $this->httpClient->request('GET', $userinfoEndpoint, $options)->toArray();
+        try {
+            /** @var array<string, mixed> $response */
+            $response = $this->httpClient->request('GET', $userinfoEndpoint, $options)->toArray();
+        } catch (HttpClientExceptionInterface $e) {
+            throw new NetworkException('Userinfo request failed: ' . $e->getMessage(), 0, $e);
+        }
 
         $userinfo = new Userinfo($response);
 

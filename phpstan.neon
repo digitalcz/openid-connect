@@ -8,4 +8,9 @@ parameters:
             missingCheckedExceptionInThrows: true
             tooWideThrowType: true
         checkedExceptionClasses:
+            # All of the library's own exceptions.
             - DigitalCz\OpenIDConnect\Exception\Exception
+            # Symfony HTTP client exceptions are checked so that every call site is forced to
+            # either handle them (wrap into one of our own exceptions) or declare them - the
+            # library never lets a raw Symfony exception leak out of its public API.
+            - Symfony\Contracts\HttpClient\Exception\ExceptionInterface
