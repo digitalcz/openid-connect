@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Client;
 
 use DigitalCz\OpenIDConnect\Config\Config;
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
+use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Util\Pkce;
 use InvalidArgumentException;
 use RuntimeException;
@@ -34,6 +37,9 @@ final readonly class AuthorizationCode
      *
      * @param array<string, string> $params Additional query parameters
      * @return AuthorizationUrlResult Authorization URL with security parameters
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
      */
     public function createAuthorizationUrl(array $params = []): AuthorizationUrlResult
     {
@@ -78,6 +84,9 @@ final readonly class AuthorizationCode
      *
      * @param array<string, string> $params Additional query parameters
      * @return string Logout URL with query parameters
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
      */
     public function createLogoutUrl(array $params = []): string
     {
@@ -99,6 +108,10 @@ final readonly class AuthorizationCode
      * @param string|null $codeVerifier PKCE code verifier (required if PKCE was used)
      * @param array<string, string> $params Additional body parameters
      * @return Tokens Access token, refresh token, and ID token
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws InvalidTokenException if the returned ID token fails validation
+     * @throws NetworkException if the token endpoint cannot be reached
      */
     public function fetchTokens(
         string $code,
@@ -131,6 +144,9 @@ final readonly class AuthorizationCode
      * @param Tokens $tokens Current tokens with refresh token
      * @param array<string, string> $params Additional body parameters
      * @return Tokens New tokens with fresh access token
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the token endpoint cannot be reached
      */
     public function refreshToken(Tokens $tokens, array $params = []): Tokens
     {
@@ -158,6 +174,9 @@ final readonly class AuthorizationCode
      *
      * @param Tokens $tokens Tokens with access token
      * @return Userinfo User profile information
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the userinfo endpoint cannot be reached
      */
     public function fetchUserinfo(Tokens $tokens): Userinfo
     {

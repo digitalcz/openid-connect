@@ -3,3 +3,9 @@ parameters:
     paths:
         - src
         - examples
+    exceptions:
+        check:
+            missingCheckedExceptionInThrows: true
+            tooWideThrowType: true
+        checkedExceptionClasses:
+            - DigitalCz\OpenIDConnect\Exception\Exception

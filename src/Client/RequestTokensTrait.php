@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Client;
 
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
+
 trait RequestTokensTrait
 {
     /**
@@ -11,6 +14,9 @@ trait RequestTokensTrait
      *
      * @param array<string, string|null> $params Request body parameters
      * @return Tokens Created tokens
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the token endpoint cannot be reached
      */
     private function requestTokens(array $params): Tokens
     {

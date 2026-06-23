@@ -10,6 +10,8 @@ use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationDeniedException;
 use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationException;
 use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationExpiredException;
 use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationPendingException;
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Exception\SlowDownException;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use Psr\Clock\ClockInterface;
@@ -49,6 +51,9 @@ final readonly class DeviceAuthorization
      * Request a device and user code from the authorization server.
      *
      * @param array<string, string> $params Additional body parameters (e.g. audience)
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the device authorization endpoint cannot be reached
      */
     public function requestDeviceAuthorization(array $params = []): DeviceAuthorizationResponse
     {
@@ -81,6 +86,8 @@ final readonly class DeviceAuthorization
      * @throws DeviceAuthorizationException         Any other OAuth error.
      * @throws DeviceAuthorizationExpiredException  Device code expired.
      * @throws DeviceAuthorizationPendingException  User has not yet authorized.
+     * @throws DiscoveryException                   Provider metadata cannot be resolved.
+     * @throws NetworkException                     Token endpoint cannot be reached.
      * @throws SlowDownException                    Polling too fast - increase interval.
      */
     public function fetchTokens(string $deviceCode, array $params = []): Tokens
@@ -119,6 +126,12 @@ final readonly class DeviceAuthorization
      * elapses.
      *
      * @param array<string, string> $params Additional body parameters forwarded to each poll
+     *
+     * @throws DeviceAuthorizationDeniedException   User denied the request.
+     * @throws DeviceAuthorizationException         Any other non-recoverable OAuth error.
+     * @throws DeviceAuthorizationExpiredException  Device code expired before authorization completed.
+     * @throws DiscoveryException                   Provider metadata cannot be resolved.
+     * @throws NetworkException                     Token endpoint cannot be reached.
      */
     public function pollForTokens(DeviceAuthorizationResponse $response, array $params = []): Tokens
     {
