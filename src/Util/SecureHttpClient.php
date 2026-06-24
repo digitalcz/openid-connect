@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Util;
 
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Symfony\Contracts\HttpClient\ResponseStreamInterface;
@@ -23,6 +25,9 @@ final class SecureHttpClient implements HttpClientInterface
 
     /**
      * @param array<string, mixed> $options
+     *
+     * @throws DiscoveryException if the URL is not transport-secure (non-HTTPS, non-loopback)
+     * @throws TransportExceptionInterface when an unsupported option is passed
      */
     public function request(string $method, string $url, array $options = []): ResponseInterface
     {

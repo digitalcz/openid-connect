@@ -6,7 +6,9 @@ namespace DigitalCz\OpenIDConnect\BackChannelLogout;
 
 use DigitalCz\OpenIDConnect\Config\Config;
 use DigitalCz\OpenIDConnect\Discovery\JwksLoader;
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Util\SignatureAlgorithmsFactory;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use Exception;
@@ -134,6 +136,10 @@ final class JwtLogoutTokenValidator implements LogoutTokenValidator
         }
     }
 
+    /**
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
+     */
     private function createJwsLoader(): JWSLoader
     {
         $signingAlgorithms = $this->config->issuerMetadata()->idTokenSigningAlgValuesSupported();
@@ -146,11 +152,19 @@ final class JwtLogoutTokenValidator implements LogoutTokenValidator
         );
     }
 
+    /**
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
+     */
     private function validateClaims(LogoutToken $token): void
     {
         $this->createClaimCheckerManager()->check($token->claims(), $this->mandatoryClaims);
     }
 
+    /**
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
+     */
     private function createClaimCheckerManager(): ClaimCheckerManager
     {
         return $this->claimCheckerManager ??= new ClaimCheckerManager([

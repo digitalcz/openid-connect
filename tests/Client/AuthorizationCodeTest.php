@@ -7,6 +7,7 @@ namespace DigitalCz\OpenIDConnect\Client;
 use DigitalCz\OpenIDConnect\Config\ClientMetadata;
 use DigitalCz\OpenIDConnect\Config\Config;
 use DigitalCz\OpenIDConnect\Config\IssuerMetadata;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\TestCase;
 use DigitalCz\OpenIDConnect\Util\PkceMethod;
 use InvalidArgumentException;
@@ -14,6 +15,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use RuntimeException;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -204,6 +207,19 @@ class AuthorizationCodeTest extends TestCase
         $this->authorizationCode->fetchTokens($authorizationCode);
     }
 
+    public function testFetchTokensWrapsHttpClientExceptionInNetworkException(): void
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('toArray')->willThrowException($this->createMock(ClientExceptionInterface::class));
+
+        $this->httpClient->method('request')->willReturn($response);
+
+        $this->expectException(NetworkException::class);
+        $this->expectExceptionMessage('Token request failed:');
+
+        $this->authorizationCode->fetchTokens('test-auth-code');
+    }
+
     public function testRefreshTokenSuccess(): void
     {
         $originalTokens = $this->createTokensWithRefreshToken();
@@ -301,6 +317,21 @@ class AuthorizationCodeTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Userinfo sub does not match id_token sub');
+
+        $this->authorizationCode->fetchUserinfo($tokens);
+    }
+
+    public function testFetchUserinfoWrapsHttpClientExceptionInNetworkException(): void
+    {
+        $tokens = $this->createTokensWithIdToken();
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('toArray')->willThrowException($this->createMock(TransportExceptionInterface::class));
+
+        $this->httpClient->method('request')->willReturn($response);
+
+        $this->expectException(NetworkException::class);
+        $this->expectExceptionMessage('Userinfo request failed:');
 
         $this->authorizationCode->fetchUserinfo($tokens);
     }

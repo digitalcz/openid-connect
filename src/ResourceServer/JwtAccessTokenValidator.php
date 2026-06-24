@@ -6,7 +6,9 @@ namespace DigitalCz\OpenIDConnect\ResourceServer;
 
 use DigitalCz\OpenIDConnect\Config\Config;
 use DigitalCz\OpenIDConnect\Discovery\JwksLoader;
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Util\SignatureAlgorithmsFactory;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use Jose\Component\Checker\AlgorithmChecker;
@@ -80,6 +82,10 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
         }
     }
 
+    /**
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the JWKS endpoint cannot be reached
+     */
     private function validateSignature(AccessToken $token): JWS
     {
         $jwksUri = $this->config->issuerMetadata()->jwksUri();
@@ -98,6 +104,8 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
      * present and equal to the expected type; per RFC 9068 both the bare form
      * ("at+jwt") and the prefixed media type ("application/at+jwt") are accepted.
      * The comparison is case-insensitive, as media types are (RFC 9068 / RFC 2045).
+     *
+     * @throws InvalidTokenException if the typ header is missing or does not match
      */
     private function validateTokenType(JWS $jws): void
     {
@@ -121,6 +129,10 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
         }
     }
 
+    /**
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
+     */
     private function createJwsLoader(): JWSLoader
     {
         $idTokenSigningAlgorithms = $this->config->issuerMetadata()->idTokenSigningAlgValuesSupported();
@@ -135,12 +147,19 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
 
     /**
      * @param array<string, mixed> $claims
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
      */
     private function validateClaims(array $claims): void
     {
         $this->createClaimCheckerManager()->check($claims, $this->mandatoryClaims);
     }
 
+    /**
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
+     */
     private function createClaimCheckerManager(): ClaimCheckerManager
     {
         return $this->claimCheckerManager ??= new ClaimCheckerManager([

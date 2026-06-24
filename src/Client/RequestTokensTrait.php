@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace DigitalCz\OpenIDConnect\Client;
 
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
+use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpClientExceptionInterface;
+
 trait RequestTokensTrait
 {
     /**
@@ -11,6 +15,9 @@ trait RequestTokensTrait
      *
      * @param array<string, string|null> $params Request body parameters
      * @return Tokens Created tokens
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the token endpoint cannot be reached
      */
     private function requestTokens(array $params): Tokens
     {
@@ -23,8 +30,12 @@ trait RequestTokensTrait
         $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
         $options = $authenticator->applyAuthentication($options);
 
-        $response = $this->httpClient->request('POST', $url, $options);
+        try {
+            $data = $this->httpClient->request('POST', $url, $options)->toArray();
+        } catch (HttpClientExceptionInterface $e) {
+            throw new NetworkException('Token request failed: ' . $e->getMessage(), 0, $e);
+        }
 
-        return Tokens::fromTokenResponse($response->toArray());
+        return Tokens::fromTokenResponse($data);
     }
 }

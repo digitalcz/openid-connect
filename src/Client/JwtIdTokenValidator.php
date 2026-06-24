@@ -6,7 +6,9 @@ namespace DigitalCz\OpenIDConnect\Client;
 
 use DigitalCz\OpenIDConnect\Config\Config;
 use DigitalCz\OpenIDConnect\Discovery\JwksLoader;
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Util\SignatureAlgorithmsFactory;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use Exception;
@@ -80,6 +82,10 @@ final class JwtIdTokenValidator implements IdTokenValidator
         $jwsLoader->loadAndVerifyWithKeySet((string)$token, $jwkSet, $signature);
     }
 
+    /**
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
+     */
     private function createJwsLoader(): JWSLoader
     {
         $idTokenSigningAlgorithms = $this->config->issuerMetadata()->idTokenSigningAlgValuesSupported();
@@ -92,11 +98,19 @@ final class JwtIdTokenValidator implements IdTokenValidator
         );
     }
 
+    /**
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
+     */
     private function validateClaims(IdToken $token): void
     {
         $this->createClaimCheckerManager()->check($token->claims(), $this->mandatoryClaims);
     }
 
+    /**
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
+     */
     private function createClaimCheckerManager(): ClaimCheckerManager
     {
         return $this->claimCheckerManager ??= new ClaimCheckerManager([
@@ -139,6 +153,9 @@ final class JwtIdTokenValidator implements IdTokenValidator
         }
     }
 
+    /**
+     * @throws InvalidTokenException if the nonce does not match
+     */
     private function validateNonce(IdToken $token, ?string $nonce): void
     {
         if ($nonce === null) {

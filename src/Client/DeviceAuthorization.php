@@ -10,9 +10,12 @@ use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationDeniedException;
 use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationException;
 use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationExpiredException;
 use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationPendingException;
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Exception\SlowDownException;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
 use Psr\Clock\ClockInterface;
+use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpClientExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -49,6 +52,9 @@ final readonly class DeviceAuthorization
      * Request a device and user code from the authorization server.
      *
      * @param array<string, string> $params Additional body parameters (e.g. audience)
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the device authorization endpoint cannot be reached
      */
     public function requestDeviceAuthorization(array $params = []): DeviceAuthorizationResponse
     {
@@ -63,8 +69,12 @@ final readonly class DeviceAuthorization
         $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
         $options = $authenticator->applyAuthentication($options);
 
-        /** @var array<string, mixed> $data */
-        $data = $this->httpClient->request('POST', $url, $options)->toArray();
+        try {
+            /** @var array<string, mixed> $data */
+            $data = $this->httpClient->request('POST', $url, $options)->toArray();
+        } catch (HttpClientExceptionInterface $e) {
+            throw new NetworkException('Device authorization request failed: ' . $e->getMessage(), 0, $e);
+        }
 
         return DeviceAuthorizationResponse::fromResponse($data);
     }
@@ -81,6 +91,8 @@ final readonly class DeviceAuthorization
      * @throws DeviceAuthorizationException         Any other OAuth error.
      * @throws DeviceAuthorizationExpiredException  Device code expired.
      * @throws DeviceAuthorizationPendingException  User has not yet authorized.
+     * @throws DiscoveryException                   Provider metadata cannot be resolved.
+     * @throws NetworkException                     Token endpoint cannot be reached.
      * @throws SlowDownException                    Polling too fast - increase interval.
      */
     public function fetchTokens(string $deviceCode, array $params = []): Tokens
@@ -97,10 +109,12 @@ final readonly class DeviceAuthorization
         $authenticator = new ClientAuthenticator($clientMetadata, $issuerMetadata);
         $options = $authenticator->applyAuthentication($options);
 
-        $response = $this->httpClient->request('POST', $url, $options);
-
-        /** @var array<string, mixed> $data */
-        $data = $response->toArray(false);
+        try {
+            /** @var array<string, mixed> $data */
+            $data = $this->httpClient->request('POST', $url, $options)->toArray(false);
+        } catch (HttpClientExceptionInterface $e) {
+            throw new NetworkException('Device token request failed: ' . $e->getMessage(), 0, $e);
+        }
 
         if (isset($data['error']) && is_string($data['error'])) {
             throw $this->mapError($data['error'], $data);
@@ -119,6 +133,12 @@ final readonly class DeviceAuthorization
      * elapses.
      *
      * @param array<string, string> $params Additional body parameters forwarded to each poll
+     *
+     * @throws DeviceAuthorizationDeniedException   User denied the request.
+     * @throws DeviceAuthorizationException         Any other non-recoverable OAuth error.
+     * @throws DeviceAuthorizationExpiredException  Device code expired before authorization completed.
+     * @throws DiscoveryException                   Provider metadata cannot be resolved.
+     * @throws NetworkException                     Token endpoint cannot be reached.
      */
     public function pollForTokens(DeviceAuthorizationResponse $response, array $params = []): Tokens
     {

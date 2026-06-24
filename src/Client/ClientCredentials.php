@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DigitalCz\OpenIDConnect\Client;
 
 use DigitalCz\OpenIDConnect\Config\Config;
+use DigitalCz\OpenIDConnect\Exception\DiscoveryException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -29,6 +31,9 @@ final readonly class ClientCredentials
      *
      * @param array<string, string> $params Additional body parameters
      * @return Tokens Access token for API access
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the token endpoint cannot be reached
      */
     public function fetchTokens(array $params = []): Tokens
     {

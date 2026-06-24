@@ -12,11 +12,14 @@ use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationDeniedException;
 use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationException;
 use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationExpiredException;
 use DigitalCz\OpenIDConnect\Exception\DeviceAuthorizationPendingException;
+use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Exception\SlowDownException;
 use DigitalCz\OpenIDConnect\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Clock\ClockInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use UnexpectedValueException;
@@ -174,6 +177,32 @@ class DeviceAuthorizationTest extends TestCase
         $this->expectExceptionMessage('expires_in');
 
         $this->deviceAuthorization->requestDeviceAuthorization();
+    }
+
+    public function testRequestDeviceAuthorizationWrapsHttpClientExceptionInNetworkException(): void
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('toArray')->willThrowException($this->createMock(ServerExceptionInterface::class));
+
+        $this->httpClient->method('request')->willReturn($response);
+
+        $this->expectException(NetworkException::class);
+        $this->expectExceptionMessage('Device authorization request failed:');
+
+        $this->deviceAuthorization->requestDeviceAuthorization();
+    }
+
+    public function testFetchTokensWrapsHttpClientExceptionInNetworkException(): void
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('toArray')->willThrowException($this->createMock(TransportExceptionInterface::class));
+
+        $this->httpClient->method('request')->willReturn($response);
+
+        $this->expectException(NetworkException::class);
+        $this->expectExceptionMessage('Device token request failed:');
+
+        $this->deviceAuthorization->fetchTokens('device-code');
     }
 
     public function testFetchTokensSuccess(): void
