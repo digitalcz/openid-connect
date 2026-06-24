@@ -33,4 +33,16 @@ class SignatureAlgorithmsFactoryTest extends TestCase
         $this->assertNotContains('HS384', $names);
         $this->assertNotContains('HS512', $names);
     }
+
+    public function testRestrictToAsymmetricDropsHmacAndKeepsAsymmetric(): void
+    {
+        $restricted = SignatureAlgorithmsFactory::restrictToAsymmetric(['HS256', 'RS256', 'ES256', 'HS512']);
+
+        $this->assertSame(['RS256', 'ES256'], $restricted);
+    }
+
+    public function testRestrictToAsymmetricReturnsEmptyListWhenOnlyHmacAdvertised(): void
+    {
+        $this->assertSame([], SignatureAlgorithmsFactory::restrictToAsymmetric(['HS256', 'HS384']));
+    }
 }
