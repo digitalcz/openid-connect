@@ -82,10 +82,9 @@ final class JwtIdTokenValidator implements IdTokenValidator
 
     private function createJwsLoader(): JWSLoader
     {
-        $idTokenSigningAlgorithms = array_values(array_intersect(
+        $idTokenSigningAlgorithms = SignatureAlgorithmsFactory::restrictToAsymmetric(
             $this->config->issuerMetadata()->idTokenSigningAlgValuesSupported(),
-            SignatureAlgorithmsFactory::asymmetricAlgorithmNames(),
-        ));
+        );
         $algorithmManagerFactory = new AlgorithmManagerFactory(SignatureAlgorithmsFactory::create());
 
         return $this->jwsLoader ??= new JWSLoader(

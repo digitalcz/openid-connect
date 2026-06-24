@@ -93,4 +93,20 @@ final class SignatureAlgorithmsFactory
 
         return $names;
     }
+
+    /**
+     * Restrict a list of advertised algorithm names to the available asymmetric ones.
+     *
+     * Verification of tokens against a provider JWKS must never accept HMAC,
+     * per RFC 8725 §3.1 — defense-in-depth against algorithm-confusion attacks.
+     *
+     * @param array<string> $algorithms
+     * @return list<string>
+     *
+     * @see https://www.rfc-editor.org/rfc/rfc8725#section-3.1
+     */
+    public static function restrictToAsymmetric(array $algorithms): array
+    {
+        return array_values(array_intersect($algorithms, self::asymmetricAlgorithmNames()));
+    }
 }
