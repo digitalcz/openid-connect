@@ -88,6 +88,12 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
             $seenClaims = [];
 
             foreach ($this->claimCheckers as $claimChecker) {
+                if (!$claimChecker instanceof ClaimChecker) {
+                    throw new InvalidArgumentException(
+                        sprintf('Each element of $claimCheckers must implement %s.', ClaimChecker::class),
+                    );
+                }
+
                 $claim = $claimChecker->supportedClaim();
 
                 if (isset($seenClaims[$claim])) {
