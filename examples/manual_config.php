@@ -66,7 +66,9 @@ $clientCredentials = new ClientCredentials($config, $httpClient);
 // Create device authorization flow handler
 $deviceAuthorization = new DeviceAuthorization($config, $httpClient);
 
-// Create access token validators for resource server
+// Create access token validators for resource server.
+// The third argument is the expected audience: a string, a list of accepted audiences
+// (e.g. ['service-a', 'service-b']), or null to disable the audience check entirely.
 $jwtAccessTokenValidator = new JwtAccessTokenValidator(
     $config,
     $jwksLoader,
