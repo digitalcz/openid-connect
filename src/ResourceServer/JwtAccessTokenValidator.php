@@ -88,13 +88,6 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
             $seenClaims = [];
 
             foreach ($this->claimCheckers as $claimChecker) {
-                // @phpstan-ignore instanceof.alwaysTrue (runtime guard; PHP arrays don't enforce the docblock's element type)
-                if (!$claimChecker instanceof ClaimChecker) {
-                    throw new InvalidArgumentException(
-                        sprintf('Each element of $claimCheckers must implement %s.', ClaimChecker::class),
-                    );
-                }
-
                 $claim = $claimChecker->supportedClaim();
 
                 if (isset($seenClaims[$claim])) {
