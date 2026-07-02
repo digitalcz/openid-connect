@@ -39,6 +39,9 @@ final readonly class OidcFactory
     /**
      * @param string|array<string, string|string[]|bool>|IssuerMetadata $issuer
      * @param string|list<string> $defaultScopes
+     * @param string|list<string>|false|null $resourceServerAudience Expected audience for resource-server JWT
+     *        access-token validation. false (default) uses the client id; a string or list configures the accepted
+     *        audience(s); null disables the audience check (deviates from RFC 9068 — see JwtAccessTokenValidator).
      */
     public static function create(
         HttpClientInterface $httpClient,
@@ -59,6 +62,7 @@ final readonly class OidcFactory
         ?string $accessTokenType = null,
         ?string $backchannelLogoutUri = null,
         bool $backchannelLogoutSessionRequired = false,
+        string|array|false|null $resourceServerAudience = false,
     ): Oidc {
         if (is_string($defaultScopes)) {
             $defaultScopes = explode(' ', $defaultScopes);
@@ -133,7 +137,7 @@ final readonly class OidcFactory
         $jwtAccessTokenValidator = new JwtAccessTokenValidator(
             $config,
             $jwksLoader,
-            $clientMetadata->clientId(),
+            $resourceServerAudience === false ? $clientMetadata->clientId() : $resourceServerAudience,
             $clock,
             expectedTokenType: $accessTokenType,
         );

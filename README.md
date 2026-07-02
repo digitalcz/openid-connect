@@ -238,6 +238,44 @@ $oidc = OidcFactory::create(
 When set, the `typ` header must be present and equal to the expected value; both `at+jwt` and `application/at+jwt`
 are accepted. It is disabled by default because not all authorization servers emit the `typ` header.
 
+#### Audience validation
+
+By default the resource server accepts only tokens whose `aud` claim matches the `clientId`. Use
+`resourceServerAudience` to decouple the accepted audience from the client id — for example when the resource
+server has several identities of its own, or when it must accept tokens minted for other first-party services:
+
+```php
+// Accept a token whose "aud" matches any of the listed audiences.
+$oidc = OidcFactory::create(
+    httpClient: $httpClient,
+    issuer: 'https://issuer.example.com',
+    clientId: 'my-client',
+    resourceServerAudience: ['service-a', 'service-b'],
+);
+
+// Disable the audience check entirely (validate signature + issuer + expiry only).
+$oidc = OidcFactory::create(
+    httpClient: $httpClient,
+    issuer: 'https://issuer.example.com',
+    clientId: 'my-client',
+    resourceServerAudience: null,
+);
+```
+
+Passing a **list** verifies that the token's `aud` (a single value or an array) intersects the configured
+audiences — this is the standard model for a resource server with multiple identities (RFC 9068 §4).
+
+Passing **`null`** turns the audience check off. This is a **deliberate deviation from RFC 9068**, which requires
+rejecting a token whose `aud` does not identify the resource server. It exists for closed first-party token
+propagation across services sharing one issuer; the standards-correct alternative is
+[Token Exchange (RFC 8693)](https://www.rfc-editor.org/rfc/rfc8693). The presence of the `aud` claim itself is
+still governed by the validator's mandatory-claims set. Leaving `resourceServerAudience` unset keeps the default
+(`aud` must equal `clientId`).
+
+When wiring `JwtAccessTokenValidator` manually, the same `string|list<string>|null` values apply to its `$audience`
+argument. For fully custom validation you can inject a replacement set of claim checkers via `$claimCheckers`, which
+then supersedes the default issuer/audience/expiry/issued-at/not-before checkers.
+
 ### Back-Channel Logout
 
 Implements [OpenID Connect Back-Channel Logout 1.0](https://openid.net/specs/openid-connect-backchannel-1_0.html).

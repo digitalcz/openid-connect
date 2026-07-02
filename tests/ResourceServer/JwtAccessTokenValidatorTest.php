@@ -10,6 +10,7 @@ use DigitalCz\OpenIDConnect\Discovery\JwksLoader;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
 use DigitalCz\OpenIDConnect\TestCase;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
+use Jose\Component\Checker\IssuerChecker;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -699,6 +700,138 @@ class JwtAccessTokenValidatorTest extends TestCase
         $this->expectExceptionMessage('Invalid Access Token:');
 
         $validator->validate(new JwtAccessToken($jwt));
+    }
+
+    public function testValidateAcceptsTokenWhenAudienceIsInConfiguredList(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            ['first-service', 'second-service'],
+            new SimpleClock(),
+        );
+
+        $jwt = $this->createSignedJwt(['iss' => 'https://auth.example.com', 'aud' => 'second-service']);
+
+        $this->assertInstanceOf(
+            ValidatedAccessToken::class,
+            $validator->validate(new JwtAccessToken($jwt)),
+        );
+    }
+
+    public function testValidateRejectsTokenWhenAudienceNotInConfiguredList(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            ['first-service', 'second-service'],
+            new SimpleClock(),
+        );
+
+        $jwt = $this->createSignedJwt(['iss' => 'https://auth.example.com', 'aud' => 'third-service']);
+
+        $this->expectException(InvalidTokenException::class);
+        $this->expectExceptionMessage('Invalid Access Token:');
+
+        $validator->validate(new JwtAccessToken($jwt));
+    }
+
+    public function testValidateAcceptsArrayAudienceIntersectingConfiguredList(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            ['first-service', 'second-service'],
+            new SimpleClock(),
+        );
+
+        // Token carries multiple audiences; one of them is in the configured allow-list.
+        $jwt = $this->createSignedJwt([
+            'iss' => 'https://auth.example.com',
+            'aud' => ['unrelated-service', 'second-service'],
+        ]);
+
+        $this->assertInstanceOf(
+            ValidatedAccessToken::class,
+            $validator->validate(new JwtAccessToken($jwt)),
+        );
+    }
+
+    public function testValidateWithNullAudienceAcceptsForeignAudience(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        // Audience validation disabled: a token minted for a different first-party client is accepted.
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            null,
+            new SimpleClock(),
+        );
+
+        $jwt = $this->createSignedJwt(['iss' => 'https://auth.example.com', 'aud' => 'some-other-client']);
+
+        $this->assertInstanceOf(
+            ValidatedAccessToken::class,
+            $validator->validate(new JwtAccessToken($jwt)),
+        );
+    }
+
+    public function testValidateWithNullAudienceAcceptsMissingAudienceWhenNotMandatory(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        // With the audience check disabled and "aud" dropped from the mandatory set, a token
+        // without any "aud" claim is accepted.
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            null,
+            new SimpleClock(),
+            10,
+            ['iss', 'sub', 'exp', 'iat'],
+        );
+
+        $jwt = $this->createSignedJwt(['iss' => 'https://auth.example.com', 'aud' => null]);
+
+        $this->assertInstanceOf(
+            ValidatedAccessToken::class,
+            $validator->validate(new JwtAccessToken($jwt)),
+        );
+    }
+
+    public function testValidateWithInjectedClaimCheckersReplacesDefaultSet(): void
+    {
+        $this->jwksLoader->method('load')->willReturn($this->publicJwks());
+
+        // Only an issuer check is injected, fully replacing the default set. The configured
+        // $audience is ignored, and neither the audience nor the expiration default checker runs.
+        $validator = new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            'ignored-audience',
+            new SimpleClock(),
+            mandatoryClaims: ['iss'],
+            claimCheckers: [new IssuerChecker(['https://auth.example.com'])],
+        );
+
+        // Foreign audience AND already expired — both would fail the defaults, both pass here.
+        $jwt = $this->createSignedJwt([
+            'iss' => 'https://auth.example.com',
+            'aud' => 'some-other-client',
+            'exp' => time() - 3600,
+        ]);
+
+        $this->assertInstanceOf(
+            ValidatedAccessToken::class,
+            $validator->validate(new JwtAccessToken($jwt)),
+        );
     }
 
     protected function setUp(): void

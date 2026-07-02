@@ -455,6 +455,55 @@ class OidcFactoryTest extends TestCase
         $this->assertInstanceOf(Oidc::class, $oidc);
     }
 
+    public function testResourceServerAudienceDefaultsToClientId(): void
+    {
+        $oidc = OidcFactory::create(
+            httpClient: $this->jwksHttpClient(),
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+        );
+
+        // A token whose audience is not the client id is rejected under the default configuration.
+        $jwt = $this->createSignedJwt(['iss' => 'https://auth.example.com', 'aud' => 'another-client']);
+
+        $this->expectException(InvalidTokenException::class);
+
+        $oidc->resourceServer()->introspect(new JwtAccessToken($jwt));
+    }
+
+    public function testResourceServerAudienceAcceptsConfiguredList(): void
+    {
+        $oidc = OidcFactory::create(
+            httpClient: $this->jwksHttpClient(),
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            resourceServerAudience: ['first-service', 'second-service'],
+        );
+
+        $jwt = $this->createSignedJwt(['iss' => 'https://auth.example.com', 'aud' => 'second-service']);
+
+        $validated = $oidc->resourceServer()->introspect(new JwtAccessToken($jwt));
+
+        $this->assertInstanceOf(ValidatedAccessToken::class, $validated);
+    }
+
+    public function testResourceServerAudienceNullDisablesAudienceCheck(): void
+    {
+        $oidc = OidcFactory::create(
+            httpClient: $this->jwksHttpClient(),
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+            resourceServerAudience: null,
+        );
+
+        // Token issued for a different first-party client is accepted because the audience check is off.
+        $jwt = $this->createSignedJwt(['iss' => 'https://auth.example.com', 'aud' => 'some-other-client']);
+
+        $validated = $oidc->resourceServer()->introspect(new JwtAccessToken($jwt));
+
+        $this->assertInstanceOf(ValidatedAccessToken::class, $validated);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -499,6 +548,23 @@ class OidcFactoryTest extends TestCase
             ->method('request')
             ->with('GET', $this->anything())
             ->willReturn($response);
+    }
+
+    /**
+     * A mock HTTP client that serves {@see publicJwks()} from the issuer's JWKS endpoint,
+     * so tokens created with {@see createSignedJwt()} verify end-to-end through the factory.
+     */
+    private function jwksHttpClient(): HttpClientInterface&MockObject
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('toArray')->willReturn($this->publicJwks());
+
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->method('request')
+            ->with('GET', 'https://auth.example.com/.well-known/jwks.json')
+            ->willReturn($response);
+
+        return $httpClient;
     }
 
     private function setupCacheMock(CacheInterface&MockObject $cache): void
