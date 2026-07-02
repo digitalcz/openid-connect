@@ -240,7 +240,8 @@ are accepted. It is disabled by default because not all authorization servers em
 
 #### Audience validation
 
-By default the resource server accepts only tokens whose `aud` claim matches the `clientId`. Use
+By default the resource server's JWT access-token validator accepts only tokens whose `aud` claim matches the
+`clientId` (opaque tokens are unaffected — they're validated via introspection, which only checks `active`). Use
 `resourceServerAudience` to decouple the accepted audience from the client id — for example when the resource
 server has several identities of its own, or when it must accept tokens minted for other first-party services:
 
@@ -253,7 +254,8 @@ $oidc = OidcFactory::create(
     resourceServerAudience: ['service-a', 'service-b'],
 );
 
-// Disable the audience check entirely (validate signature + issuer + expiry only).
+// Disable the audience check entirely (the "aud" value is no longer verified against anything;
+// its presence is still required by the default mandatory-claims set).
 $oidc = OidcFactory::create(
     httpClient: $httpClient,
     issuer: 'https://issuer.example.com',

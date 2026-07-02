@@ -236,15 +236,8 @@ class OidcFactoryTest extends TestCase
 
     public function testAccessTokenTypeRejectsMismatchWhenConfigured(): void
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('toArray')->willReturn($this->publicJwks());
-        $httpClient->method('request')
-            ->with('GET', 'https://auth.example.com/.well-known/jwks.json')
-            ->willReturn($response);
-
         $oidc = OidcFactory::create(
-            httpClient: $httpClient,
+            httpClient: $this->jwksHttpClient(),
             issuer: $this->issuerMetadata,
             clientId: 'test-client-id',
             accessTokenType: 'at+jwt',
@@ -263,15 +256,12 @@ class OidcFactoryTest extends TestCase
 
     public function testAccessTokenTypeAllowsAnyTypeByDefault(): void
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('toArray')->willReturn($this->publicJwks());
-        $httpClient->method('request')
-            ->with('GET', 'https://auth.example.com/.well-known/jwks.json')
-            ->willReturn($response);
-
         // No accessTokenType configured -> the same typ:"JWT" token is accepted.
-        $oidc = OidcFactory::create(httpClient: $httpClient, issuer: $this->issuerMetadata, clientId: 'test-client-id');
+        $oidc = OidcFactory::create(
+            httpClient: $this->jwksHttpClient(),
+            issuer: $this->issuerMetadata,
+            clientId: 'test-client-id',
+        );
 
         $jwt = $this->createSignedJwt(
             ['iss' => 'https://auth.example.com', 'aud' => 'test-client-id'],

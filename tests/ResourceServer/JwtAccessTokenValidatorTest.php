@@ -10,6 +10,7 @@ use DigitalCz\OpenIDConnect\Discovery\JwksLoader;
 use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
 use DigitalCz\OpenIDConnect\TestCase;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
+use InvalidArgumentException;
 use Jose\Component\Checker\IssuerChecker;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -47,6 +48,51 @@ class JwtAccessTokenValidatorTest extends TestCase
         );
 
         $this->assertInstanceOf(JwtAccessTokenValidator::class, $validator);
+    }
+
+    public function testConstructorRejectsEmptyAudienceList(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('$audience must not be an empty list');
+
+        new JwtAccessTokenValidator($this->config, $this->jwksLoader, []);
+    }
+
+    public function testConstructorRejectsClaimCheckersCombinedWithAudience(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('$audience must be null when $claimCheckers is provided');
+
+        new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            'test-audience',
+            claimCheckers: [new IssuerChecker(['https://auth.example.com'])],
+        );
+    }
+
+    public function testConstructorRejectsEmptyClaimCheckers(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('$claimCheckers must not be empty');
+
+        new JwtAccessTokenValidator($this->config, $this->jwksLoader, null, claimCheckers: []);
+    }
+
+    public function testConstructorRejectsDuplicateClaimCheckers(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Duplicate claim checker for claim "iss"');
+
+        new JwtAccessTokenValidator(
+            $this->config,
+            $this->jwksLoader,
+            null,
+            claimCheckers: [
+                new IssuerChecker(['https://auth.example.com']),
+                new IssuerChecker(['https://other.example.com']),
+            ],
+        );
     }
 
     public function testSupportsJwtAccessToken(): void
@@ -810,12 +856,12 @@ class JwtAccessTokenValidatorTest extends TestCase
     {
         $this->jwksLoader->method('load')->willReturn($this->publicJwks());
 
-        // Only an issuer check is injected, fully replacing the default set. The configured
-        // $audience is ignored, and neither the audience nor the expiration default checker runs.
+        // Only an issuer check is injected, fully replacing the default set: neither the
+        // audience nor the expiration default checker runs.
         $validator = new JwtAccessTokenValidator(
             $this->config,
             $this->jwksLoader,
-            'ignored-audience',
+            null,
             new SimpleClock(),
             mandatoryClaims: ['iss'],
             claimCheckers: [new IssuerChecker(['https://auth.example.com'])],

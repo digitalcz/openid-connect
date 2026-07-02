@@ -11,6 +11,7 @@ use DigitalCz\OpenIDConnect\Exception\InvalidTokenException;
 use DigitalCz\OpenIDConnect\Exception\NetworkException;
 use DigitalCz\OpenIDConnect\Util\SignatureAlgorithmsFactory;
 use DigitalCz\OpenIDConnect\Util\SimpleClock;
+use InvalidArgumentException;
 use Jose\Component\Checker\AlgorithmChecker;
 use Jose\Component\Checker\AudienceChecker;
 use Jose\Component\Checker\CallableChecker;
@@ -48,10 +49,12 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
      *                                            deviation from RFC 9068 — the standards-correct way to accept a
      *                                            token issued for another audience is token exchange (RFC 8693).
      *                                            The presence of the "aud" claim is still governed by $mandatoryClaims.
+     *                                            Must be null when $claimCheckers is provided.
      * @param list<string> $mandatoryClaims
      * @param list<ClaimChecker>|null $claimCheckers When provided, fully replaces the default claim checker set
-     *                                               (issuer, audience, expiration, issued-at, not-before); $audience
-     *                                               is then ignored. Escape hatch for fully custom validation.
+     *                                               (issuer, audience, expiration, issued-at, not-before). Must be
+     *                                               non-empty, each checker covering a distinct claim, and $audience
+     *                                               must be null. Escape hatch for fully custom validation.
      */
     public function __construct(
         private readonly Config $config,
@@ -63,6 +66,39 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
         private readonly ?string $expectedTokenType = null,
         private readonly ?array $claimCheckers = null,
     ) {
+        if ($this->audience === []) {
+            throw new InvalidArgumentException(
+                '$audience must not be an empty list; use null to disable audience validation.',
+            );
+        }
+
+        if ($this->claimCheckers !== null) {
+            if ($this->audience !== null) {
+                throw new InvalidArgumentException(
+                    '$audience must be null when $claimCheckers is provided; the injected checkers replace it entirely.',
+                );
+            }
+
+            if ($this->claimCheckers === []) {
+                throw new InvalidArgumentException(
+                    '$claimCheckers must not be empty; pass null to use the default claim checkers.',
+                );
+            }
+
+            $seenClaims = [];
+
+            foreach ($this->claimCheckers as $claimChecker) {
+                $claim = $claimChecker->supportedClaim();
+
+                if (isset($seenClaims[$claim])) {
+                    throw new InvalidArgumentException(
+                        sprintf('Duplicate claim checker for claim "%s" in $claimCheckers.', $claim),
+                    );
+                }
+
+                $seenClaims[$claim] = true;
+            }
+        }
     }
 
     /**
@@ -177,14 +213,19 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
      */
     private function createClaimCheckerManager(): ClaimCheckerManager
     {
-        if ($this->claimCheckerManager !== null) {
-            return $this->claimCheckerManager;
-        }
+        return $this->claimCheckerManager ??= new ClaimCheckerManager(
+            $this->claimCheckers ?? $this->defaultClaimCheckers(),
+        );
+    }
 
-        if ($this->claimCheckers !== null) {
-            return $this->claimCheckerManager = new ClaimCheckerManager($this->claimCheckers);
-        }
-
+    /**
+     * @return list<ClaimChecker>
+     *
+     * @throws DiscoveryException if provider metadata cannot be resolved
+     * @throws NetworkException if the discovery endpoint cannot be reached
+     */
+    private function defaultClaimCheckers(): array
+    {
         $checkers = [
             new IssuerChecker([$this->config->issuerMetadata()->issuer()]),
             new ExpirationTimeChecker($this->clock, $this->allowedTimeDrift),
@@ -198,7 +239,7 @@ final class JwtAccessTokenValidator implements AccessTokenValidator
             $checkers[] = $audienceChecker;
         }
 
-        return $this->claimCheckerManager = new ClaimCheckerManager($checkers);
+        return $checkers;
     }
 
     /**
