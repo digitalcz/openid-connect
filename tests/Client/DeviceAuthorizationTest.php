@@ -215,7 +215,10 @@ class DeviceAuthorizationTest extends TestCase
         ];
 
         $response = $this->createMock(ResponseInterface::class);
-        $response->method('toArray')->with(false)->willReturn($tokenResponse);
+        $response->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn($tokenResponse);
 
         $this->httpClient->expects($this->once())
             ->method('request')
@@ -305,13 +308,19 @@ class DeviceAuthorizationTest extends TestCase
         $this->fixedClock(1000);
 
         $pendingResponse = $this->createMock(ResponseInterface::class);
-        $pendingResponse->method('toArray')->with(false)->willReturn(['error' => 'authorization_pending']);
+        $pendingResponse->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn(['error' => 'authorization_pending']);
 
         $successResponse = $this->createMock(ResponseInterface::class);
-        $successResponse->method('toArray')->with(false)->willReturn([
-            'access_token' => 'final-token',
-            'token_type' => 'Bearer',
-        ]);
+        $successResponse->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn([
+                'access_token' => 'final-token',
+                'token_type' => 'Bearer',
+            ]);
 
         $this->httpClient->expects($this->exactly(2))
             ->method('request')
@@ -336,16 +345,25 @@ class DeviceAuthorizationTest extends TestCase
         $this->fixedClock(1000);
 
         $slowDown = $this->createMock(ResponseInterface::class);
-        $slowDown->method('toArray')->with(false)->willReturn(['error' => 'slow_down']);
+        $slowDown->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn(['error' => 'slow_down']);
 
         $pending = $this->createMock(ResponseInterface::class);
-        $pending->method('toArray')->with(false)->willReturn(['error' => 'authorization_pending']);
+        $pending->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn(['error' => 'authorization_pending']);
 
         $success = $this->createMock(ResponseInterface::class);
-        $success->method('toArray')->with(false)->willReturn([
-            'access_token' => 'token',
-            'token_type' => 'Bearer',
-        ]);
+        $success->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn([
+                'access_token' => 'token',
+                'token_type' => 'Bearer',
+            ]);
 
         $this->httpClient->expects($this->exactly(3))
             ->method('request')
@@ -371,10 +389,16 @@ class DeviceAuthorizationTest extends TestCase
         $this->fixedClock(1000);
 
         $pending = $this->createMock(ResponseInterface::class);
-        $pending->method('toArray')->with(false)->willReturn(['error' => 'authorization_pending']);
+        $pending->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn(['error' => 'authorization_pending']);
 
         $success = $this->createMock(ResponseInterface::class);
-        $success->method('toArray')->with(false)->willReturn(['access_token' => 'abc']);
+        $success->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn(['access_token' => 'abc']);
 
         $this->httpClient->expects($this->exactly(2))
             ->method('request')
@@ -413,7 +437,10 @@ class DeviceAuthorizationTest extends TestCase
     public function testPollForTokensExpiresWhenDeadlineReached(): void
     {
         $pending = $this->createMock(ResponseInterface::class);
-        $pending->method('toArray')->with(false)->willReturn(['error' => 'authorization_pending']);
+        $pending->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn(['error' => 'authorization_pending']);
 
         $this->httpClient->method('request')->willReturn($pending);
 
@@ -471,7 +498,10 @@ class DeviceAuthorizationTest extends TestCase
     private function mockTokenResponse(array $data): void
     {
         $response = $this->createMock(ResponseInterface::class);
-        $response->method('toArray')->with(false)->willReturn($data);
+        $response->expects($this->once())
+            ->method('toArray')
+            ->with(false)
+            ->willReturn($data);
         $this->httpClient->method('request')->willReturn($response);
     }
 
