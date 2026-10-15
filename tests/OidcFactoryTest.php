@@ -550,7 +550,8 @@ class OidcFactoryTest extends TestCase
         $response->method('toArray')->willReturn($this->publicJwks());
 
         $httpClient = $this->createMock(HttpClientInterface::class);
-        $httpClient->method('request')
+        $httpClient->expects($this->atLeastOnce())
+            ->method('request')
             ->with('GET', 'https://auth.example.com/.well-known/jwks.json')
             ->willReturn($response);
 
