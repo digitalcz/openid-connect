@@ -18,10 +18,10 @@ use Throwable;
 /**
  * HTTP-based OIDC discovery.
  */
-final class HttpDiscoverer implements Discoverer
+final readonly class HttpDiscoverer implements Discoverer
 {
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
+        private HttpClientInterface $httpClient,
     ) {
     }
 
