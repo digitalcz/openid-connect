@@ -16,10 +16,10 @@ use Symfony\Contracts\HttpClient\ResponseStreamInterface;
  * Acts as a single choke point so discovery, JWKS, token, userinfo and introspection
  * requests are all guarded, including any request site added later.
  */
-final class SecureHttpClient implements HttpClientInterface
+final readonly class SecureHttpClient implements HttpClientInterface
 {
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
+        private HttpClientInterface $httpClient,
     ) {
     }
 

@@ -13,10 +13,10 @@ use Psr\Clock\ClockInterface;
 /**
  * JWT client assertion generator for OAuth2 client authentication
  */
-final class JwtClientAssertionGenerator
+final readonly class JwtClientAssertionGenerator
 {
     public function __construct(
-        private readonly ClockInterface $clock = new SimpleClock(),
+        private ClockInterface $clock = new SimpleClock(),
     ) {
     }
 
